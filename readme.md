@@ -58,6 +58,6 @@ while(G.isregular()):
 ```
 Demo of the example,
        
-       **blue nodes** : d <= degree <= c*d  
-       **red nodes** : degree<d or degree > c*d 
+- **blue nodes** : d <= degree <= c*d  
+- **red nodes** : degree<d or degree > c*d 
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
