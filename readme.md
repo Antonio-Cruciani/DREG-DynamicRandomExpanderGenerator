@@ -41,7 +41,7 @@ RAES evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
 
 ```python 
-
+# Initializing parameters
 n = 30
 d = 3 
 c = 1.5 
@@ -49,8 +49,12 @@ p = 0
 lamb = 1
 beta = 0.01
 G = DynamicGraph(n,d,c,lamb,beta,p,"Multiple")
-
-
+# is regular return False if all vertices has d <= degree <= c*d, else return True
+while(G.isregular()):
+    # Phase 1
+    G.add_phase()
+    # Phase 2
+    G.del_phase()  
 ```
-
+Demo of the example, **blue nodes** : d <= degree <= c*d  **red nodes** : degree<d or degree > c*d 
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
