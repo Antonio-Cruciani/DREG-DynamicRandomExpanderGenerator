@@ -35,10 +35,9 @@ Dynamic Random Graph $$ \mathcal{G}(n,d,c) $$ where:
 -  $d$ is the minimum required degree in the graph
 -  $c$ is the tolerance ($c\cdot d $= Max Degree in the graph)
 
-<<<<<<< HEAD
+
 RAES evolves over time with the following rules:
-=======
-RAES evolves over time following the following rules:
 
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
->>>>>>> af263df646c75e2c5c8879bba4fe79f4a8492f73
+
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.gif?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
