@@ -19,6 +19,7 @@
 - [RAES Random Graph](#RAES)
 - [Edge Dynamic Random Graph](#Edge-Dynamic)
 - [Vertex Dynamic Random Graph](#Vertex-Dynamic)
+- [Distributed Protocols](#Distributed-Protocols)
 - [Heuristic Convergence ](#Heuristic-Convergence)
 - [License](#license)
 
@@ -147,5 +148,4 @@ Demo of the example,
 
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/VertexDynamic.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
 
-## Heuristic-Convergence
-
+## Distributed-Protocols
