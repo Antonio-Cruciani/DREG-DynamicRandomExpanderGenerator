@@ -35,4 +35,4 @@ Dynamic Random Graph $$ \mathcal{G}(n,d,c) $$ where:
 -  $d$ is the minimum required degree in the graph
 -  $c$ is the tolerance ($c\cdot d $= Max Degree in the graph)
 
-RAES evolves over time following the following rules:
+RAES evolves over time with the following rules:
