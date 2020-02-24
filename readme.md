@@ -92,5 +92,5 @@ Dynamic Random Graph G(lamb,q,d,c) where:
 -  **d** is the minimum required degree in the graph
 -  **c** is the tolerance (c*d = Max Degree in the graph)
 
-
+Vertex Dynamic evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/FullyDyn.png?v=3&s=200" title="Fdyn" alt="Fdyn" height=356 width=786>
