@@ -159,6 +159,13 @@ G.flooding.set_initiator()
 ```
 And for the update step you have to use:
 ```python 
-G.flooding.update_flooding(Graph)
-```        
+G.flooding.update_flooding(G)
+```  
+Demo of the flooding on the Edge Dynamic,
+       
+- **black nodes** : Not informed  
+- **yellow nodes** :  Informed 
+
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/floodEdjedyn.gif?v=3&s=200" title="flood" alt="flood" height=256 width=486>
+
             
