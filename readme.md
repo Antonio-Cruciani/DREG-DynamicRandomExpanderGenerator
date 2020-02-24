@@ -100,6 +100,11 @@ while(t<500):
     G.random_fall()
     t+=1
 ```
+Demo of the example,
+       
+- **blue nodes** : d <= degree <= c*d  
+- **red nodes** :  degree < d or degree > c*d 
+
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EdgeDynamic.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
 
 
@@ -135,5 +140,10 @@ while(t<500):
     G.disconnect_from_network()
     t+=1
 ```
+Demo of the example,
+       
+- **blue nodes** : d <= degree <= c*d  
+- **red nodes** :  degree < d or degree > c*d 
+
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/VertexDynamic.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
 
