@@ -85,9 +85,9 @@ Edge Dynamic evolves over time with the following rules:
 
 
 ## Vertex-Dynamic
-Dynamic Random Graph G(lamb,q,d,c) where:
+Dynamic Random Graph G(lambda,q,d,c) where:
 
--	 **lamb** is the intensity parameter of the Poisson Process
+-	 **lambda** is the intensity parameter of the Poisson Process
 -  **q** is the exit proability of Vertices
 -  **d** is the minimum required degree in the graph
 -  **c** is the tolerance (c*d = Max Degree in the graph)
