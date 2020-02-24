@@ -46,9 +46,9 @@ n = 30
 d = 3 
 c = 1.5 
 p = 0
-lambda = 1
+lamb = 1
 beta = 0.01
-G = DynamicGraph(n,d,c,lambda,beta,p,"Multiple")
+G = DynamicGraph(n,d,c,lamb,beta,p,"Multiple")
 
 
 ```
