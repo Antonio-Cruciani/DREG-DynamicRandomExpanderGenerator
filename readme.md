@@ -17,8 +17,8 @@
 - [Installation](#installation)
 - [Description](#Description)
 - [RAES Random Graph](#RAES)
-- [Edge Dynamic Random Graph](#EdgeDynamic)
-- [Vertex Dynamic Random Graph](#VertexDynamic)
+- [Edge Dynamic Random Graph](#Edge Dynamic)
+- [Vertex Dynamic Random Graph](#Vertex Dynamic)
 - [Papers ](#Papers)
 - [License](#license)
 
