@@ -151,14 +151,14 @@ Demo of the example,
 ## Distributed-Protocols
 It is possible to simulate the Flooding Procol on the Dynamic Graph. You just have to instantiate the Flooding object of the DynamicGraph:
 ```python 
-Graph.set_flooding()
+G.set_flooding()
 ```
 After this step you can choose the initiator u.a.r.:
 ```python 
-Graph.flooding.set_initiator()
+G.flooding.set_initiator()
 ```
 And for the update step you have to use:
 ```python 
-Graph.flooding.update_flooding(Graph)
+G.flooding.update_flooding(Graph)
 ```        
             
