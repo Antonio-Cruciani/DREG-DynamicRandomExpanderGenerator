@@ -37,4 +37,4 @@ Dynamic Random Graph $$ \mathcal{G}(n,d,c) $$ where:
 
 RAES evolves over time following the following rules:
 
-<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=386>
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=486>
