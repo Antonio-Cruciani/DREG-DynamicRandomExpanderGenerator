@@ -81,3 +81,6 @@ Edge Dynamic evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EdgeDynamic.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
 
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EdgeDynamic.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
+
+
+## Vertex Dynamic
