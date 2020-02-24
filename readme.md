@@ -14,7 +14,6 @@
 
 
 
-- [Installation](#installation)
 - [Description](#Description)
 - [RAES Random Graph](#RAES)
 - [Edge Dynamic Random Graph](#Edge-Dynamic)
