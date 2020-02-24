@@ -17,8 +17,8 @@
 - [Installation](#installation)
 - [Description](#Description)
 - [RAES Random Graph](#RAES)
-- [Edge Dynamic Random Graph](#Edge Dynamic)
-- [Vertex Dynamic Random Graph](#Vertex Dynamic)
+- [Edge Dynamic Random Graph](#Edge-Dynamic)
+- [Vertex Dynamic Random Graph](#Vertex-Dynamic)
 - [Papers ](#Papers)
 - [License](#license)
 
@@ -68,7 +68,7 @@ Demo of the example,
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
 
 
-## Edge Dynamic Graph
+## Edge-Dynamic
 Dynamic Random Graph G(n,d,c,p) where:
 
 -	 **n** is the number of vertices 
@@ -83,4 +83,4 @@ Edge Dynamic evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EdgeDynamic.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
 
 
-## Vertex Dynamic
+## Vertex-Dynamic
