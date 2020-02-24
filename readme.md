@@ -27,7 +27,8 @@
 
 ## Description
 This package allows you to create random dynamic graphs where each node at each time step chooses one or more neighbors uniformly at random (u.a.r.). We propose you three different dynamic random graphs:
-- **RAES** ( Request a link, then Accept if Enough Space ) proposed by Becchetti et al. ( https://arxiv.org/abs/1811.10316 ) that allow you to construct an Expander Graph in **O**(log n) rounds With High Probability.
+- **RAES** ( Request a link, then Accept if Enough Space ) proposed by Becchetti et al. 
+( https://arxiv.org/abs/1811.10316 ) that allow you to construct an Expander Graph in **O**(log n) rounds With High Probability.
 
 ## RAES
 Dynamic Random Graph G(n,d,c) where:
