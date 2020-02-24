@@ -39,12 +39,16 @@ Dynamic Random Graph $$ \mathcal{G}(n,d,c) $$ where:
 RAES evolves over time with the following rules:
 
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
+
 '''python
+    
     n = 30
     d = 3 
     c = 1.5 
     p = 0.1
     
     G = DynamicGraph(0,d,c,1,0.01,0,"Multiple")
+    
+    
 '''
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
