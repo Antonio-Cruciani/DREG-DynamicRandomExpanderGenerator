@@ -31,9 +31,9 @@
 ## RAES
 Dynamic Random Graph G(n,d,c) where:
 
--	 n is the number of vertices 
--  d is the minimum required degree in the graph
--  c is the tolerance (c*d = Max Degree in the graph)
+-	 **n** is the number of vertices 
+-  **d** is the minimum required degree in the graph
+-  **c** is the tolerance (c*d = Max Degree in the graph)
 
 
 RAES evolves over time with the following rules:
