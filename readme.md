@@ -1,4 +1,4 @@
-
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/Dynamic.png?v=3&s=200" title="KG Racing" alt="KG Racing" height=356 width=386>
 
 
 # Dynamic Random Graph Generator
