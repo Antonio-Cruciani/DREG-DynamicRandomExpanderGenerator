@@ -29,7 +29,7 @@
 
 
 ## RAES
-Dynamic Random Graph $$ \mathcal{G}(n,d,c) $$ where:
+Dynamic Random Graph `$$ \mathcal{G}(n,d,c) $$` where:
 
 -	$n$ is the number of vertices 
 -  $d$ is the minimum required degree in the graph
