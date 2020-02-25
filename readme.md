@@ -14,7 +14,6 @@
 
 
 
-- [Installation](#installation)
 - [Description](#Description)
 - [RAES Random Graph](#RAES)
 - [Edge Dynamic Random Graph](#Edge-Dynamic)
@@ -31,7 +30,7 @@ This package allows you to create random dynamic graphs where each node at each 
 - **RAES** ( Request a link, then Accept if Enough Space ) proposed by Becchetti et al. 
 ( https://arxiv.org/abs/1811.10316 ) that allow you to construct an Expander Graph in **O**(log n) rounds With High Probability.
 - **Edge Dynamic** proposed by Antonio Cruciani that is a natural extension of RAES where there exists the probability **p** that, at each time step, an edge of the graph can fall. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph. 
-- **Vertx Dynamic** proposed by Antonio Cruciani that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
+- **Vertex Dynamic** proposed by Antonio Cruciani that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
 
 
 ## RAES
@@ -159,6 +158,13 @@ G.flooding.set_initiator()
 ```
 And for the update step you have to use:
 ```python 
-G.flooding.update_flooding(Graph)
-```        
+G.flooding.update_flooding(G)
+```  
+Demo of the flooding on the Edge Dynamic,
+       
+- **black nodes** : Not informed  
+- **yellow nodes** :  Informed 
+
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/floodEdjedyn.gif?v=3&s=200" title="flood" alt="flood" height=256 width=486>
+
             
