@@ -196,7 +196,7 @@ beta = 0.01
 epsilon = 0.005
 spectral_queue = Queue(mt.log(n,2))
 G = DynamicGraph(n,d,c,lamb,beta,p,"Multiple")
-# is regular return False if all vertices has d <= degree <= c*d, else return True
+# G.get_converged() return True if the graph is converged, else return False
 while(not(G.get_converged()):
     # Phase 1
     G.add_phase()
