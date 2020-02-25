@@ -183,7 +183,9 @@ To check this property we can define a queue (FIFO) of lenght log n and check if
 <p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/queue.png?v=3&s=200" title="queue" alt="queuem" height=256 width=486>
  </p>
+ 
 ```python 
+
 # Initializing parameters
 n = 1024
 d = 3 
