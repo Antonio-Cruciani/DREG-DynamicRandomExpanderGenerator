@@ -186,13 +186,13 @@ To check this property we can define a queue (FIFO) of lenght log n and check if
  
 ```python 
 # Initializing parameters
-n = 1024
+n = 64
 d = 3 
 c = 1.5 
 p = 0.1
 lamb = 1
 beta = 0.01
-epsilon = 0.005
+epsilon = 0.05
 spectral_queue = Queue(mt.log(n,2))
 G = DynamicGraph(n,d,c,lamb,beta,p,"Multiple")
 # G.get_converged() return True if the graph is converged, else return False
@@ -218,3 +218,6 @@ while(not(G.get_converged()):
                 spectral_queue.set_converged(terminate)
                 G.set_converged(True)
 ```  
+
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/spectralconv.gif.gif?v=3&s=200" title="convercence" alt="convergence" height=256 width=486>
+
