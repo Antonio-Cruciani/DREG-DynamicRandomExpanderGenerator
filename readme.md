@@ -168,3 +168,4 @@ Demo of the flooding on the Edge Dynamic,
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/floodEdjedyn.gif?v=3&s=200" title="flood" alt="flood" height=256 width=486>
 
             
+## Heuristic-Convergence
