@@ -65,9 +65,9 @@ Demo of the example,
        
 - **blue nodes** : d <= degree <= c*d  
 - **red nodes** :  degree < d or degree > c*d 
- 
+ <p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
-
+</p>
 
 ## Edge-Dynamic
 Dynamic Random Graph G(n,d,c,p) where:
@@ -104,9 +104,9 @@ Demo of the example,
        
 - **blue nodes** : d <= degree <= c*d  
 - **red nodes** :  degree < d or degree > c*d 
-
+<p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EdgeDynamic.gif?v=3&s=200" title="RAES" alt="RAESRG" height=256 width=486>
-
+</p>
 
 ## Vertex-Dynamic
 Dynamic Random Graph G(lambda,q,d,c) where:
@@ -144,9 +144,9 @@ Demo of the example,
        
 - **blue nodes** : d <= degree <= c*d  
 - **red nodes** :  degree < d or degree > c*d 
-
+<p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/VertexDynamic.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
-
+</p>
 ## Distributed-Protocols
 It is possible to simulate the Flooding Procol on the Dynamic Graph. You just have to instantiate the Flooding object of the DynamicGraph:
 ```python 
@@ -164,9 +164,9 @@ Demo of the flooding on the Edge Dynamic,
        
 - **black nodes** : Not informed  
 - **yellow nodes** :  Informed 
-
+<p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/floodEdjedyn.gif?v=3&s=200" title="flood" alt="flood" height=256 width=486>
-
+</p>
             
 ## Heuristic-Convergence
 We propose an Heuristic to determine if the Edge Dynamic has converged.
@@ -218,6 +218,11 @@ while(not(G.get_converged()):
                 spectral_queue.set_converged(terminate)
                 G.set_converged(True)
 ```  
-
-<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/spectralconv.gif.gif?v=3&s=200" title="convercence" alt="convergence" height=256 width=486>
+Demo of the heuristic on the Edge Dynamic,
+       
+- **black nodes** : Not Converged
+- **yellow nodes** :  Converged 
+<p align="center">
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/spectralconv.gif?v=3&s=200" title="convercence" alt="convergence" height=256 width=486>
+ </p>
 
