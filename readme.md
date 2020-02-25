@@ -147,6 +147,7 @@ Demo of the example,
 <p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/VertexDynamic.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
 </p>
+
 ## Distributed-Protocols
 It is possible to simulate the Flooding Procol on the Dynamic Graph. You just have to instantiate the Flooding object of the DynamicGraph:
 
