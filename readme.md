@@ -183,4 +183,41 @@ To check this property we can define a queue (FIFO) of lenght log n and check if
 <p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/queue.png?v=3&s=200" title="queue" alt="queuem" height=256 width=486>
  </p>
-
+```python 
+# Initializing parameters
+n = 1024
+d = 3 
+c = 1.5 
+p = 0.1
+lamb = 1
+beta = 0.01
+epsilon = 0.005
+spectral_queue = Queue(mt.log(n,2))
+G = DynamicGraph(n,d,c,lamb,beta,p,"Multiple")
+# is regular return False if all vertices has d <= degree <= c*d, else return True
+while(not(G.get_converged()):
+    # Phase 1
+    G.add_phase()
+    # Phase 2
+    G.del_phase() 
+    # Phase 3
+    G.random_fall()
+    Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+    spectral_queue.add_element_to_queue(spectralGap)
+    if (spectral_queue.get_queue_lenght() == spectral_queue.get_max_lenght() and spectral_queue.get_converged() == False):
+            spectral_differences = []
+            s_q = spectral_queue.get_queue()
+            for i in range(0, spectral_queue.get_queue_lenght() - 1):
+                spectral_differences.append(abs(s_q[i] - s_q[i + 1]))
+            terminate = True
+            for j in spectral_differences:
+                if (j > epsilon):
+                    terminate = False
+            if(terminate):
+                spectral_queue.set_converged(terminate)
+                G.set_converged(True)
+            
+            
+    
+```
+```  
