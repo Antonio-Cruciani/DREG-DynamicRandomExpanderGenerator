@@ -216,8 +216,4 @@ while(not(G.get_converged()):
             if(terminate):
                 spectral_queue.set_converged(terminate)
                 G.set_converged(True)
-            
-            
-    
-```
 ```  
