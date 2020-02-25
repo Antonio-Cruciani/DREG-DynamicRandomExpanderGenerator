@@ -172,6 +172,6 @@ Demo of the flooding on the Edge Dynamic,
 We propose an Heuristic to determine if the Edge Dynamic has converged.
 Given the adjacency matrix **A** of the graph at a generic time step we define:   
 <p align="center">
-<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/TransitionMatrix.png?v=3&s=200" title="Tmatrix" alt="Tmat" height=27 width=25>
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/TransitionMatrix.png?v=3&s=200" title="Tmatrix" alt="Tmat" height=27 width=35>
  </p>
 
