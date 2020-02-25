@@ -174,4 +174,4 @@ Given the adjacency matrix **A** of the graph at a generic time step we define:
 <p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/TransitionMatrix.png?v=3&s=200" title="Tmatrix" alt="Tmat" height=27 width=50>
  </p>
-
+Where **D** is the diagonal **degree matrix** of the graph. Given the spectrum of **P** (ordered in descending order) we define the **spectral gap** as the difference between the first and the second eigenvalues of **P**. We know that if the spectral gap of the transition matrix **P** is small (near to 0) we have that the graph is not a good Expander Graph. Thanks to this measure we can understand a key property of the graph at each time step and we can define a convergence criterion as follows: if the spectral gap differs only by an epsilon for log n rounds we have that the graph is converged to a stationary configuration.
