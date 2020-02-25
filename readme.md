@@ -169,3 +169,5 @@ Demo of the flooding on the Edge Dynamic,
 
             
 ## Heuristic-Convergence
+We propose an Heuristic to determine if the Edge Dynamic has converged.
+Given the adjacency matrix **A** of the graph at a generic time step we define 
