@@ -230,4 +230,4 @@ Demo of the heuristic on the Edge Dynamic,
 This is free software, if you want to use it please cite this work.
 Users interested in improving and expanding the project are welcome.
 
-Thanks to [Professor Francesco Pasquale][http://www.mat.uniroma2.it/~pasquale/] for supervising this work.
+Thanks to [Professor Francesco Pasquale](http://www.mat.uniroma2.it/~pasquale/) for supervising this work.
