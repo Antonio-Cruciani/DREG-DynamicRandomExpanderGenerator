@@ -185,7 +185,6 @@ To check this property we can define a queue (FIFO) of lenght log n and check if
  </p>
  
 ```python 
-
 # Initializing parameters
 n = 1024
 d = 3 
