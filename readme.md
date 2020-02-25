@@ -21,7 +21,6 @@
 - [Distributed Protocols](#Distributed-Protocols)
 - [Heuristic Convergence ](#Heuristic-Convergence)
 - [License](#License)
-- []
 
 
 
