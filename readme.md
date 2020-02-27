@@ -46,6 +46,7 @@ RAES evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/RAES.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
 
 ```python 
+from src.Graphs.Objects.MultipleEdge import DynamicGraph
 # Initializing parameters
 n = 30
 d = 3 
@@ -82,6 +83,7 @@ Edge Dynamic evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EdgeDynamic.png?v=3&s=200" title="RAES" alt="RAESRG" height=356 width=786>
 
 ```python 
+from src.Graphs.Objects.MultipleEdge import DynamicGraph
 # Initializing parameters
 n = 30
 d = 3 
@@ -120,6 +122,7 @@ Vertex Dynamic evolves over time with the following rules:
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/FullyDyn.png?v=3&s=200" title="Fdyn" alt="Fdyn" height=356 width=786>
 
 ```python 
+from src.Graphs.Objects.MultipleEdge import DynamicGraph
 # Initializing parameters
 n = 0
 d = 3 
@@ -189,6 +192,9 @@ To check this property we can define a queue (FIFO) of lenght log n and check if
  </p>
  
 ```python 
+from src.Graphs.Objects.MultipleEdge import DynamicGraph
+from src.Graphs.Objects.Queue import Queue
+from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
 # Initializing parameters
 n = 64
 d = 3 
