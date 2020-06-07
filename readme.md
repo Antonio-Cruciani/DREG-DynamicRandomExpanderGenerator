@@ -162,13 +162,6 @@ Dynamic Random Graph G(n,p,q,E0) where:
  
 The Edge Markovian Random Graph evolves over time with the following rule:
 
-
-Demo of the example,
-
-<p align="center">
-<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EMG0505.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
-</p>
-
 ```python 
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
 # Initializing parameters
@@ -181,6 +174,14 @@ while(t<500):
     G.edge_markovian()
     t+=1
 ```
+
+Demo of the example,
+
+<p align="center">
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EMG0505.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
+</p>
+
+
 
 ## Distributed-Protocols
 It is possible to simulate the Flooding Procol on the Dynamic Graph. You just have to instantiate the Flooding object of the DynamicGraph:
