@@ -8,8 +8,9 @@ from src.MathModules.MathTools import flip
 from src.Protocols.FloodOBJ import Flooding
 
 class DynamicGraph:
+    # Aggiungere lista di archi iniziale del grafo
 
-    def __init__(self,n,d,c,lam,beta,falling_probability,model):
+    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = None ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
         self.G = nx.Graph()
         self.G.add_nodes_from([i for i in range(0,n)])
         self.n = n
@@ -27,7 +28,21 @@ class DynamicGraph:
         self.converged = False
         self.target_density = self.target_size_achieved()
         self.max_label = n
+        self.birth_rate = edge_birth_rate
+        self.death_rate = edge_death_rate
+        if(starting_edge_list):
+            self.G.add_edges_from(starting_edge_list)
+        if(model == "EdgeMarkovian"):
+            kn = nx.complete_graph(n)
+            self.kn_edges = []
+            for e in nx.generate_edgelist(kn,data=False):
+                if(int(e.split(" ")[0])<int(e.split(" ")[1])):
 
+                    self.kn_edges.append((int(e.split(" ")[0]),int(e.split(" ")[1])))
+                else:
+                    self.kn_edges.append((int(e.split(" ")[1]), int(e.split(" ")[0])))
+        else:
+            self.kn_edges = []
 
     def set_target_size(self,lam, beta):
         if(beta == 0):
@@ -90,6 +105,16 @@ class DynamicGraph:
         return(self.outrate)
     def get_list_of_nodes(self):
         return(list(self.G.nodes()))
+    def get_list_of_edges(self):
+        edge_list_tuples = []
+        for edge in nx.generate_edgelist(self.G, data=False):
+            if(int(edge.split(" ")[0])<int(edge.split(" ")[1])):
+                edge_list_tuples.append((int(edge.split(" ")[0]),int(edge.split(" ")[1])))
+            else:
+                edge_list_tuples.append((int(edge.split(" ")[1]), int(edge.split(" ")[0])))
+
+        return(edge_list_tuples)
+
     def get_converged(self):
         return(self.converged)
     def get_max_label(self):
@@ -244,4 +269,24 @@ class DynamicGraph:
         if(len(self.G.nodes()) >=self.target_n ):
             return True
         return False
+
+
+    def edge_markovian(self):
+        
+        edges = self.get_list_of_edges()
+        new_edges = []
+        falling_edges = []
+        # Falling phase
+        for e in edges:
+            if(flip(self.death_rate) == 'H'):
+                falling_edges.append(e)
+        # Birth phase
+
+        birth_candidates = set(self.kn_edges) - set(edges)
+        for e in birth_candidates:
+            if(flip(self.birth_rate) == 'H'):
+                new_edges.append(e)
+        # Updating the graph
+        self.G.remove_edges_from(falling_edges)
+        self.G.add_edges_from(new_edges)
 
