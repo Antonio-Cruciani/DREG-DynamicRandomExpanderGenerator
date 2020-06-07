@@ -18,6 +18,7 @@
 - [RAES Random Graph](#RAES)
 - [Edge Dynamic Random Graph](#Edge-Dynamic)
 - [Vertex Dynamic Random Graph](#Vertex-Dynamic)
+- [Edge Markovian Random Graph](#Edge-Markovian)
 - [Distributed Protocols](#Distributed-Protocols)
 - [Heuristic Convergence ](#Heuristic-Convergence)
 - [License](#License)
@@ -31,7 +32,7 @@ This package allows you to create random dynamic graphs where each node at each 
 ( https://arxiv.org/abs/1811.10316 ) that allow you to construct an Expander Graph in **O**(log n) rounds With High Probability.
 - **Edge Dynamic** proposed by Antonio Cruciani that is a natural extension of RAES where there exists the probability **p** that, at each time step, each edge of the graph can fall. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph. 
 - **Vertex Dynamic** proposed by Antonio Cruciani that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
-
+- **Edge Markovian**
 
 ## RAES
 Dynamic Random Graph G(n,d,c) where:
@@ -151,6 +152,36 @@ Demo of the example,
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/VertexDynamic.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
 </p>
 
+## Edge-Markovian
+Dynamic Random Graph G(n,p,q,E0) where:
+
+-	**n** is the number of vertices 
+-  **p** is the birth-rate of the edges
+-  **q** is the death-rate of the edges
+-  **E0** is the set of the edges at time 0
+ 
+The Edge Markovian Random Graph evolves over time with the following rule:
+
+
+Demo of the example,
+
+<p align="center">
+<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/EMG0505.gif?v=3&s=200" title="Vdyn" alt="Vdyn" height=256 width=486>
+</p>
+
+```python 
+from src.Graphs.Objects.MultipleEdge import DynamicGraph
+# Initializing parameters
+n = 32
+p = 0.5
+q = 0.5
+G = DynamicGraph(n,model = "EdgeMarkovian",,edge_birth_rate = p,edge_death_rate= q)
+t = 0
+while(t<500): 
+    G.edge_markovian()
+    t+=1
+```
+
 ## Distributed-Protocols
 It is possible to simulate the Flooding Procol on the Dynamic Graph. You just have to instantiate the Flooding object of the DynamicGraph:
 
@@ -173,8 +204,8 @@ Demo of the flooding on the Edge Dynamic,
 - **yellow nodes** :  Informed 
 <p align="center">
 <img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/floodEdjedyn.gif?v=3&s=200" title="flood" alt="flood" height=256 width=486>
-</p>
-            
+</p>  
+      
 ## Heuristic-Convergence
 We propose an Heuristic to determine if the Edge Dynamic has converged.
 Given the adjacency matrix **A** of the graph at a generic time step we define:   
