@@ -168,7 +168,7 @@ from src.Graphs.Objects.MultipleEdge import DynamicGraph
 n = 32
 p = 0.5
 q = 0.5
-G = DynamicGraph(n,model = "EdgeMarkovian",,edge_birth_rate = p,edge_death_rate= q)
+G = DynamicGraph(n,model = "EdgeMarkovian",starting_edge_list = [],edge_birth_rate = p,edge_death_rate= q)
 t = 0
 while(t<500): 
     G.edge_markovian()
