@@ -1,4 +1,4 @@
-#README
+# README
 
 This folder contains my Master's Degree Thesis in which I proposed and analyzed the Edge Dynamic and the Vertex Dynamic models.
 
