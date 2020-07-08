@@ -31,11 +31,11 @@ This package allows you to create random dynamic graphs inspired by P2P networks
 
 ### P2P  
 - **RAES** ( Request a link, then Accept if Enough Space ) proposed by Becchetti et al. 
-( https://arxiv.org/abs/1811.10316 ) that allow you to construct an Expander Graph in **O**(log n) rounds With High Probability.
-- **Edge Dynamic** proposed by Antonio Cruciani ([More details](./Thesis/AntonioCruciani_Master's_Degree_Thesis(ITA).pdf)) that is a natural extension of RAES where there exists the probability **p** that, at each time step, each edge of the graph can fall. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph. 
-- **Vertex Dynamic** proposed by Antonio Cruciani ([More details](./Thesis/AntonioCruciani_Master's_Degree_Thesis(ITA).pdf)) that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
+( [More details] (https://arxiv.org/abs/1811.10316) ) that allow you to construct an Expander Graph in **O**(log n) rounds With High Probability.
+- **Edge Dynamic** proposed by Antonio Cruciani ([More details (ITA)](./Thesis/AntonioCruciani_Master's_Degree_Thesis(ITA).pdf) [More details (ENG)](./Thesis/AntonioCrucianiExtracted.pdf)) that is a natural extension of RAES where there exists the probability **p** that, at each time step, each edge of the graph can fall. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph. 
+- **Vertex Dynamic** proposed by Antonio Cruciani ([More details (ITA)](./Thesis/AntonioCruciani_Master's_Degree_Thesis(ITA).pdf) [More details (ENG)](./Thesis/AntonioCrucianiExtracted.pdf)) that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
 ### Radio Networks 
-- **Edge Markovian** You can read about it in https://dl.acm.org/doi/pdf/10.1145/1400751.1400781 in this model you have a fixed number of nodes and each edge is a Birth-Death Markov Chain.
+- **Edge Markovian** You can read about it at the following [link](https://dl.acm.org/doi/pdf/10.1145/1400751.1400781 ) in this model you have a fixed number of nodes and each edge is a Birth-Death Markov Chain.
 ## RAES
 Dynamic Random Graph G(n,d,c) where:
 
