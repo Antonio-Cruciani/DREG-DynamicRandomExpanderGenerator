@@ -11,6 +11,7 @@ class Flooding:
         self.t_flood = None
         self.number_of_restart = -1
         self.converged = None
+        self.failed = False
         # self.number_informed = None
         # self.number_uninformed = None
 
@@ -89,3 +90,9 @@ class Flooding:
             self.set_converged(False)
         else:
             self.set_converged(True)
+
+    def set_failed(self,result):
+        self.failed = result
+
+    def get_failed(self):
+        return(self.failed)

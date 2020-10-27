@@ -6,7 +6,7 @@ import scipy.sparse
 
 from src.MathModules.MathTools import flip
 from src.Protocols.FloodOBJ import Flooding
-
+from src.Protocols.Consensus import Consensus
 class DynamicGraph:
     # Aggiungere lista di archi iniziale del grafo
 
@@ -22,6 +22,9 @@ class DynamicGraph:
         self.target_n = self.set_target_size(lam,beta)
         self.p = falling_probability
         self.flooding = Flooding()
+        self.consensus = Consensus()
+        self.initial_colors = 2
+        self.consensus_bias = [0.5,0.5]
         self.number_of_exiting_nodes_at_each_round = []
         self.number_of_entering_nodes_at_each_round = []
         self.type_of_dynamic_graph = model
@@ -30,6 +33,9 @@ class DynamicGraph:
         self.max_label = n
         self.birth_rate = edge_birth_rate
         self.death_rate = edge_death_rate
+        self.semiregular_percentage = 90
+        self.time_conv = 0
+        self.reset_number = 0
         if(starting_edge_list):
             self.G.add_edges_from(starting_edge_list)
         if(model == "EdgeMarkovian"):
@@ -67,6 +73,15 @@ class DynamicGraph:
 
     def set_max_label(self,new_label):
         self.max_label += new_label
+    def set_semiregular_percentage(self,perc):
+        self.semiregular_percentage = perc
+    def increment_time_conv(self):
+        self.time_conv += 1
+    def reset_time_conv(self):
+        self.time_conv = 0
+        self.reset_number +=1
+    def get_reset_number(self):
+        return(self.reset_number)
 
     def start_flooding(self):
         self.flooding.set_initiator()
@@ -103,6 +118,10 @@ class DynamicGraph:
         return(self.inrate)
     def get_outrate(self):
         return(self.outrate)
+    def get_semiregular_percentage(self):
+        return(self.semiregular_percentage)
+    def get_time_conv(self):
+        return(self.time_conv)
     def get_list_of_nodes(self):
         return(list(self.G.nodes()))
     def get_list_of_edges(self):
@@ -240,6 +259,15 @@ class DynamicGraph:
         self.G.add_nodes_from(entering_nodes)
         if (self.flooding.get_started() ):
             self.flooding.add_nodes_to_dictionary(entering_nodes)
+
+        if(self.consensus.get_started()):
+            new_nodes_colors = []
+            for i in entering_nodes:
+                if (flip(self.consensus_bias[0]) == 'H'):
+                    new_nodes_colors.append(0)
+                else:
+                    new_nodes_colors.append(1)
+            self.consensus.add_nodes_to_dictionary(entering_nodes,new_nodes_colors)
         if(not self.target_density):
             self.target_density = self.target_size_achieved()
         self.set_max_label(X_t)
@@ -262,6 +290,8 @@ class DynamicGraph:
         if (self.flooding.get_started()):
             self.flooding.del_nodes_from_dictionary(exiting_nodes)
 
+        if(self.consensus.get_started()):
+            self.consensus.del_nodes_from_dictionary(exiting_nodes)
         self.set_number_of_exiting_nodes_at_each_round(Z_t)
 
 
@@ -272,7 +302,7 @@ class DynamicGraph:
 
 
     def edge_markovian(self):
-        
+
         edges = self.get_list_of_edges()
         new_edges = []
         falling_edges = []
