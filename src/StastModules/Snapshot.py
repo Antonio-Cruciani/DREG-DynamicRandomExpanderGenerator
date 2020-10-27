@@ -1,4 +1,4 @@
-
+from src.StastModules.GraphAnalysis import get_graph_properties
 import numpy as np
 def get_snapshot_dynamic(G,d,c,t):
 

@@ -36,7 +36,8 @@ class VertexDynamic:
 
 
     def run(self):
-
+        print("Starting simulation ")
+        sim_start = time.time()
         for inrate in self.inrate_list:
             for outrate in self.outrate_list:
                 print("Inrate: ",inrate, " Outrate: ",outrate, " Flooding: ",self.flooding)
@@ -53,6 +54,8 @@ class VertexDynamic:
                             #vertexDynamicStats.add_flood_infos(flood_info)
                             print("Elapsed time: ",time.start()-start_time)
                 self.write_info_dic_as_csv(outpath,vertexDynamicStats)
+        print("Ending simulation")
+        print("Elapsed time : ", time.time() - sim_start)
 
     def VertexDynamicGenerator(self, d, c, inrate, outrate, sim):
 
@@ -138,10 +141,10 @@ class VertexDynamic:
             return (flood_dictionary)
 
         t = 0
-        t_conv = 0
+
         final_stats = []
         achieved = False
-        nodes_conv_time = 0
+
         repeat = True
         sim = {
             "simulation": sim
@@ -149,9 +152,7 @@ class VertexDynamic:
         if (self.d <= 0 or self.c < 0):
             print("Error, input parameters must be: d>0 c>1")
             return (-1)
-
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
-
         while(repeat):
             G.connect_to_network()
             G.add_phase()
@@ -161,7 +162,6 @@ class VertexDynamic:
                 if (G.get_target_density()):
                     print(" The Graph contains the desired number of nodes ")
                     stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
-                    nodes_conv_time = t
                     conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                     flood_info = check_convergence_dynamic()
                     final_stats.append({**sim, **conv_perc, **stats, **flood_info})
