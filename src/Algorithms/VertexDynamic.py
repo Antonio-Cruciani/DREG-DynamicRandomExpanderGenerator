@@ -3,6 +3,7 @@ from src.FileOperations.WriteOnFile import create_file,create_folder,write_on_fi
 from src.StastModules.Snapshot import get_snapshot_dynamic
 import time
 import math as mt
+
 class VertexDynamicOutput:
     def __init__(self):
         self.stats = []
