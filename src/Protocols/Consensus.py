@@ -1,5 +1,5 @@
 import random as rnd
-#import statistics as stat
+import statistics as stat
 
 class Consensus:
     def __init__(self,number_of_byzantine_nodes = 0,update_rule = "3M"):
