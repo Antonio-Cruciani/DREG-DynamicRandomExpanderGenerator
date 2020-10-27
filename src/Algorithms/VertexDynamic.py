@@ -189,11 +189,3 @@ class VertexDynamic:
         for i in results.get_stats():
             write_on_file_contents(outPath, i)
 
-print("PROVA")
-d =[2,3,4]
-c = [1.5,2,3]
-inr = [1]
-outr = [0.01]
-outpath = "./Desktop/ "
-a = VertexDynamic(d,c,inr,outr,outpath)
-a.run()
