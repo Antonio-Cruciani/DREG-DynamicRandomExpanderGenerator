@@ -7,15 +7,15 @@ import math as mt
 class VertexDynamicOutput:
     def __init__(self):
         self.stats = []
-        self.flood_infos = []
+        #self.flood_infos = []
     def add_stats(self,new_stats):
         self.stats.append(new_stats)
-    def add_flood_infos(self,new_flood_infos):
-        self.flood_info.append(new_flood_infos)
+    # def add_flood_infos(self,new_flood_infos):
+    #     self.flood_info.append(new_flood_infos)
     def get_stats(self):
         return(self.stats)
-    def get_flood_infos(self):
-        return(self.flood_infos)
+    # def get_flood_infos(self):
+    #     return(self.flood_infos)
 
 
 
@@ -50,7 +50,7 @@ class VertexDynamic:
                         for sim in range(0,self.SimNumber):
                             print("Simulation: ",sim)
                             start_time = time.start()
-                            stats = self.VertexDynamicGenerator(self, d, c,inrate,outrate,sim)
+                            stats = self.VertexDynamicGenerator( d, c,inrate,outrate,sim)
                             vertexDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
                             print("Elapsed time: ",time.start()-start_time)
@@ -142,7 +142,6 @@ class VertexDynamic:
             return (flood_dictionary)
 
         t = 0
-
         final_stats = []
         achieved = False
 
@@ -162,6 +161,7 @@ class VertexDynamic:
             if(not achieved):
                 if (G.get_target_density()):
                     print(" The Graph contains the desired number of nodes ")
+                    achieved = True
                     stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
                     conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                     flood_info = check_convergence_dynamic()
@@ -184,7 +184,16 @@ class VertexDynamic:
                 print("Flooding Protocol status : FAILED")
         return(final_stats)
 
-    def write_info_dic_as_csv(outPath,results):
+    def write_info_dic_as_csv(self,outPath,results):
         create_file(outPath, list(results.get_stats()[0][0].keys()))
         for i in results.get_stats():
             write_on_file_contents(outPath, i)
+
+print("PROVA")
+d =[2,3,4]
+c = [1.5,2,3]
+inr = [1]
+outr = [0.01]
+outpath = "./Desktop/ "
+a = VertexDynamic(d,c,inr,outr,outpath)
+a.run()
