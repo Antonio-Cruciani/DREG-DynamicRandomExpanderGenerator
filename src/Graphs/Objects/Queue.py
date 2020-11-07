@@ -28,4 +28,6 @@ class Queue:
             self.queue.pop(0)
             self.queue.append(new_element)
         else:
+            print(self.get_max_lenght())
             print("ERROR QUEUE LENGHT MUST BE <= LENGHT")
+            exit(1)

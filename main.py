@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from src.Algorithms.VertexDynamic import VertexDynamic
-#from src.Algorithms.EdgeDynamic import EdgeDynamic
+from src.Algorithms.EdgeDynamic import EdgeDynamic
 import sys, getopt
 
 def main(argv):
@@ -11,12 +11,14 @@ def main(argv):
     p = []
     inRate = []
     outRate = []
+    n = []
     flood = True
     simNumber = 30
     epsilon =0.05
+
     outPath = "./"
     try:
-        opts, args = getopt.getopt(argv, "hg:d:c:p:r:q:f:x:s:m:e:o:", ["graph=","deg=","const=","prob=","rate=","quit=","flood=","decay=","sim=","model=","epsilon=" ,"ofile="])
+        opts, args = getopt.getopt(argv, "hg:n:d:c:p:r:q:f:x:s:m:e:o:", ["graph=","nodes=","deg=","const=","prob=","rate=","quit=","flood=","decay=","sim=","model=","epsilon=" ,"ofile="])
     except getopt.GetoptError:
         print('Error!')
         sys.exit(2)
@@ -27,6 +29,10 @@ def main(argv):
             sys.exit()
         elif(opt in("-g","--graph")):
             algorithm = arg
+        elif(opt in ("-n","--nodes")):
+            splittedInput = arg.split(",")
+            for elem in splittedInput:
+                n.append(int(elem))
         elif(opt in ("-d","--deg")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
@@ -66,7 +72,7 @@ def main(argv):
     if(algorithm == "VD"):
         ex = VertexDynamic(d,c,inRate,outRate,outPath,flooding=flood,regular_decay=decay,model = model,simNumber=simNumber)
     elif(algorithm == "ED"):
-        print("TODO")
+        ex = EdgeDynamic(d ,c,p,n ,outPath ,flooding = flood, epsilon = epsilon ,model =model,simNumber = simNumber )
 
 
 if __name__ == "__main__":

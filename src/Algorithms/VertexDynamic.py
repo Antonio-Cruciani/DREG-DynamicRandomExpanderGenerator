@@ -49,11 +49,11 @@ class VertexDynamic:
                     for c in self.c_list:
                         for sim in range(0,self.SimNumber):
                             print("Simulation: ",sim)
-                            start_time = time.start()
+                            start_time = time.time()
                             stats = self.VertexDynamicGenerator( d, c,inrate,outrate,sim)
                             vertexDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
-                            print("Elapsed time: ",time.start()-start_time)
+                            print("Elapsed time: ",time.time()-start_time)
                 self.write_info_dic_as_csv(outpath,vertexDynamicStats)
         print("Ending simulation")
         print("Elapsed time : ", time.time() - sim_start)
@@ -149,7 +149,7 @@ class VertexDynamic:
         sim = {
             "simulation": sim
         }
-        if (self.d <= 0 or self.c < 0):
+        if (d <= 0 or c < 0):
             print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
