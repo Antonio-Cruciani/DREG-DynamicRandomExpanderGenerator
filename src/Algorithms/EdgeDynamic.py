@@ -165,7 +165,7 @@ class EdgeDynamic:
 
                     repeat = False
                     # final_stats.append({**sim, **stats_bef,**stats_aft, **stats, **flood_dictionary})
-                    final_stats.append({**sim, **stats_aft, **stats, **flood_dictionary})
+                    final_stats.append({**sim, **stats_bef, **stats, **flood_dictionary})
                     print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
                 if (repeat):
 
@@ -176,7 +176,6 @@ class EdgeDynamic:
                         print("CONVERGENZA GRAFO DINAMICO:", G.get_converged())
                         # print({**sim,**stats_bef ,**stats_aft,**stats, **flood_dictionary}.keys())
                         # final_stats.append({**sim,**stats_bef ,**stats_aft,**stats, **flood_dictionary})
-                        print("MAIOO")
                         final_stats.append({**sim, **stats_bef, **stats, **flood_dictionary})
                         # print(final_stats)
                     else:
