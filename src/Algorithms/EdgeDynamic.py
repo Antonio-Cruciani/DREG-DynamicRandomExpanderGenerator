@@ -171,13 +171,8 @@ class EdgeDynamic:
 
                     if (G.flooding.get_converged() == False):
                         flood_dictionary = flood()
-                        print("NUMERO DI NODI INFORMATI :", G.flooding.get_informed_nodes())
-                        print("NUMERO DI NODI NON INFORMATI:", G.flooding.get_uninformed_nodes())
-                        print("CONVERGENZA GRAFO DINAMICO:", G.get_converged())
-                        # print({**sim,**stats_bef ,**stats_aft,**stats, **flood_dictionary}.keys())
-                        # final_stats.append({**sim,**stats_bef ,**stats_aft,**stats, **flood_dictionary})
                         final_stats.append({**sim, **stats_bef, **stats, **flood_dictionary})
-                        # print(final_stats)
+
                     else:
                         repeat = False
             t+=1
