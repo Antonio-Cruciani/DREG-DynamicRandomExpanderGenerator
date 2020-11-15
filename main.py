@@ -40,7 +40,7 @@ def main(argv):
         elif(opt in ("-c","--const")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
-                c.append(int(elem))
+                c.append(float(elem))
         elif(opt in ("-p","--prob")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
@@ -50,12 +50,14 @@ def main(argv):
             for elem in splittedInput:
                 inRate.append(int(elem))
         elif (opt in ("-q", "--quit")):
+            splittedInput = arg.split(",")
             for elem in splittedInput:
-                outRate.append(int(elem))
+
+                outRate.append(float(elem))
         elif (opt in ("-f", "--flood")):
             if(arg == "False" or arg == "false"):
                 flood = False
-        elif (opt in ("-d", "--decay")):
+        elif (opt in ("-a", "--decay")):
             if(float(arg)>=1):
                 print(" ERROR ! Decay must be 0<= decay <1")
             else:
@@ -66,13 +68,16 @@ def main(argv):
             model = arg
         elif(opt in ("-e","--epsilon")):
             epsilon = float(arg)
-        elif(opt in ("-0","--outfile")):
+        elif(opt in ("-o","--outfile")):
             outPath = arg
 
     if(algorithm == "VD"):
-        ex = VertexDynamic(d,c,inRate,outRate,outPath,flooding=flood,regular_decay=decay,model = model,simNumber=simNumber)
+
+        ex = VertexDynamic(d,c,inRate,outRate,outPath,flooding=flood,regular_decay=0.5,model = model,simNumber=simNumber)
+        ex.run()
     elif(algorithm == "ED"):
         ex = EdgeDynamic(d ,c,p,n ,outPath ,flooding = flood, epsilon = epsilon ,model =model,simNumber = simNumber )
+        ex.run()
 
 
 if __name__ == "__main__":

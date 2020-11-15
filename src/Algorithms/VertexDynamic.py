@@ -209,9 +209,9 @@ class VertexDynamic:
 
             if (G.flooding.get_converged() and (not (G.flooding.get_failed()))):
                 repeat = False
-            # if ((self.cdPercentage - (G.get_reset_number() * self.decay)) <= -1):
-            #     print("The graph does not converge")
-            #     repeat = False
+            if ((self.cdPercentage - (G.get_reset_number() * self.decay)) <= -1):
+                print("The graph does not converge")
+                repeat = False
             if (G.flooding.get_failed()):
                 repeat = False
                 print("Flooding Protocol status : FAILED")
