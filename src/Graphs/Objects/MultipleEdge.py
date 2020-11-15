@@ -1,6 +1,7 @@
 import networkx as nx
 import random as rnd
 import numpy as np
+import math as mt
 import scipy
 import scipy.sparse
 
@@ -33,7 +34,12 @@ class DynamicGraph:
         self.max_label = n
         self.birth_rate = edge_birth_rate
         self.death_rate = edge_death_rate
-        self.semiregular_percentage = 90
+        self.semiregular_percentage = 100
+        self.aolds = [0]
+        self.bolds = [100]
+        self.a = 0
+        self.b = 100
+
         self.time_conv = 0
         self.reset_number = 0
         if(starting_edge_list):
@@ -119,7 +125,7 @@ class DynamicGraph:
     def get_outrate(self):
         return(self.outrate)
     def get_semiregular_percentage(self):
-        return(self.semiregular_percentage)
+        return(self.semiregular_percentage/100)
     def get_time_conv(self):
         return(self.time_conv)
     def get_list_of_nodes(self):
@@ -301,6 +307,27 @@ class DynamicGraph:
         return False
 
 
+    def get_percentage(self,bool):
+        # a = self.range_percentage[0]
+        # b = self.range_percentage[1]
+        m = mt.ceil((self.b - self.a) / 2)
+        # print("M=",m)
+        # print("B= ",self.b)
+        # print("A = ",self.a)
+        if(bool):
+            self.a = mt.ceil( (self.b-self.a ) / 2) + self.a
+
+            self.aolds.append(self.a)
+        else:
+            self.b = m
+            self.a = self.aolds[-1]
+            #self.aolds.pop()
+        self.bolds.append(self.b)
+        self.semiregular_percentage = self.b
+
+
+
+
     def edge_markovian(self):
 
         edges = self.get_list_of_edges()
@@ -320,3 +347,10 @@ class DynamicGraph:
         self.G.remove_edges_from(falling_edges)
         self.G.add_edges_from(new_edges)
 
+
+
+
+    def get_a(self):
+        return(self.a)
+    def get_b(self):
+        return(self.b)

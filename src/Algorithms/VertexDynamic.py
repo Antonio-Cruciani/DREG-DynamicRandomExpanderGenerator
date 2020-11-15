@@ -1,29 +1,30 @@
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
-from src.FileOperations.WriteOnFile import create_file,create_folder,write_on_file_contents
+from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_file_contents
 from src.StastModules.Snapshot import get_snapshot_dynamic
 import time
 import math as mt
 
+
 class VertexDynamicOutput:
     def __init__(self):
         self.stats = []
-        #self.flood_infos = []
-    def add_stats(self,new_stats):
+        # self.flood_infos = []
+
+    def add_stats(self, new_stats):
         self.stats.append(new_stats)
+
     # def add_flood_infos(self,new_flood_infos):
     #     self.flood_info.append(new_flood_infos)
     def get_stats(self):
-        return(self.stats)
+        return (self.stats)
     # def get_flood_infos(self):
     #     return(self.flood_infos)
 
 
-
-
 class VertexDynamic:
 
-    def __init__(self ,d ,c ,inrate ,outrate ,outpath ,flooding = True ,regular_convergence = 0.9 ,regular_decay = 0.5
-                 ,model ="Multiple",simNumber = 30):
+    def __init__(self, d, c, inrate, outrate, outpath, flooding=True, regular_convergence=0.9, regular_decay=0.5
+                 , model="Multiple", simNumber=30):
         self.d_list = d
         self.c_list = c
         self.inrate_list = inrate
@@ -35,26 +36,27 @@ class VertexDynamic:
         self.outPath = outpath
         self.simNumber = simNumber
 
-
     def run(self):
         print("Starting simulation ")
         sim_start = time.time()
         for inrate in self.inrate_list:
             for outrate in self.outrate_list:
-                print("Inrate: ",inrate, " Outrate: ",outrate, " Flooding: ",self.flooding)
-                outpath = create_folder(self.outPath,"VertexDynamic_in_"+str(inrate)+"_out_"+str(outrate)+"_f_"+str(self.flooding))
+                print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding)
+                outpath = create_folder(self.outPath,
+                                        "VertexDynamic_in_" + str(inrate) + "_out_" + str(outrate) + "_f_" + str(
+                                            self.flooding))
                 outpath = outpath + "results"
                 vertexDynamicStats = VertexDynamicOutput()
                 for d in self.d_list:
                     for c in self.c_list:
-                        for sim in range(0,self.SimNumber):
-                            print("Simulation: ",sim)
+                        for sim in range(0, self.simNumber):
+                            print("Simulation: ", sim)
                             start_time = time.time()
-                            stats = self.VertexDynamicGenerator( d, c,inrate,outrate,sim)
+                            stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
                             vertexDynamicStats.add_stats(stats)
-                            #vertexDynamicStats.add_flood_infos(flood_info)
-                            print("Elapsed time: ",time.time()-start_time)
-                self.write_info_dic_as_csv(outpath,vertexDynamicStats)
+                            # vertexDynamicStats.add_flood_infos(flood_info)
+                            print("Elapsed time: ", time.time() - start_time)
+                self.write_info_dic_as_csv(outpath, vertexDynamicStats)
         print("Ending simulation")
         print("Elapsed time : ", time.time() - sim_start)
 
@@ -79,17 +81,45 @@ class VertexDynamic:
                         semireg += 1
                 G.increment_time_conv()
 
-                if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
+                # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
+                if (semireg >= len(nodi) * G.get_semiregular_percentage()):
 
-                    print("(d,cd)-regular = ", semireg, " perc of vertices = ",
-                          len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay)))
-                    G.set_converged(True)
-                    G.set_semiregular_percentage((self.cdPercentage - (G.get_reset_number() * self.decay)))
+                    if (G.get_a() == 0 and G.get_b() == 100):
+                        G.set_converged(True)
+                        print(" Structural convergence at ", (G.get_semiregular_percentage())*100, "%")
+                    else:
+                        # print("(d,cd)-regular = ", semireg, " perc of vertices = ",
+                        #     len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay)))
+                        a = G.get_a()
+                        b = G.get_b()
+
+                        if (a == b):
+                            G.set_converged(True)
+                            print("----------------------------------------------------------------")
+                            print(" Structural convergence at ", (G.get_semiregular_percentage())*100, "%")
+                            print("----------------------------------------------------------------")
+                        else:
+
+                            G.get_percentage(True)
+                            print("Increasing (d,cd)-regularity range to ", G.get_a()  ," - ", G.get_b(), "%")
+                        # G.set_semiregular_percentage((self.cdPercentage - (G.get_reset_number() * self.decay)))
                 elif (G.get_time_conv() > 2 * G.get_target_n()):
-                    print(mt.floor(mt.log(G.get_target_n())))
-                    G.reset_time_conv()
-                    print("Lowering (d,cd)-regularity to ", (self.cdPercentage - (G.get_reset_number() * self.decay)))
+                    a = G.get_a()
+                    b = G.get_b()
+                    if (a == b):
+                        G.set_converged(True)
+                        print("----------------------------------------------------------------")
+                        print(" Structural convergence at " , (G.get_semiregular_percentage())*100, "%")
+                        print("----------------------------------------------------------------")
+                    else:
+                        G.get_percentage(False)
 
+                    #print(mt.floor(mt.log(G.get_target_n())))
+                    G.reset_time_conv()
+
+
+                    # print("Lowering (d,cd)-regularity to ", (self.cdPercentage - (G.get_reset_number() * self.decay)))
+                    print("Lowering (d,cd)-regularity range to ", G.get_a() ," - ", G.get_b(), "%")
 
             flood_dictionary = {}
             if (G.get_converged()):
@@ -123,7 +153,6 @@ class VertexDynamic:
                             G.flooding.set_converged(False)
                             G.flooding.set_failed(True)
 
-
                 flood_dictionary['informed_nodes'] = G.flooding.get_informed_nodes()
                 flood_dictionary['uninformed_nodes'] = G.flooding.get_uninformed_nodes()
                 flood_dictionary['t_flood'] = G.flooding.get_t_flood()
@@ -142,6 +171,7 @@ class VertexDynamic:
             return (flood_dictionary)
 
         t = 0
+
         final_stats = []
         achieved = False
 
@@ -153,39 +183,41 @@ class VertexDynamic:
             print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
-        while(repeat):
+        while (repeat):
             G.connect_to_network()
             G.add_phase()
             G.del_phase()
             G.disconnect_from_network()
-            if(not achieved):
+            if (not achieved):
                 if (G.get_target_density()):
+                    print("----------------------------------------------------------------")
                     print(" The Graph contains the desired number of nodes ")
+                    print("----------------------------------------------------------------")
                     achieved = True
                     stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
-                    conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                    #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                    conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                     flood_info = check_convergence_dynamic()
                     final_stats.append({**sim, **conv_perc, **stats, **flood_info})
             else:
-                conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                 stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
                 flood_info = check_convergence_dynamic()
                 final_stats.append({**sim, **conv_perc, **stats, **flood_info})
-            t+=1
-
+            t += 1
 
             if (G.flooding.get_converged() and (not (G.flooding.get_failed()))):
                 repeat = False
-            if ((self.cdPercentage - (G.get_reset_number() * self.decay)) <= 0.2):
+            if ((self.cdPercentage - (G.get_reset_number() * self.decay)) <= -1):
                 print("The graph does not converge")
                 repeat = False
             if (G.flooding.get_failed()):
                 repeat = False
                 print("Flooding Protocol status : FAILED")
-        return(final_stats)
+        return (final_stats)
 
-    def write_info_dic_as_csv(self,outPath,results):
+    def write_info_dic_as_csv(self, outPath, results):
         create_file(outPath, list(results.get_stats()[0][0].keys()))
         for i in results.get_stats():
             write_on_file_contents(outPath, i)
-
