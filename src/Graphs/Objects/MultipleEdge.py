@@ -4,6 +4,8 @@ import numpy as np
 import math as mt
 import scipy
 import scipy.sparse
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from src.MathModules.MathTools import flip
 from src.Protocols.FloodOBJ import Flooding
@@ -36,9 +38,11 @@ class DynamicGraph:
         self.death_rate = edge_death_rate
         self.semiregular_percentage = 100
         self.aolds = [0]
-        self.bolds = [100]
+        self.bolds = [50]
         self.a = 0
         self.b = 100
+        self.previous = None
+        self.m = 1
 
         self.time_conv = 0
         self.reset_number = 0
@@ -160,6 +164,78 @@ class DynamicGraph:
             return(1)
         elif(self.type_of_dynamic_graph == "Multiple"):
             return(len(neigh)-self.tolerance)
+
+    def add_MT(self,u):
+        nodes = list(self.G.nodes())
+        neighbors = [n for n in self.G.neighbors(u)]
+        edge_list = []
+        if (len(neighbors) < self.d):
+            # Calculating the set of the elements over random sampling
+            if (len(neighbors) > 0):
+                app = list(set(nodes) - set(neighbors) - set([u]))
+            else:
+                app = list(set(nodes) - set([u]))
+            if (app):
+                # Converting in int the element sampled over the list
+                # Calculating the sample size
+                sample_size = self.get_sample_add_phase(neighbors)
+                v_sample = rnd.choices(app, k=sample_size)
+                # Adding the edge (i,v) to the graph
+                edge_list.append((u, int(v_sample[0])))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        preprocessed = []
+        for i in edge_list:
+            if i[0] > i[1]:
+                preprocessed.append((i[1], i[0]))
+            else:
+                preprocessed.append((i[0], i[1]))
+        return(preprocessed)
+
+
+    def add_phase_MT(self):
+        nodes = list(self.G.nodes())
+        edge_list = []
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = executor.map(self.add_MT, nodes)
+        for result in results:
+            edge_list.extend(result)
+        # Adding the undirected edge list to the graph
+        self.G.add_edges_from(list(set(edge_list)))
+
+    def del_MT(self,u):
+
+        edge_list = []
+        neig = [n for n in self.G.neighbors(u)]
+        if (len(neig) > self.tolerance):
+            # Calculating the sample size
+
+            sample_size = self.get_sample_del_phase(neig)
+
+            # Sampling a node from the neighborhood
+            v_sample = rnd.choices(neig, k=sample_size)
+            # Adding the samples to the list of nodes to remove
+            edge_list.append((u, int(v_sample[0])))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        preprocessed = []
+        for i in edge_list:
+            if i[0] > i[1]:
+                preprocessed.append((i[1], i[0]))
+            else:
+                preprocessed.append((i[0], i[1]))
+        return (preprocessed)
+
+    def del_phase_MT(self):
+        nodes = list(self.G.nodes())
+        edge_list = []
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = executor.map(self.del_MT, nodes)
+        for result in results:
+            edge_list.extend(result)
+
+        # Removing the undirected edge list from the graph
+        self.G.remove_edges_from(list(set(edge_list)))
+
+
 
     def add_phase(self):
         nodes = list(self.G.nodes())
@@ -310,21 +386,51 @@ class DynamicGraph:
     def get_percentage(self,bool):
         # a = self.range_percentage[0]
         # b = self.range_percentage[1]
-        m = mt.ceil((self.b - self.a) / 2)
+
         # print("M=",m)
         # print("B= ",self.b)
         # print("A = ",self.a)
+        # RIPROGETTALO
         if(bool):
-            self.a = mt.ceil( (self.b-self.a ) / 2) + self.a
+            if(self.a == 0 and self.b == 100):
+                self.m = 1
 
-            self.aolds.append(self.a)
+            elif(self.a == 50 ):
+                self.m = 75
+                self.a = 75+1
+                self.b = 100
+            else:
+                self.m = mt.floor((self.b - self.a) / 2)
+                self.semiregular_percentage = self.m
+
+                self.a = self.m +1
+
+
         else:
-            self.b = m
-            self.a = self.aolds[-1]
-            #self.aolds.pop()
-        self.bolds.append(self.b)
-        self.semiregular_percentage = self.b
+            if(self.a == 0 and self.b == 100):
+                self.m = 50
+                self.a = self.m
+                self.b = 100 -1
+                self.semiregular_percentage = self.m
+            elif(self.a == 50 and self.b == 100):
+                self.b = 50 -1
+                self.a = 25
+                self.m = 25
+                self.semiregular_percentage = self.m
+            else:
+                self.m = mt.floor((self.b - self.a) / 2)
+                #self.b = self.a
+                self.semiregular_percentage = self.m
+                self.b = self.m -1
 
+
+            #self.aolds.pop()
+        # self.bolds.append(self.b)
+        # self.semiregular_percentage = self.b
+        # self.previous = bool
+
+    def get_m(self):
+        return(self.m)
 
 
 
@@ -348,7 +454,8 @@ class DynamicGraph:
         self.G.add_edges_from(new_edges)
 
 
-
+    def get_previous(self):
+        return (self.previous)
 
     def get_a(self):
         return(self.a)

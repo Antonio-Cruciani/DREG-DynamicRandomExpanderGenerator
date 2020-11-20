@@ -48,7 +48,9 @@ class VertexDynamic:
                 outpath = outpath + "results"
                 vertexDynamicStats = VertexDynamicOutput()
                 for d in self.d_list:
+                    print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, "d: ",d)
                     for c in self.c_list:
+                        print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, " d: ",d," c: ",c)
                         for sim in range(0, self.simNumber):
                             print("Simulation: ", sim)
                             start_time = time.time()
@@ -63,6 +65,8 @@ class VertexDynamic:
     def VertexDynamicGenerator(self, d, c, inrate, outrate, sim):
 
         def check_convergence_dynamic():
+            # ASPETTA N = LAMBDA/Q PASSI E POI EFFETTUA IL CONTROLLO
+            # NELLO STESSO PASSO PROVA A FARLO CONVERGERE A 100% -> 50-> ETC
             if (G.get_converged() == False):
                 # Getting the number of the vertices with less than d neighbours
                 # Number of the nodes with a degree >=d and <= cd
@@ -82,44 +86,47 @@ class VertexDynamic:
                 G.increment_time_conv()
 
                 # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
+
                 if (semireg >= len(nodi) * G.get_semiregular_percentage()):
 
-                    if (G.get_a() == 0 and G.get_b() == 100):
+
+                    if (G.get_m() == 1):
                         G.set_converged(True)
                         print(" Structural convergence at ", (G.get_semiregular_percentage())*100, "%")
                     else:
-                        # print("(d,cd)-regular = ", semireg, " perc of vertices = ",
-                        #     len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay)))
-                        a = G.get_a()
-                        b = G.get_b()
-
-                        if (a == b):
-                            G.set_converged(True)
-                            print("----------------------------------------------------------------")
-                            print(" Structural convergence at ", (G.get_semiregular_percentage())*100, "%")
-                            print("----------------------------------------------------------------")
-                        else:
-
-                            G.get_percentage(True)
-                            print("Increasing (d,cd)-regularity range to ", G.get_a()  ," - ", G.get_b(), "%")
+                        G.get_percentage(True)
+                        print("Increasing (d,cd)-regularity range to ", G.get_a()  ," - ", G.get_b(), "%")
                         # G.set_semiregular_percentage((self.cdPercentage - (G.get_reset_number() * self.decay)))
                 elif (G.get_time_conv() > 2 * G.get_target_n()):
-                    a = G.get_a()
-                    b = G.get_b()
-                    if (a == b):
-                        G.set_converged(True)
-                        print("----------------------------------------------------------------")
-                        print(" Structural convergence at " , (G.get_semiregular_percentage())*100, "%")
-                        print("----------------------------------------------------------------")
-                    else:
-                        G.get_percentage(False)
+
+                    G.get_percentage(False)
+                    print("Lowering (d,cd)-regularity range to ", G.get_a(), " - ", G.get_b(), "%")
+                    # C'E' per forza un bug, convergono tutti al 100%
+                    # if (a == b):
+                    #     G.set_converged(True)
+                    #     print("----------------------------------------------------------------")
+                    #     print(" Structural convergence at " , (G.get_semiregular_percentage())*100, "%")
+                    #     print("----------------------------------------------------------------")
+
+                    #elif(a == 0 and b == 100):
+                    # if (a == 0 and b == 100):
+                    #     G.get_percentage(True)
+                    #     print("Increasing (d,cd)-regularity range to ", G.get_a(), " - ", G.get_b(), "%")
+                    # elif(G.get_previous() == False):
+                    #     G.get_percentage(False)
+                    #     print("Lowering (d,cd)-regularity range to ", G.get_a(), " - ", G.get_b(), "%")
+                    # elif(G.get_previous() == True):
+                    #     G.set_converged(True)
+                    #     print("----------------------------------------------------------------")
+                    #     print(" Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
+                    #     print("----------------------------------------------------------------")
 
                     #print(mt.floor(mt.log(G.get_target_n())))
                     G.reset_time_conv()
 
 
                     # print("Lowering (d,cd)-regularity to ", (self.cdPercentage - (G.get_reset_number() * self.decay)))
-                    print("Lowering (d,cd)-regularity range to ", G.get_a() ," - ", G.get_b(), "%")
+
 
             flood_dictionary = {}
             if (G.get_converged()):
@@ -185,7 +192,12 @@ class VertexDynamic:
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         while (repeat):
             G.connect_to_network()
+
             G.add_phase()
+
+            #G.add_phase_MT()
+            #G.del_phase_MT()
+
             G.del_phase()
             G.disconnect_from_network()
             if (not achieved):
