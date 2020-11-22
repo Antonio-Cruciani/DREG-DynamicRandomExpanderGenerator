@@ -86,46 +86,42 @@ class VertexDynamic:
                 G.increment_time_conv()
 
                 # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
-
+                percentages = [i for i in range(0,101)]
+                G.set_semiregular_percentage(percentages[-1])
+                # BICTCP_BETA_SCALE = 1024
+                # BICTCP_B =4
+                # fast_convergence = 1
+                # max_increment = 16
+                # beta = 819
+                # initial_ssthresh = 0
+                # smooth_part = 20
+                # cnt = 0
+                # last_max_cwnd = 0
+                # last_cwnd = 0
+                # last_time = 0
+                # epoch_start = 0
+                # https://elixir.bootlin.com/linux/v4.4/source/net/ipv4/tcp_bic.c
                 if (semireg >= len(nodi) * G.get_semiregular_percentage()):
+                    G.set_converged(True)
+                else:
 
+                    a = 0
+                    b = 100
+                    while(a<=b):
+                        m = ((b+a) / 2)
+                        G.set_semiregular_percentage(m)
+                        #print("Nodi semireg = ", semireg, " Percentuale = ",G.get_semiregular_percentage(),"Nodi rete",len(nodi), " Nodi perc nodi = ",len(nodi) * G.get_semiregular_percentage())
+                        if(semireg >= len(nodi) * G.get_semiregular_percentage()):
+                            a = m + 1
+                            #print("Increasing (d,cd)-regularity range to ", a, " - ",b, "%")
+                        else:
+                            b = m - 1
+                            #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
 
-                    if (G.get_m() == 1):
-                        G.set_converged(True)
-                        print(" Structural convergence at ", (G.get_semiregular_percentage())*100, "%")
-                    else:
-                        G.get_percentage(True)
-                        print("Increasing (d,cd)-regularity range to ", G.get_a()  ," - ", G.get_b(), "%")
-                        # G.set_semiregular_percentage((self.cdPercentage - (G.get_reset_number() * self.decay)))
-                elif (G.get_time_conv() > 2 * G.get_target_n()):
+                    print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
+                    print("----------------------------------------------------------------")
+                    G.set_converged(True)
 
-                    G.get_percentage(False)
-                    print("Lowering (d,cd)-regularity range to ", G.get_a(), " - ", G.get_b(), "%")
-                    # C'E' per forza un bug, convergono tutti al 100%
-                    # if (a == b):
-                    #     G.set_converged(True)
-                    #     print("----------------------------------------------------------------")
-                    #     print(" Structural convergence at " , (G.get_semiregular_percentage())*100, "%")
-                    #     print("----------------------------------------------------------------")
-
-                    #elif(a == 0 and b == 100):
-                    # if (a == 0 and b == 100):
-                    #     G.get_percentage(True)
-                    #     print("Increasing (d,cd)-regularity range to ", G.get_a(), " - ", G.get_b(), "%")
-                    # elif(G.get_previous() == False):
-                    #     G.get_percentage(False)
-                    #     print("Lowering (d,cd)-regularity range to ", G.get_a(), " - ", G.get_b(), "%")
-                    # elif(G.get_previous() == True):
-                    #     G.set_converged(True)
-                    #     print("----------------------------------------------------------------")
-                    #     print(" Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
-                    #     print("----------------------------------------------------------------")
-
-                    #print(mt.floor(mt.log(G.get_target_n())))
-                    G.reset_time_conv()
-
-
-                    # print("Lowering (d,cd)-regularity to ", (self.cdPercentage - (G.get_reset_number() * self.decay)))
 
 
             flood_dictionary = {}
@@ -137,7 +133,8 @@ class VertexDynamic:
                 else:
                     # Updating Flooding
                     if (G.flooding.get_t_flood() == 1):
-                        print(" Flooding Protocol STARTED", G.flooding.get_started())
+                        print("Flooding Protocol STARTED", G.flooding.get_started())
+                        print("----------------------------------------------------------------")
                     if (G.flooding.get_started() == True):
                         G.flooding.update_flooding(G)
 
@@ -145,17 +142,21 @@ class VertexDynamic:
                             G.set_converged(True)
                             G.flooding.set_converged(False)
                             if (G.flooding.get_number_of_restart() == 0):
-                                print(" Number of attempts: ", 1, " FLOODING PROTOCOL FAILED")
+                                print("Number of attempts: ", 1, " FLOODING PROTOCOL FAILED")
                                 print("END of the simulation")
+                                print("----------------------------------------------------------------")
                                 G.flooding.set_converged(False)
                                 G.flooding.set_failed(True)
                         G.flooding.is_informed()
                         if (G.flooding.get_converged()):
-                            print("--- ALL NODES IN THE NETWORK ARE INFORMED ---\n\n")
+                            print("--- ALL NODES IN THE NETWORK ARE INFORMED ---")
+                            print("Flooding Protocol status : TERMINATED\n\n")
+                            print("----------------------------------------------------------------")
 
-                        if (G.flooding.get_t_flood() > G.get_target_n()):
-                            print(" The Flooding protocol is too slow, stopping the simulation")
+                        if (G.flooding.get_t_flood() > 2*G.get_target_n()):
+                            print("The Flooding protocol is too slow, stopping the simulation")
                             print("Number of informed nodes: ", G.flooding.get_informed_nodes())
+                            print("----------------------------------------------------------------")
                             G.set_converged(True)
                             G.flooding.set_converged(False)
                             G.flooding.set_failed(True)
@@ -203,7 +204,7 @@ class VertexDynamic:
             if (not achieved):
                 if (G.get_target_density()):
                     print("----------------------------------------------------------------")
-                    print(" The Graph contains the desired number of nodes ")
+                    print("The Graph contains the desired number of nodes ")
                     print("----------------------------------------------------------------")
                     achieved = True
                     stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
@@ -227,6 +228,7 @@ class VertexDynamic:
             if (G.flooding.get_failed()):
                 repeat = False
                 print("Flooding Protocol status : FAILED")
+                print("----------------------------------------------------------------")
         return (final_stats)
 
     def write_info_dic_as_csv(self, outPath, results):
