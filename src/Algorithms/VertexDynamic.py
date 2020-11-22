@@ -88,19 +88,7 @@ class VertexDynamic:
                 # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
                 percentages = [i for i in range(0,101)]
                 G.set_semiregular_percentage(percentages[-1])
-                # BICTCP_BETA_SCALE = 1024
-                # BICTCP_B =4
-                # fast_convergence = 1
-                # max_increment = 16
-                # beta = 819
-                # initial_ssthresh = 0
-                # smooth_part = 20
-                # cnt = 0
-                # last_max_cwnd = 0
-                # last_cwnd = 0
-                # last_time = 0
-                # epoch_start = 0
-                # https://elixir.bootlin.com/linux/v4.4/source/net/ipv4/tcp_bic.c
+               
                 if (semireg >= len(nodi) * G.get_semiregular_percentage()):
                     G.set_converged(True)
                 else:
