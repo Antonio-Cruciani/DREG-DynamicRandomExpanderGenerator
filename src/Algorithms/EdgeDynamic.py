@@ -4,9 +4,10 @@ from src.Graphs.Objects.Queue import Queue
 from src.StastModules.Snapshot import get_snapshot
 from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
 import networkx as nx
-
 import time
 import math as mt
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class EdgeDynamicOutput:
     def __init__(self):
@@ -36,26 +37,38 @@ class EdgeDynamic:
         self.epsilon = epsilon
 
     def run(self):
-        print("Starting simulation ")
+        logging.info("----------------------------------------------------------------")
+        logging.info("Starting simulation")
         sim_start = time.time()
         for p in self.p_list:
            for n in self.n_list:
-                print("Number of nodes ",n," Falling probability: ",p," Flooding: ",self.flooding)
+                logging.info("----------------------------------------------------------------")
+                logging.info("Number of nodes: %d Falling probability: %r Flooding: %r" % (n,p,self.flooding))
+                #print("Number of nodes ",n," Falling probability: ",p," Flooding: ",self.flooding)
                 outpath = create_folder(self.outPath,"EdgeDynamic_n_"+str(n)+"_p_"+str(p)+"_f_"+str(self.flooding))
                 outpath = outpath + "results"
                 edgeDynamicStats = EdgeDynamicOutput()
                 for d in self.d_list:
+                    logging.info("Number of nodes: %d Falling probability: %r Flooding: %r d: %d" % (n,p,self.flooding,d))
                     for c in self.c_list:
+                        logging.info(
+                            "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %d" % (n, p, self.flooding, d,c))
                         for sim in range(0,self.SimNumber):
-                            print("Simulation: ",sim)
+                            logging.info("Simulation: %d" % (sim))
+                            #print("Simulation: ",sim)
                             start_time = time.time()
                             stats = self.EdgeDynamicGenerator(d, c,p,n,sim)
                             edgeDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
-                            print("Elapsed time: ",time.time()-start_time)
+                            logging.info("Elapsed time %f" % time.time()-start_time)
+                            #print("Elapsed time: ",time.time()-start_time)
                 self.write_info_dic_as_csv(outpath,edgeDynamicStats)
-        print("Ending simulation")
-        print("Elapsed time : ", time.time() - sim_start)
+        logging.info("----------------------------------------------------------------")
+        logging.info("Ending Simulation")
+        logging.info("Elapsed time of the entire simulation %r" % (time.time() - sim_start))
+
+        #print("Ending simulation")
+        #print("Elapsed time : ", time.time() - sim_start)
 
     def EdgeDynamicGenerator(self, d, c, p,n, sim):
 
@@ -66,13 +79,15 @@ class EdgeDynamic:
                     G.set_flooding()
                     G.flooding.set_initiator()
                     G.flooding.update_flooding(G)
-                    print("----- Flooding Simulation: STARTED -----\n")
+                    logging.info("Flooding Simulation : STARTED")
+                    #print("----- Flooding Simulation: STARTED -----\n")
                 else:
                     if (G.flooding.get_started() == True):
                         G.flooding.update_flooding(G)
                     G.flooding.is_informed()
                     if (G.flooding.get_converged()):
-                        print("--- ALL NODES IN THE NETWORK ARE INFORMED ---\n\n")
+                        logging.info("ALL NODES IN THE NETWORK ARE INFORMED")
+                        #print("--- ALL NODES IN THE NETWORK ARE INFORMED ---\n\n")
                 flood_dictionary['informed_nodes'] = G.flooding.get_informed_nodes()
                 flood_dictionary['uninformed_nodes'] = G.flooding.get_uninformed_nodes()
                 flood_dictionary['t_flood'] = G.flooding.get_t_flood()
@@ -112,7 +127,8 @@ class EdgeDynamic:
                     spectral_queue.set_converged(terminate)
                     G.set_converged(terminate)
                     G.flooding.set_converged(False)
-                    print("----- Spectral Gap Converged at: ", spectral_gap, " -----\n")
+                    logging.info("Spectral Gap converged at %r" % (spectral_gap))
+                    #print("----- Spectral Gap Converged at: ", spectral_gap, " -----\n")
             return (spectral_queue)
 
         t = 0
@@ -123,7 +139,8 @@ class EdgeDynamic:
             "simulation": sim
         }
         if (d <= 0 or c < 0):
-            print("Error, input parameters must be: d>0 c>1")
+            logging.error("Error, input parameters must be: d>0 c>1")
+            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         spectral_queue = Queue(mt.log(n, 2))
         G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
@@ -166,7 +183,9 @@ class EdgeDynamic:
                     repeat = False
                     # final_stats.append({**sim, **stats_bef,**stats_aft, **stats, **flood_dictionary})
                     final_stats.append({**sim, **stats_bef, **stats, **flood_dictionary})
-                    print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
+                    logging.info("The graph is not connected, flooding will always fail")
+                    logging.info("Exiting")
+                    #print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
                 if (repeat):
 
                     if (G.flooding.get_converged() == False):
@@ -182,7 +201,7 @@ class EdgeDynamic:
 
 
     def write_info_dic_as_csv(self, outPath, results):
-        print( list(results.get_stats()[0][0].keys()))
+        #print( list(results.get_stats()[0][0].keys()))
         create_file(outPath, list(results.get_stats()[0][0].keys()))
         for i in results.get_stats():
             write_on_file_contents(outPath, i)

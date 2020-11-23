@@ -37,13 +37,6 @@ class DynamicGraph:
         self.birth_rate = edge_birth_rate
         self.death_rate = edge_death_rate
         self.semiregular_percentage = 100
-        self.aolds = [0]
-        self.bolds = [50]
-        self.a = 0
-        self.b = 100
-        self.previous = None
-        self.m = 1
-
         self.time_conv = 0
         self.reset_number = 0
         if(starting_edge_list):

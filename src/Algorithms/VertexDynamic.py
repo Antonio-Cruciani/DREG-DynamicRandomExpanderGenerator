@@ -3,7 +3,8 @@ from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_
 from src.StastModules.Snapshot import get_snapshot_dynamic
 import time
 import math as mt
-
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class VertexDynamicOutput:
     def __init__(self):
@@ -37,36 +38,46 @@ class VertexDynamic:
         self.simNumber = simNumber
 
     def run(self):
-        print("Starting simulation ")
+        logging.info("----------------------------------------------------------------")
+        logging.info("Starting simulation")
+        #print("Starting simulation ")
         sim_start = time.time()
         for inrate in self.inrate_list:
             for outrate in self.outrate_list:
-                print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding)
+                logging.info("----------------------------------------------------------------")
+                logging.info("Inrate: %d Outrate: %d Flooding: %r" % (inrate, outrate,self.flooding ))
+                #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding)
                 outpath = create_folder(self.outPath,
                                         "VertexDynamic_in_" + str(inrate) + "_out_" + str(outrate) + "_f_" + str(
                                             self.flooding))
                 outpath = outpath + "results"
                 vertexDynamicStats = VertexDynamicOutput()
                 for d in self.d_list:
-                    print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, "d: ",d)
+                    logging.info("Inrate: %d Outrate: %d Flooding %r d: %d" % (inrate,outrate,self.flooding,d))
+                    #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, "d: ",d)
                     for c in self.c_list:
-                        print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, " d: ",d," c: ",c)
+                        logging.info("Inrate: %d Outrate: %d Flooding %r d: %d c: %r " % (inrate,outrate,self.flooding,d,c))
+                        #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, " d: ",d," c: ",c)
                         for sim in range(0, self.simNumber):
-                            print("Simulation: ", sim)
+                            logging.info("Simulation %d" % (sim))
+                            #print("Simulation: ", sim)
                             start_time = time.time()
                             stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
                             vertexDynamicStats.add_stats(stats)
                             # vertexDynamicStats.add_flood_infos(flood_info)
-                            print("Elapsed time: ", time.time() - start_time)
+                            logging.info("Elapsed time %r" % (time.time() - start_time))
+                            logging.info("----------------------------------------------------------------")
+                            #print("Elapsed time: ", time.time() - start_time)
                 self.write_info_dic_as_csv(outpath, vertexDynamicStats)
-        print("Ending simulation")
-        print("Elapsed time : ", time.time() - sim_start)
+        logging.info("Ending simulation")
+        logging.info("Total elapsed time %r" % (time.time() - sim_start))
+        #print("Ending simulation")
+        #print("Elapsed time : ", time.time() - sim_start)
 
     def VertexDynamicGenerator(self, d, c, inrate, outrate, sim):
 
         def check_convergence_dynamic():
-            # ASPETTA N = LAMBDA/Q PASSI E POI EFFETTUA IL CONTROLLO
-            # NELLO STESSO PASSO PROVA A FARLO CONVERGERE A 100% -> 50-> ETC
+
             if (G.get_converged() == False):
                 # Getting the number of the vertices with less than d neighbours
                 # Number of the nodes with a degree >=d and <= cd
@@ -88,11 +99,10 @@ class VertexDynamic:
                 # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
                 percentages = [i for i in range(0,101)]
                 G.set_semiregular_percentage(percentages[-1])
-               
+
                 if (semireg >= len(nodi) * G.get_semiregular_percentage()):
                     G.set_converged(True)
                 else:
-
                     a = 0
                     b = 100
                     while(a<=b):
@@ -106,8 +116,9 @@ class VertexDynamic:
                             b = m - 1
                             #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
 
-                    print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
-                    print("----------------------------------------------------------------")
+                    logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
+                    #print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
+                    #print("----------------------------------------------------------------")
                     G.set_converged(True)
 
 
@@ -121,8 +132,9 @@ class VertexDynamic:
                 else:
                     # Updating Flooding
                     if (G.flooding.get_t_flood() == 1):
-                        print("Flooding Protocol STARTED", G.flooding.get_started())
-                        print("----------------------------------------------------------------")
+                        logging.info("Flooding protocol STARTED %r"%(G.flooding.get_started()))
+                        #print("Flooding Protocol STARTED", G.flooding.get_started())
+                        #print("----------------------------------------------------------------")
                     if (G.flooding.get_started() == True):
                         G.flooding.update_flooding(G)
 
@@ -130,21 +142,32 @@ class VertexDynamic:
                             G.set_converged(True)
                             G.flooding.set_converged(False)
                             if (G.flooding.get_number_of_restart() == 0):
-                                print("Number of attempts: ", 1, " FLOODING PROTOCOL FAILED")
-                                print("END of the simulation")
-                                print("----------------------------------------------------------------")
+                                logging.info("Number of attempts 1 FLOODING PROTOCOL FAILED")
+                                logging.info("END of the simulation")
+                                logging.info("----------------------------------------------------------------")
+                                #print("Number of attempts: ", 1, " FLOODING PROTOCOL FAILED")
+                                #print("END of the simulation")
+                                #print("----------------------------------------------------------------")
                                 G.flooding.set_converged(False)
                                 G.flooding.set_failed(True)
                         G.flooding.is_informed()
                         if (G.flooding.get_converged()):
-                            print("--- ALL NODES IN THE NETWORK ARE INFORMED ---")
-                            print("Flooding Protocol status : TERMINATED\n\n")
-                            print("----------------------------------------------------------------")
+                            logging.info("AL NODES IN THE NETWORK ARE INFORMED")
+                            logging.info("Flooding Protocol status: Correctly Terminated")
+                            logging.info("----------------------------------------------------------------")
+                            #print("--- ALL NODES IN THE NETWORK ARE INFORMED ---")
+
+                            #print("Flooding Protocol status : TERMINATED\n\n")
+                            #print("----------------------------------------------------------------")
 
                         if (G.flooding.get_t_flood() > 2*G.get_target_n()):
-                            print("The Flooding protocol is too slow, stopping the simulation")
-                            print("Number of informed nodes: ", G.flooding.get_informed_nodes())
-                            print("----------------------------------------------------------------")
+                            logging.info("The Flooding protocol is too slow, stopping the simulation")
+                            logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
+                            logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
+                            logging.info("----------------------------------------------------------------")
+                            #print("The Flooding protocol is too slow, stopping the simulation")
+                            #print("Number of informed nodes: ", G.flooding.get_informed_nodes())
+                            #print("----------------------------------------------------------------")
                             G.set_converged(True)
                             G.flooding.set_converged(False)
                             G.flooding.set_failed(True)
@@ -176,7 +199,8 @@ class VertexDynamic:
             "simulation": sim
         }
         if (d <= 0 or c < 0):
-            print("Error, input parameters must be: d>0 c>1")
+            logging.error("Input parameters must be: d>0 c>1")
+            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         while (repeat):
@@ -191,32 +215,35 @@ class VertexDynamic:
             G.disconnect_from_network()
             if (not achieved):
                 if (G.get_target_density()):
-                    print("----------------------------------------------------------------")
-                    print("The Graph contains the desired number of nodes ")
-                    print("----------------------------------------------------------------")
+                    logging.info("The Graph contains the desired number of nodes")
+                    #print("----------------------------------------------------------------")
+                    #print("The Graph contains the desired number of nodes ")
+                    #print("----------------------------------------------------------------")
                     achieved = True
                     stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
                     #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
-                    conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                     flood_info = check_convergence_dynamic()
+                    conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                     final_stats.append({**sim, **conv_perc, **stats, **flood_info})
             else:
                 #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
-                conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                 stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
                 flood_info = check_convergence_dynamic()
+                conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                 final_stats.append({**sim, **conv_perc, **stats, **flood_info})
             t += 1
 
             if (G.flooding.get_converged() and (not (G.flooding.get_failed()))):
                 repeat = False
             if ((self.cdPercentage - (G.get_reset_number() * self.decay)) <= -1):
-                print("The graph does not converge")
+                logging.info("The graph does not converge")
+                #print("The graph does not converge")
                 repeat = False
             if (G.flooding.get_failed()):
                 repeat = False
-                print("Flooding Protocol status : FAILED")
-                print("----------------------------------------------------------------")
+                logging.info("Flooding protocol: FAILED")
+                #print("Flooding Protocol status : FAILED")
+                #print("----------------------------------------------------------------")
         return (final_stats)
 
     def write_info_dic_as_csv(self, outPath, results):

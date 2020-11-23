@@ -1,14 +1,18 @@
 import os
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 def create_folder(path, dirname):
     path = path+"/"+dirname + "/"
     try:
         # Create target Directory
         os.mkdir(path)
-        print("Directory ", dirname, " Created ")
+        logging.info("Directory %s created" % (dirname))
+        #print("Directory ", dirname, " Created ")
         return(path)
     except FileExistsError:
-        print("Directory ", dirname, " already exists")
+        logging.error("Directory %s already exists" % (dirname))
+        #print("Directory ", dirname, " already exists")
 
 def create_file(path,keys):
     file = open(path + '.csv', 'w+')

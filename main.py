@@ -2,6 +2,8 @@
 from src.Algorithms.VertexDynamic import VertexDynamic
 from src.Algorithms.EdgeDynamic import EdgeDynamic
 import sys, getopt
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 def main(argv):
     algorithm = ""
@@ -20,12 +22,12 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hg:n:d:c:p:r:q:f:x:s:m:e:o:", ["graph=","nodes=","deg=","const=","prob=","rate=","quit=","flood=","decay=","sim=","model=","epsilon=" ,"ofile="])
     except getopt.GetoptError:
-        print('Error!')
+        logging.error("ERROR!")
         sys.exit(2)
     for opt,arg in opts:
         if (opt == "-h"):
-            print ("HELPER")
-            print("TODO")
+            logging.info("HELPER")
+            logging.info("TODO")
             sys.exit()
         elif(opt in("-g","--graph")):
             algorithm = arg
@@ -59,7 +61,7 @@ def main(argv):
                 flood = False
         elif (opt in ("-a", "--decay")):
             if(float(arg)>=1):
-                print(" ERROR ! Decay must be 0<= decay <1")
+                logging.error("ERROR ! Decay must be 0<= decay <1")
             else:
                 decay = float(arg)
         elif(opt in ("-s","--sim")):
