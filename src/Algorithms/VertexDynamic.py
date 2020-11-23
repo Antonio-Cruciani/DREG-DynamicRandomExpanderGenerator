@@ -45,7 +45,7 @@ class VertexDynamic:
         for inrate in self.inrate_list:
             for outrate in self.outrate_list:
                 logging.info("----------------------------------------------------------------")
-                logging.info("Inrate: %d Outrate: %d Flooding: %r" % (inrate, outrate,self.flooding ))
+                logging.info("Inrate: %d Outrate: %r Flooding: %r" % (inrate, outrate,self.flooding ))
                 #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding)
                 outpath = create_folder(self.outPath,
                                         "VertexDynamic_in_" + str(inrate) + "_out_" + str(outrate) + "_f_" + str(
@@ -53,10 +53,10 @@ class VertexDynamic:
                 outpath = outpath + "results"
                 vertexDynamicStats = VertexDynamicOutput()
                 for d in self.d_list:
-                    logging.info("Inrate: %d Outrate: %d Flooding %r d: %d" % (inrate,outrate,self.flooding,d))
+                    logging.info("Inrate: %d Outrate: %r Flooding %r d: %d" % (inrate,outrate,self.flooding,d))
                     #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, "d: ",d)
                     for c in self.c_list:
-                        logging.info("Inrate: %d Outrate: %d Flooding %r d: %d c: %r " % (inrate,outrate,self.flooding,d,c))
+                        logging.info("Inrate: %d Outrate: %r Flooding %r d: %d c: %r " % (inrate,outrate,self.flooding,d,c))
                         #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, " d: ",d," c: ",c)
                         for sim in range(0, self.simNumber):
                             logging.info("Simulation %d" % (sim))
