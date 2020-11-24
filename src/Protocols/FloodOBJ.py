@@ -12,7 +12,7 @@ class Flooding:
         self.number_of_restart = -1
         self.converged = None
         self.failed = False
-        self.percentage = None
+        self.percentage = 0
         # self.number_informed = None
         # self.number_uninformed = None
 
