@@ -150,9 +150,12 @@ class VertexDynamic:
                                 #print("----------------------------------------------------------------")
                                 G.flooding.set_converged(False)
                                 G.flooding.set_failed(True)
-                        G.flooding.is_informed()
+                        G.flooding.terminated()
                         if (G.flooding.get_converged()):
                             logging.info("AL NODES IN THE NETWORK ARE INFORMED")
+                            logging.info("Number of informed nodes %d" % (G.flooding.get_informed_nodes()))
+                            logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
+                            logging.info("Percentage of informed nodes %r" % (G.flooding.get_percentage()))
                             logging.info("Flooding Protocol status: Correctly Terminated")
                             logging.info("----------------------------------------------------------------")
                             #print("--- ALL NODES IN THE NETWORK ARE INFORMED ---")
@@ -164,6 +167,8 @@ class VertexDynamic:
                             logging.info("The Flooding protocol is too slow, stopping the simulation")
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
                             logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
+                            logging.info("Percentage of informed nodes %r" % (G.flooding.get_percentage()))
+                            logging.info("Flooding Protocol status: Failed")
                             logging.info("----------------------------------------------------------------")
                             #print("The Flooding protocol is too slow, stopping the simulation")
                             #print("Number of informed nodes: ", G.flooding.get_informed_nodes())
@@ -174,6 +179,7 @@ class VertexDynamic:
 
                 flood_dictionary['informed_nodes'] = G.flooding.get_informed_nodes()
                 flood_dictionary['uninformed_nodes'] = G.flooding.get_uninformed_nodes()
+                flood_dictionary['percentage_informed'] = G.flooding.get_percentage()
                 flood_dictionary['t_flood'] = G.flooding.get_t_flood()
                 flood_dictionary['process_status'] = G.get_converged()
                 flood_dictionary['flood_status'] = G.flooding.get_converged()
@@ -182,6 +188,7 @@ class VertexDynamic:
             else:
                 flood_dictionary['informed_nodes'] = 0
                 flood_dictionary['uninformed_nodes'] = len(G.get_list_of_nodes())
+                flood_dictionary['percentage_informed'] = 0
                 flood_dictionary['t_flood'] = 0
                 flood_dictionary['process_status'] = G.get_converged()
                 flood_dictionary['flood_status'] = G.flooding.get_converged()
@@ -204,15 +211,22 @@ class VertexDynamic:
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         while (repeat):
-            G.connect_to_network()
 
-            G.add_phase()
+            G.connect_to_network()
+            G.disconnect_from_network()
+            # 1) Entrano nuovi nodi
+            # 2) Escono dei nodi
+            # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
+            # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
+            # NOTA 3)-4) deve essere in parallelo non seriale
+            # 5) Esegui flooding step sul grafo al tempo I
+            G.add_phase_vd()
 
             #G.add_phase_MT()
             #G.del_phase_MT()
 
             G.del_phase()
-            G.disconnect_from_network()
+
             if (not achieved):
                 if (G.get_target_density()):
                     logging.info("The Graph contains the desired number of nodes")

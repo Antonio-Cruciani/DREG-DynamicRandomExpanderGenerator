@@ -15,6 +15,7 @@ class DynamicGraph:
 
     def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = None ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
         self.G = nx.Graph()
+        self.entering_nodes =[]
         self.G.add_nodes_from([i for i in range(0,n)])
         self.n = n
         self.d = d
@@ -39,6 +40,7 @@ class DynamicGraph:
         self.semiregular_percentage = 100
         self.time_conv = 0
         self.reset_number = 0
+        self.t = 0
         if(starting_edge_list):
             self.G.add_edges_from(starting_edge_list)
         if(model == "EdgeMarkovian"):
@@ -207,7 +209,8 @@ class DynamicGraph:
             # Sampling a node from the neighborhood
             v_sample = rnd.choices(neig, k=sample_size)
             # Adding the samples to the list of nodes to remove
-            edge_list.append((u, int(v_sample[0])))
+            for x in v_sample:
+                edge_list.append((u, int(x)))
         # Now we have to transform the directed edge list in ad undirected edge list
         preprocessed = []
         for i in edge_list:
@@ -247,7 +250,8 @@ class DynamicGraph:
                     sample_size = self.get_sample_add_phase(neighbors)
                     v_sample = rnd.choices(app,k=sample_size)
                     # Adding the edge (i,v) to the graph
-                    edge_list.append((i, int(v_sample[0])))
+                    for x in v_sample:
+                        edge_list.append((i, int(x)))
         # Now we have to transform the directed edge list in ad undirected edge list
         preprocessed = []
         for i in edge_list:
@@ -260,6 +264,7 @@ class DynamicGraph:
 
     # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
     def del_phase(self):
+        self.t +=1
         nodes = list(self.G.nodes())
         edge_list = []
         for i in nodes:
@@ -272,7 +277,8 @@ class DynamicGraph:
                 # Sampling a node from the neighborhood
                 v_sample = rnd.choices(neig,k=sample_size)
                 # Adding the samples to the list of nodes to remove
-                edge_list.append((i, int(v_sample[0])))
+                for x in v_sample:
+                    edge_list.append((i, int(x)))
         # Now we have to transform the directed edge list in ad undirected edge list
         preprocessed = []
         for i in edge_list:
@@ -332,6 +338,7 @@ class DynamicGraph:
             max_label += 1
         # Adding the list of nodes in the Graph
         self.G.add_nodes_from(entering_nodes)
+        self.entering_nodes = entering_nodes
         if (self.flooding.get_started() ):
             self.flooding.add_nodes_to_dictionary(entering_nodes)
 
@@ -375,55 +382,63 @@ class DynamicGraph:
             return True
         return False
 
+    # Struttura del nuovo modello vertex dynamic:
+    # 1) Entrano nuovi nodi
+    # 2) Escono dei nodi
+    # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
+    # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
+    # NOTA 3)-4) deve essere in parallelo non seriale
+    # 5) Esegui flooding step sul grafo al tempo I
+    # Nota parametro di convergenza del flooding alpha
 
-    def get_percentage(self,bool):
-        # a = self.range_percentage[0]
-        # b = self.range_percentage[1]
+    #def vertex_dynamic_add(self):
+        # RAES ESEGUITO TRA I NODI AL TEMPO I-1
+        # RAES ESEGUITO TRA I NODI ENTRANTI VERSO QUELLI AL TEMPO I-1
 
-        # print("M=",m)
-        # print("B= ",self.b)
-        # print("A = ",self.a)
-        # RIPROGETTALO
-        if(bool):
-            if(self.a == 0 and self.b == 100):
-                self.m = 1
+    def add_phase_vd(self):
+        nodes = list(set(self.G.nodes())-set(self.entering_nodes))
+        edge_list = []
+        for i in nodes:
+            neighbors = [n for n in self.G.neighbors(i)]
+            if (len(neighbors) < self.d):
+                # Calculating the set of the elements over random sampling
+                if (len(neighbors) > 0):
+                    app = list(set(nodes) - set(neighbors) - set([i]))
+                else:
+                    app = list(set(nodes) - set([i]))
+                if (app):
+                    # Converting in int the element sampled over the list
+                    # Calculating the sample size
+                    sample_size = self.get_sample_add_phase(neighbors)
+                    v_sample = rnd.choices(app,k=sample_size)
+                    # Adding the edge (i,v) to the graph
+                    edge_list.append((i, int(v_sample[0])))
+        # If is not the first round and there are nodes in the network,
+        # then the new nodes sample d vertices in the network
+        if(self.t>0 and len(nodes)>0):
 
-            elif(self.a == 50 ):
-                self.m = 75
-                self.a = 75+1
-                self.b = 100
+            # New nodes are connecting to the network
+            survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
+            for i in survived_entering_nodes:
+                sample_size = self.get_sample_add_phase([])
+
+                v_sample = rnd.choices(nodes, k=sample_size)
+                for x in v_sample:
+                    edge_list.append((i, int(x)))
+
+                #print(edge_list)
+        # Now we have to transform the directed edge list in ad undirected edge list
+        preprocessed = []
+        for i in edge_list:
+            if i[0] > i[1]:
+                preprocessed.append((i[1], i[0]))
             else:
-                self.m = mt.floor((self.b - self.a) / 2)
-                self.semiregular_percentage = self.m
-
-                self.a = self.m +1
-
-
-        else:
-            if(self.a == 0 and self.b == 100):
-                self.m = 50
-                self.a = self.m
-                self.b = 100 -1
-                self.semiregular_percentage = self.m
-            elif(self.a == 50 and self.b == 100):
-                self.b = 50 -1
-                self.a = 25
-                self.m = 25
-                self.semiregular_percentage = self.m
-            else:
-                self.m = mt.floor((self.b - self.a) / 2)
-                #self.b = self.a
-                self.semiregular_percentage = self.m
-                self.b = self.m -1
+                preprocessed.append((i[0], i[1]))
+        # Adding the undirected edge list to the graph
+        self.G.add_edges_from(list(set(preprocessed)))
 
 
-            #self.aolds.pop()
-        # self.bolds.append(self.b)
-        # self.semiregular_percentage = self.b
-        # self.previous = bool
 
-    def get_m(self):
-        return(self.m)
 
 
 
@@ -447,10 +462,3 @@ class DynamicGraph:
         self.G.add_edges_from(new_edges)
 
 
-    def get_previous(self):
-        return (self.previous)
-
-    def get_a(self):
-        return(self.a)
-    def get_b(self):
-        return(self.b)

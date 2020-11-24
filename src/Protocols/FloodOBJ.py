@@ -12,6 +12,7 @@ class Flooding:
         self.number_of_restart = -1
         self.converged = None
         self.failed = False
+        self.percentage = None
         # self.number_informed = None
         # self.number_uninformed = None
 
@@ -61,7 +62,11 @@ class Flooding:
 
     def set_converged(self,value):
         self.converged = value
+    def set_percentage(self,perc):
+        self.percentage = perc
 
+    def get_percentage(self):
+        return(self.percentage)
     def get_converged(self):
         return(self.converged)
 
@@ -84,7 +89,27 @@ class Flooding:
             if (self.get_informed_nodes() == 0):
                 return (False)
         return (True)
-
+    def terminated(self):
+        nodes = len(list(self.dic.keys()))
+        ones = (self.get_informed_nodes() /nodes) * 100
+        #zeros = (self.get_uninformed_nodes()/nodes)*100
+        if(ones == 100):
+            self.set_percentage(ones)
+            self.set_converged(True)
+        elif(ones>= 90):
+            a = 90
+            b = 100
+            while(a<=b):
+                m = ((b + a) / 2)
+                self.set_percentage(m)
+                if(ones>= self.get_percentage()):
+                    a = m + 1
+                else:
+                    b = m - 1
+            self.set_converged(True)
+        else:
+            self.set_percentage(ones)
+            self.set_converged(False)
     def is_informed(self):
         if (0 in list(self.dic.values())):
             self.set_converged(False)
