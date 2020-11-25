@@ -163,8 +163,9 @@ class VertexDynamic:
                             #print("Flooding Protocol status : TERMINATED\n\n")
                             #print("----------------------------------------------------------------")
 
-                        if (G.flooding.get_t_flood() > 2*G.get_target_n()):
+                        if (G.flooding.get_t_flood() > mt.floor(mt.log(G.get_target_n(),2))):
                             logging.info("The Flooding protocol is too slow, stopping the simulation")
+                            logging.info("Number of executed steps: %d  Step threshold: %d"%(G.flooding.get_t_flood(),mt.floor(mt.log(G.get_target_n(),2))))
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
                             logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
                             logging.info("Percentage of informed nodes %r" % (G.flooding.get_percentage()))
@@ -225,7 +226,7 @@ class VertexDynamic:
             #G.add_phase_MT()
             #G.del_phase_MT()
 
-            G.del_phase()
+            G.del_phase_vd()
 
             if (not achieved):
                 if (G.get_target_density()):
