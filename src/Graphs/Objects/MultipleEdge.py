@@ -11,7 +11,6 @@ from src.MathModules.MathTools import flip
 from src.Protocols.FloodOBJ import Flooding
 from src.Protocols.Consensus import Consensus
 class DynamicGraph:
-    # Aggiungere lista di archi iniziale del grafo
 
     def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = None ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
         self.G = nx.Graph()
@@ -176,7 +175,8 @@ class DynamicGraph:
                 sample_size = self.get_sample_add_phase(neighbors)
                 v_sample = rnd.choices(app, k=sample_size)
                 # Adding the edge (i,v) to the graph
-                edge_list.append((u, int(v_sample[0])))
+                for x in v_sample:
+                    edge_list.append((u, int(x)))
         # Now we have to transform the directed edge list in ad undirected edge list
         preprocessed = []
         for i in edge_list:
@@ -415,16 +415,16 @@ class DynamicGraph:
                     edge_list.append((i, int(v_sample[0])))
         # If is not the first round and there are nodes in the network,
         # then the new nodes sample d vertices in the network
-        if(self.t>0 and len(nodes)>0):
-
-            # New nodes are connecting to the network
-            survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
-            for i in survived_entering_nodes:
-                sample_size = self.get_sample_add_phase([])
-
-                v_sample = rnd.choices(nodes, k=sample_size)
-                for x in v_sample:
-                    edge_list.append((i, int(x)))
+        # if(self.t>0 and len(nodes)>0):
+        #
+        #     # New nodes are connecting to the network
+        #     survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
+        #     for i in survived_entering_nodes:
+        #         sample_size = self.get_sample_add_phase([])
+        #
+        #         v_sample = rnd.choices(nodes, k=sample_size)
+        #         for x in v_sample:
+        #             edge_list.append((i, int(x)))
 
                 #print(edge_list)
         # Now we have to transform the directed edge list in ad undirected edge list
@@ -438,9 +438,31 @@ class DynamicGraph:
         self.G.add_edges_from(list(set(preprocessed)))
 
 
+        # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
 
-
-
+    def del_phase_vd(self):
+        self.t += 1
+        nodes = list(set(self.G.nodes())-set(self.entering_nodes))
+        edge_list = []
+        for i in nodes:
+            neig = [n for n in self.G.neighbors(i)]
+            if (len(neig) > self.tolerance):
+                # Calculating the sample size
+                sample_size = self.get_sample_del_phase(neig)
+                # Sampling a node from the neighborhood
+                v_sample = rnd.choices(neig, k=sample_size)
+                # Adding the samples to the list of nodes to remove
+                for x in v_sample:
+                    edge_list.append((i, int(x)))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        preprocessed = []
+        for i in edge_list:
+            if i[0] > i[1]:
+                preprocessed.append((i[1], i[0]))
+            else:
+                preprocessed.append((i[0], i[1]))
+        # Removing the undirected edge list from the graph
+        self.G.remove_edges_from(list(set(preprocessed)))
 
     def edge_markovian(self):
 
