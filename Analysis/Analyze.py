@@ -37,8 +37,11 @@ class Samples:
         self.residual_flooding_time = None
         self.residual_diameter = None
 
-        self.ttest_flooding_time = None
-        self.ttes_diameter = None
+        self.confidence_level = 95
+        self.t_test_type = "two.sided"
+        self.paired = False
+        self.t_test_flooding_time = None
+        self.t_test_diameter = None
 
         # Must be set to log2 n
         self.desidered_flooding_time = None
@@ -50,3 +53,23 @@ class Samples:
         num2 = float(num2)
         percentage = '{0:.2f}'.format((num1 / num2 * 100))
         return float(percentage)
+
+    def get_t_test_flooding_time(self):
+        x_avg_flooding_time = ro.vectors.FloatVector(self.avg_flooding_time)
+        ttest = ro.r['t.test']
+        result = ttest(x_avg_flooding_time, mu=self.desidered_flooding_time, paired=self.paired,
+                                          alternative=self.t_test_type, conflevel=self.confidence_level)
+        self.t_test_flooding_time = result.rx2('p.value')[0]
+
+    def get_t_test_diameter(self):
+        x_avg_diameter = ro.vectors.FloatVector(self.avg_diameter)
+        ttest = ro.r['t.test']
+        result = ttest(x_avg_diameter, mu=self.desidered_diameter, paired=self.paired,
+                                         alternative=self.t_test_type, conflevel=self.confidence_level)
+        self.t_test_diameter = result.rx2('p.value')[0]
+
+    def get_residual_flooding_time(self):
+        self.residual_flooding_time = ((self.avg_flooding_time - self.desidered_flooding_time) / self.desidered_flooding_time) * 100
+
+    def get_residual_diameter(self):
+        self.residual_diameter = ((self.avg_diameter - self.desidered_diameter) / self.desidered_diameter) * 100
