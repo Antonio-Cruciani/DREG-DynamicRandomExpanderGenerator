@@ -1,4 +1,5 @@
-
+import math as mt
+import rpy2.robjects as ro
 
 class Samples:
 
@@ -16,6 +17,7 @@ class Samples:
         self.q = None
         self.p = None
         self.number_of_simulations = None
+        self.n = None
 
         self.avg_flooding_time = None
         self.std_flooding_time = None
@@ -31,6 +33,16 @@ class Samples:
         self.std_semiregularity = None
         self.avg_semiregularity_convergence_percentage = None
         self.std_semiregularity_convergence_percentage = None
+
+        self.residual_flooding_time = None
+        self.residual_diameter = None
+
+        self.ttest_flooding_time = None
+        self.ttes_diameter = None
+
+        # Must be set to log2 n
+        self.desidered_flooding_time = None
+        self.desidere_diameter = None
 
 
     def percent(self,num1, num2):
