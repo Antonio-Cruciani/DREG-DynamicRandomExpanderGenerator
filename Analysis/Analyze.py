@@ -4,10 +4,16 @@ class Samples:
 
 
     def __init__(self,inpath,outpath):
+
         self.inputPath = inpath
         self.outputPath = outpath
+
+        self.graph = None
         self.d = None
         self.c = None
+        self.r = None
+        self.q = None
+        self.p = None
         self.number_of_simulations = None
 
         self.avg_flooding_time = None
