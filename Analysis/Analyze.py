@@ -3,10 +3,11 @@
 class Samples:
 
 
-    def __init__(self,inpath,outpath):
+    def __init__(self,inpath,outpath,samples):
 
         self.inputPath = inpath
         self.outputPath = outpath
+        self.examples = samples
 
         self.graph = None
         self.d = None
