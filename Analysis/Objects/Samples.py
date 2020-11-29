@@ -1,5 +1,8 @@
 import math as mt
+import numpy as np
 import rpy2.robjects as ro
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class Samples:
 
@@ -21,7 +24,7 @@ class Samples:
 
         # Must be set to log2 n
         self.desidered_flooding_time = None
-        self.desidere_diameter = None
+        self.desidered_diameter = None
 
 
         self.infer_experiment_infos()
@@ -56,6 +59,9 @@ class Samples:
         self.t_test_flooding_time = None
         self.t_test_diameter = None
 
+        # Plotting variables
+
+        #self.nodes = []
 
     def percent(self,num1, num2):
         num1 = float(num1)
@@ -71,8 +77,8 @@ class Samples:
                                           alternative=self.t_test_type, conflevel=self.confidence_level)
         self.t_test_flooding_time = result.rx2('p.value')[0]
 
-    def get_t_test_diameter(self):
-        x_avg_diameter = ro.vectors.FloatVector(self.avg_diameter)
+    def get_t_test_diameter(self,samples):
+        x_avg_diameter = ro.vectors.FloatVector(samples)
         ttest = ro.r['t.test']
         result = ttest(x_avg_diameter, mu=self.desidered_diameter, paired=self.paired,
                                          alternative=self.t_test_type, conflevel=self.confidence_level)
@@ -97,46 +103,108 @@ class Samples:
             self.n = self.samples['n'].values[0]
             self.p = self.samples['p'].values[0]
             self.graph = "ED"
-        self.desidered_flooding_time = self.desidere_diameter = mt.log(self.n, 2)
+        self.desidered_flooding_time = self.desidered_diameter = mt.log(self.n, 2)
+
+
+    def get_structural_stats(self):
+        avg_nodes_in_network = []
+        semiregularity = []
+        percentage = []
+        for sim in range(0,self.number_of_simulations):
+            nodes = list (self.samples[self.samples['simulation'] == sim]['n'].values)
+            avg_nodes_in_network.append(sum(nodes)/len(nodes))
+            regularity = list (self.samples[self.samples['simulation'] == sim]['semireg'].values)
+            semiregularity.append(sum(regularity)/len(regularity))
+            percentage.append(self.samples[self.samples['simulation'] == sim]['conv_percentage'].values[0])
+        self.avg_semiregularity = sum(semiregularity) / self.number_of_simulations
+        self.avg_n = (sum(avg_nodes_in_network) / self.number_of_simulations)
+        self.avg_semiregularity_convergence_percentage = sum(percentage) / self.number_of_simulations
+        self.std_n = 0
+        self.std_semiregularity = 0
+        self.std_semiregularity_convergence_percentage = 0
+        for sim in range(0,self.number_of_simulations):
+            self.std_n += mt.pow((avg_nodes_in_network[sim] - self.avg_n), 2)
+            self.std_semiregularity += mt.pow((semiregularity[sim] - self.avg_semiregularity), 2)
+            self.std_semiregularity_convergence_percentage += mt.pow((percentage[sim] - self.avg_semiregularity_convergence_percentage),2)
+        b = 1/(self.number_of_simulations-1)
+        self.std_n = mt.sqrt(b * self.std_n)
+        self.std_semiregularity = mt.sqrt(b * self.std_semiregularity)
+        self.std_semiregularity_convergence_percentage = mt.sqrt(b * self.std_semiregularity_convergence_percentage)
+        logging.debug("\t\t STRUCTURAL INFOS")
+        logging.debug("avg n = %r   std = %r" %( self.avg_n,self.std_n))
+        logging.debug("avg semiregular = %r  std = %r"%(self.avg_semiregularity, self.std_semiregularity))
+        logging.debug("avg conv = %r   std = %r"%(self.avg_semiregularity_convergence_percentage,self.std_semiregularity_convergence_percentage))
 
 
     def get_flooding_stats(self):
         summation = []
         informed = []
-        avg_nodes_in_network = []
         # Ho agigiunto un pezzo per calcolare il numero medio di nodi nella rete
         for sim in range(0,self.number_of_simulations):
-            summation.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['t_flood'].values[0])
-            informed.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0])
-            nodes =list (self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['n'].values)
-            avg_nodes_in_network.append(sum(nodes)/len(nodes))
-        self.avg_flooding_time = sum(summation) / self.number_of_simulations
-        self.avg_flooding_convergence_percentage = sum(informed) / self.number_of_simulations
-        self.std_flooding_time = 0
-        self.std_flooding_convergence_percentage = 0
-        for sim in range(0 , self.number_of_simulations):
-            self.std_flooding_time += mt.pow((summation[sim]-self.avg_flooding_time) , 2)
-            self.std_flooding_convergence_percentage += mt.pow((informed[sim] - self.avg_flooding_convergence_percentage), 2)
-        b = (1/(self.number_of_simulations-1))
-        a = (self.std_flooding_time)
-        self.std_flooding_time = mt.sqrt(b*a)
-        self.std_flooding_convergence_percentage = mt.sqrt(b * self.avg_flooding_convergence_percentage)
-        #self.std_flooding_time = mt.pow(((1.0/(self.number_of_simulations-1.0)) * self.std_flooding_time),1/2)
-        #self.std_flooding_convergence_percentage = mt.pow((((1.0/self.number_of_simulations-1.0)) * self.std_flooding_convergence_percentage),1/2)
-        print("Avg nodi",sum(avg_nodes_in_network)/self.number_of_simulations)
-        print(self.std_flooding_time)
-        print("avg",self.avg_flooding_time)
-        print(self.std_flooding_convergence_percentage)
-        print("avgc",self.avg_flooding_convergence_percentage)
-        self.get_t_test_flooding_time(summation)
-        self.get_residual_flooding_time()
+            result = list(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['t_flood'].values)
+            if(result):
+                summation.append(result[0])
+                informed.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0])
+        n = len(summation)
+        if(n!= 0):
+            self.avg_flooding_time = sum(summation) / n
+            self.avg_flooding_convergence_percentage = sum(informed) / n
+            self.std_flooding_time = 0
+            self.std_flooding_convergence_percentage = 0
+            for sim in range(0 , n):
+                self.std_flooding_time += mt.pow((summation[sim]-self.avg_flooding_time) , 2)
+                self.std_flooding_convergence_percentage += mt.pow((informed[sim] - self.avg_flooding_convergence_percentage), 2)
+            b = (1/(n-1))
+            a = (self.std_flooding_time)
+            self.std_flooding_time = mt.sqrt(b*a)
+            self.std_flooding_convergence_percentage = mt.sqrt(b * self.avg_flooding_convergence_percentage)
+            self.get_t_test_flooding_time(summation)
+            self.get_residual_flooding_time()
+        else:
+            logging.info("Flooding never converge")
         # Define the plottings
-        print(self.n)
-        print(self.desidered_flooding_time)
-        print(self.avg_flooding_time)
-        print(self.residual_flooding_time)
-        print(self.t_test_flooding_time)
-        print(self.avg_flooding_convergence_percentage)
-        exit(1)
+
     def get_diameter_stats(self):
-        return(0)
+        diameters = []
+        disconnected = []
+
+        for sim in range(0,self.number_of_simulations):
+            diam = list(self.samples[(self.samples['simulation'] == sim) & (self.samples['diameter'] != "Null")]['diameter'].values)
+
+            disc = len(self.samples[self.samples['simulation'] == sim]['diameter'].values) - len(diam)
+
+            if(diam):
+                integers_diam = [int(element) for element in diam]
+                diameters.append(sum(integers_diam) / len(diam))
+
+            if(disc):
+                disconnected.append(disc /len(self.samples[self.samples['simulation'] == sim]['diameter'].values))
+
+        if(diameters):
+            self.avg_diameter = sum(diameters) / len(diameters)
+            self.std_diameter = 0
+            for elem in range(0,len(diameters)):
+                self.std_diameter += mt.pow((diameters[elem]-self.avg_diameter),2)
+            b = 1/(len(diameters)-1)
+            self.std_diameter = mt.sqrt(b * self.std_diameter)
+        else:
+            self.avg_diameter = np.inf
+            self.std_diameter = np.inf
+        if(disconnected):
+            self.avg_disconnected = sum(disconnected) / len(disconnected)
+            self.std_disconnected = 0
+            for elem in range(0,len(disconnected)):
+                self.std_disconnected += mt.pow((disconnected[elem]-self.avg_disconnected),2)
+            a = 1/(len(disconnected)-1)
+            self.std_disconnected = mt.sqrt(a * self.std_disconnected)
+        else:
+            self.avg_disconnected = 0
+            self.std_disconnected = 0
+
+        self.get_t_test_diameter(diameters)
+        self.get_residual_diameter()
+        logging.debug("\t\t DIAMETER INFOS")
+        logging.debug("avg diameter = %r   std = %r" % (self.avg_diameter, self.std_diameter))
+        logging.debug("avg disconnected = %r  std = %r" % (self.avg_disconnected, self.std_disconnected))
+        logging.debug("Deisdered diameter = %r" % self.desidered_diameter)
+        logging.debug("T-Test pval = %r     Residual = %r "%(self.t_test_diameter,self.residual_diameter))
