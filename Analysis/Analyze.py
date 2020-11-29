@@ -85,21 +85,26 @@ class Samples:
 
     def infer_experiment_infos(self):
         self.number_of_simulations = len(set(self.samples['simulation']))
-        self.d = self.samples['d'][0]
-        self.c = self.samples['c'][0]
-        if(self.samples['r']!= 0):
-            self.r = self.samples['r'][0]
-            self.q = self.samples['q'][0]
-            self.n = self.target['n'][0]
+        self.d = self.samples['d'].values[0]
+        self.c = self.samples['c'].values[0]
+        if(self.samples['r'].values[0]!= 0):
+            self.r = self.samples['r'].values[0]
+            self.q = self.samples['q'].values[0]
+            self.n = self.target['n'].values[0]
             self.graph = "VD"
         else:
-            self.n = self.samples['n'][0]
-            self.p = self.samples['p'][0]
+            self.n = self.samples['n'].values[0]
+            self.p = self.samples['p'].values[0]
             self.graph = "ED"
         self.desidered_flooding_time = self.desidere_diameter = mt.floor(mt.log(self.n, 2))
 
 
-    def get_avg_flooding_time(self):
-        summation = 0
+    def get_flooding_time_stats(self):
+        summation = []
         for sim in range(0,self.number_of_simulations):
-            summation += self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == True)]['t_flood']
+            summation.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == True)]['t_flood'].values)
+        self.avg_flooding_time = sum(summation) / self.number_of_simulations
+        self.std_flooding_time = 0
+        for sim in range(0 , self.number_of_simulations):
+            self.std_flooding_time += mt.pow((summation[sim]-self.avg_flooding_time) , 2)
+        self.std_flooding_time = mt.sqrt((1/self.number_of_simulations-1) * self.std_flooding_time)
