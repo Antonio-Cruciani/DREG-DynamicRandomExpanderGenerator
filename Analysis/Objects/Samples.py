@@ -59,6 +59,7 @@ class Samples:
         self.t_test_flooding_time = None
         self.t_test_diameter = None
 
+        self.stats_summary = {}
         # Plotting variables
 
         #self.nodes = []
@@ -208,3 +209,60 @@ class Samples:
         logging.debug("avg disconnected = %r  std = %r" % (self.avg_disconnected, self.std_disconnected))
         logging.debug("Deisdered diameter = %r" % self.desidered_diameter)
         logging.debug("T-Test pval = %r     Residual = %r "%(self.t_test_diameter,self.residual_diameter))
+
+    def pack_and_get_stats(self):
+        logging.info("Packing infos for d = %r  c = %r  " % (self.d, self.c))
+        self.stats_summary['d'] = self.d
+        self.stats_summary['c'] = self.c
+        self.stats_summary['#simulations'] = self.number_of_simulations
+
+        if(self.graph == "VD"):
+            # In rate and outrate
+            self.stats_summary['r'] = self.r
+            self.stats_summary['q'] = self.q
+            self.stats_summary['E[n]'] = self.n
+            # Structure
+            self.stats_summary['avg_n'] = self.avg_n
+            self.stats_summary['std_n'] = self.std_n
+            self.stats_summary['avg_semireg'] = self.avg_semiregularity
+            self.stats_summary['std_semireg'] = self.std_semiregularity
+            self.stats_summary['avg_smireg_convergence'] = self.avg_semiregularity_convergence_percentage
+            self.stats_summary['std_smireg_convergence'] = self.std_semiregularity_convergence_percentage
+            # Flooding time
+            self.stats_summary['avg_flooding_time'] = self.avg_flooding_time
+            self.stats_summary['std_flooding_time'] = self.std_flooding_time
+            self.stats_summary['ttest_flooding_time'] = self.t_test_flooding_time
+            self.stats_summary['residual_flooding_time'] = self.residual_flooding_time
+            self.stats_summary['avg_flooding_convergence'] = self.avg_flooding_convergence_percentage
+            self.stats_summary['std_flooding_convergence'] = self.std_flooding_convergence_percentage
+            # Diameter
+            self.stats_summary['avg_diameter'] = self.avg_diameter
+            self.stats_summary['std_diameter'] = self.std_diameter
+            self.stats_summary['ttest_diameter'] = self.t_test_diameter
+            self.stats_summary['residual_diamter'] = self.residual_diameter
+            self.stats_summary['avg_disconnected'] = self.avg_disconnected
+            self.stats_summary['std_disconnected'] = self.std_disconnected
+
+        elif(self.graph == "ED"):
+            # Structure
+            self.stats_summary['avg_semireg'] = self.avg_semiregularity
+            self.stats_summary['std_semireg'] = self.std_semiregularity
+            # Flooding time
+            self.stats_summary['avg_flooding_time'] = self.avg_flooding_time
+            self.stats_summary['std_flooding_time'] = self.std_flooding_time
+            self.stats_summary['ttest_flooding_time'] = self.t_test_flooding_time
+            self.stats_summary['residual_flooding_time'] = self.residual_flooding_time
+            # Diameter
+            self.stats_summary['avg_diameter'] = self.avg_diameter
+            self.stats_summary['std_diameter'] = self.std_diameter
+            self.stats_summary['ttest_diameter'] = self.t_test_diameter
+            self.stats_summary['residual_diamter'] = self.residual_diameter
+            self.stats_summary['avg_disconnected'] = self.avg_disconnected
+            self.stats_summary['std_disconnected'] = self.std_disconnected
+        elif(self.graph == "EM"):
+            # TO DO
+            logging.debug("MUST BE DONE")
+
+
+
+        return(self.stats_summary)
