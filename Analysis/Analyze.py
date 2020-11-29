@@ -99,12 +99,22 @@ class Samples:
         self.desidered_flooding_time = self.desidere_diameter = mt.floor(mt.log(self.n, 2))
 
 
-    def get_flooding_time_stats(self):
+    def get_flooding_stats(self):
         summation = []
+        informed = []
         for sim in range(0,self.number_of_simulations):
             summation.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == True)]['t_flood'].values)
+            informed.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == True)]['percentage_informed'].values)
         self.avg_flooding_time = sum(summation) / self.number_of_simulations
+        self.avg_flooding_convergence_percentage = sum(informed) / self.number_of_simulations
         self.std_flooding_time = 0
+        self.std_flooding_convergence_percentage = 0
         for sim in range(0 , self.number_of_simulations):
             self.std_flooding_time += mt.pow((summation[sim]-self.avg_flooding_time) , 2)
+            self.std_flooding_convergence_percentage += mt.pow((informed[sim] - self.avg_flooding_convergence_percentage), 2)
         self.std_flooding_time = mt.sqrt((1/self.number_of_simulations-1) * self.std_flooding_time)
+        self.std_flooding_convergence_percentage = mt.sqrt((1/self.number_of_simulations-1) * self.std_flooding_convergence_percentage)
+        self.get_t_test_flooding_time()
+        self.get_residual_flooding_time()
+        # Define the plottings
+
