@@ -1,16 +1,17 @@
 import math as mt
 import numpy as np
 import rpy2.robjects as ro
+from src.FileOperations.WriteOnFile import create_folder
 import logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class Samples:
 
     # samples must be a pack of experiments regarding the same d,c,r,q,p
-    def __init__(self,samples):
+    def __init__(self,samples,outpath):
 
         #self.inputPath = inpath
-        #self.outputPath = outpath
+        self.outputPath = outpath
         self.samples = samples
 
         self.graph = None
@@ -58,6 +59,10 @@ class Samples:
         self.paired = False
         self.t_test_flooding_time = None
         self.t_test_diameter = None
+
+        self.flooding_in_each_sim = []
+        self.semiregualrity_in_each_sim = []
+        self.noed_in_each_sim = []
 
         self.stats_summary = {}
         # Plotting variables
@@ -117,6 +122,10 @@ class Samples:
             regularity = list (self.samples[self.samples['simulation'] == sim]['semireg'].values)
             semiregularity.append(sum(regularity)/len(regularity))
             percentage.append(self.samples[self.samples['simulation'] == sim]['conv_percentage'].values[0])
+            # For plotting, taking average number of nodes and average semiregularity at each time step
+            self.nodes_in_each_sim.append(sum(nodes)/len(nodes))
+            self.semiregualrity_in_each_sim.append(sum(regularity)/len(regularity))
+
         self.avg_semiregularity = sum(semiregularity) / self.number_of_simulations
         self.avg_n = (sum(avg_nodes_in_network) / self.number_of_simulations)
         self.avg_semiregularity_convergence_percentage = sum(percentage) / self.number_of_simulations
@@ -146,6 +155,12 @@ class Samples:
             if(result):
                 summation.append(result[0])
                 informed.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0])
+            # For plotting, taking the number of informed nodes at the convergence step
+            t_flood = max(self.samples[self.samples['simulation'] == sim]['t_flood'].values)
+            self.flooding_in_each_sim.append(self.samples[(self.samples['simulation'] == sim)&(self.samples['t_flood'] == t_flood)]['informed_nodes'].values[0])
+
+
+
         n = len(summation)
         if(n!= 0):
             self.avg_flooding_time = sum(summation) / n
@@ -263,6 +278,16 @@ class Samples:
             # TO DO
             logging.debug("MUST BE DONE")
 
+    def plot_statistics(self):
+        logging.info("Creating folder for d = %r c = %r " % (self.d,self.c))
+        folderName = str(self.d)+"_"+str(self.c)
+        create_folder(self.outputPath,folderName)
+        outPath = self.outputPath + folderName
+        # Aggiungere controllo sul se il flooding termina
+        logging.info("Plotting flooding stats")
+        # Funzione plotting flooding trend
+        logging.info("Plotting structural stats and flooding")
+        # Plottare l'andamento delle simulazioni e dei nodi informati
 
 
         return(self.stats_summary)
