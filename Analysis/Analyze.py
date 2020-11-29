@@ -3,12 +3,12 @@ import rpy2.robjects as ro
 
 class Samples:
 
+    # samples must be a pack of experiments regarding the same d,c,r,q,p
+    def __init__(self,samples):
 
-    def __init__(self,inpath,outpath,samples):
-
-        self.inputPath = inpath
-        self.outputPath = outpath
-        self.examples = samples
+        #self.inputPath = inpath
+        #self.outputPath = outpath
+        self.samples = samples
 
         self.graph = None
         self.d = None
@@ -16,8 +16,21 @@ class Samples:
         self.r = None
         self.q = None
         self.p = None
-        self.number_of_simulations = None
+        self.number_of_simulations = self.get_number_of_simulations()
         self.n = None
+
+        # Must be set to log2 n
+        self.desidered_flooding_time = None
+        self.desidere_diameter = None
+
+
+        self.infer_experiment_infos()
+
+
+        # Averages, standard deviations, residual values and t tests
+
+        self.avg_n = None
+        self.std_n = None
 
         self.avg_flooding_time = None
         self.std_flooding_time = None
@@ -42,10 +55,6 @@ class Samples:
         self.paired = False
         self.t_test_flooding_time = None
         self.t_test_diameter = None
-
-        # Must be set to log2 n
-        self.desidered_flooding_time = None
-        self.desidere_diameter = None
 
 
     def percent(self,num1, num2):
@@ -73,3 +82,24 @@ class Samples:
 
     def get_residual_diameter(self):
         self.residual_diameter = ((self.avg_diameter - self.desidered_diameter) / self.desidered_diameter) * 100
+
+    def infer_experiment_infos(self):
+        self.number_of_simulations = len(set(self.samples['simulation']))
+        self.d = self.samples['d'][0]
+        self.c = self.samples['c'][0]
+        if(self.samples['r']!= 0):
+            self.r = self.samples['r'][0]
+            self.q = self.samples['q'][0]
+            self.n = self.target['n'][0]
+            self.graph = "VD"
+        else:
+            self.n = self.samples['n'][0]
+            self.p = self.samples['p'][0]
+            self.graph = "ED"
+        self.desidered_flooding_time = self.desidere_diameter = mt.floor(mt.log(self.n, 2))
+
+
+    def get_avg_flooding_time(self):
+        summation = 0
+        for sim in range(0,self.number_of_simulations):
+            summation += self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == True)]['t_flood']
