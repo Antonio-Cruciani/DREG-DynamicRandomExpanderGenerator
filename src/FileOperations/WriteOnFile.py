@@ -17,6 +17,7 @@ def create_folder(path, dirname):
 def create_file(path,keys):
     file = open(path + '.csv', 'w+')
     for key in keys:
+
         file.write(str(key))
         file.write(",")
     file.write("\n")

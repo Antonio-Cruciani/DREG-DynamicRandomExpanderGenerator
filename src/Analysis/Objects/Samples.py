@@ -3,10 +3,11 @@ import numpy as np
 import rpy2.robjects as ro
 import matplotlib.ticker as mtick
 import matplotlib.pyplot as pl
-
-#from ..src.FileOperations.WriteOnFile import create_folder
+from itertools import groupby
+import os
+from src.FileOperations.WriteOnFile import create_folder
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class Samples:
 
@@ -14,7 +15,8 @@ class Samples:
     def __init__(self,samples,outpath):
 
         #self.inputPath = inpath
-        self.outputPath = outpath
+        self.outputPathPlottings = outpath
+        self.outputPathCSV = outpath
         self.samples = samples
 
         self.graph = None
@@ -63,6 +65,7 @@ class Samples:
         self.t_test_flooding_time = None
         self.t_test_diameter = None
 
+        self.flooding_convergence_percentage_in_each_sim = []
         self.flooding_in_each_sim = []
         self.semiregualrity_in_each_sim = []
         self.nodes_in_each_sim = []
@@ -72,6 +75,11 @@ class Samples:
 
         #self.nodes = []
 
+
+    def all_equal(self,iterable):
+        g = groupby(iterable)
+        return next(g, True) and not next(g, False)
+
     def percent(self,num1, num2):
         num1 = float(num1)
         num2 = float(num2)
@@ -80,18 +88,29 @@ class Samples:
     # H0 = media è esattamente log2 n
     # H1 = media non è esattamente log2 n
     def get_t_test_flooding_time(self,samples):
-        x_avg_flooding_time = ro.vectors.FloatVector(samples)
-        ttest = ro.r['t.test']
-        result = ttest(x_avg_flooding_time, mu=self.desidered_flooding_time, paired=self.paired,
-                                          alternative=self.t_test_type, conflevel=self.confidence_level)
-        self.t_test_flooding_time = result.rx2('p.value')[0]
-
+        if(len(samples)>1):
+            if (self.all_equal(samples)):
+                self.t_test_diameter = 1
+            else:
+                x_avg_flooding_time = ro.vectors.FloatVector(samples)
+                ttest = ro.r['t.test']
+                result = ttest(x_avg_flooding_time, mu=self.desidered_flooding_time, paired=self.paired,
+                                                  alternative=self.t_test_type, conflevel=self.confidence_level)
+                self.t_test_flooding_time = result.rx2('p.value')[0]
+        else:
+            self.t_test_flooding_time = 0
     def get_t_test_diameter(self,samples):
-        x_avg_diameter = ro.vectors.FloatVector(samples)
-        ttest = ro.r['t.test']
-        result = ttest(x_avg_diameter, mu=self.desidered_diameter, paired=self.paired,
-                                         alternative=self.t_test_type, conflevel=self.confidence_level)
-        self.t_test_diameter = result.rx2('p.value')[0]
+        if(len(samples)>1):
+            if(self.all_equal(samples)):
+                self.t_test_diameter = 1
+            else:
+                x_avg_diameter = ro.vectors.FloatVector(samples)
+                ttest = ro.r['t.test']
+                result = ttest(x_avg_diameter, mu=self.desidered_diameter, paired=self.paired,
+                                                 alternative=self.t_test_type, conflevel=self.confidence_level)
+                self.t_test_diameter = result.rx2('p.value')[0]
+        else:
+            self.t_test_diameter = 0
 
     def get_residual_flooding_time(self):
         self.residual_flooding_time = ((self.avg_flooding_time - self.desidered_flooding_time) / self.desidered_flooding_time) * 100
@@ -157,7 +176,12 @@ class Samples:
             result = list(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['t_flood'].values)
             if(result):
                 summation.append(result[0])
-                informed.append(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0])
+                convergence = self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0]
+                informed.append(convergence)
+                self.flooding_convergence_percentage_in_each_sim.append(convergence/100)
+            else:
+                self.flooding_convergence_percentage_in_each_sim.append(0)
+
             # For plotting, taking the number of informed nodes at the convergence step
             t_flood = max(self.samples[self.samples['simulation'] == sim]['t_flood'].values)
             self.flooding_in_each_sim.append(self.samples[(self.samples['simulation'] == sim)&(self.samples['t_flood'] == t_flood)]['informed_nodes'].values[0])
@@ -173,7 +197,10 @@ class Samples:
             for sim in range(0 , n):
                 self.std_flooding_time += mt.pow((summation[sim]-self.avg_flooding_time) , 2)
                 self.std_flooding_convergence_percentage += mt.pow((informed[sim] - self.avg_flooding_convergence_percentage), 2)
-            b = (1/(n-1))
+            if(n>1):
+                b = (1/(n-1))
+            else:
+                b = 0
             a = (self.std_flooding_time)
             self.std_flooding_time = mt.sqrt(b*a)
             self.std_flooding_convergence_percentage = mt.sqrt(b * self.avg_flooding_convergence_percentage)
@@ -204,7 +231,10 @@ class Samples:
             self.std_diameter = 0
             for elem in range(0,len(diameters)):
                 self.std_diameter += mt.pow((diameters[elem]-self.avg_diameter),2)
-            b = 1/(len(diameters)-1)
+            if(len(diameters)>1):
+                b = 1/(len(diameters)-1)
+            else:
+                b = 1
             self.std_diameter = mt.sqrt(b * self.std_diameter)
         else:
             self.avg_diameter = np.inf
@@ -280,45 +310,160 @@ class Samples:
         elif(self.graph == "EM"):
             # TO DO
             logging.debug("MUST BE DONE")
+        return (self.stats_summary)
 
     def plot_statistics(self):
         logging.info("Creating folder for d = %r c = %r " % (self.d,self.c))
+        create_folder(self.outputPathPlottings,"plottings")
+        self.outputPathPlottings = self.outputPathPlottings + "plottings/"
         folderName = str(self.d)+"_"+str(self.c)
-        #create_folder(self.outputPath,folderName)
-        outPath = self.outputPath + folderName
+        create_folder(self.outputPathPlottings,folderName)
+        self.outputPathPlottings = self.outputPathPlottings + folderName
         # Aggiungere controllo sul se il flooding termina
         logging.info("Plotting flooding stats")
         # Funzione plotting flooding trend
         logging.info("Plotting structural stats and flooding")
         # Plottare l'andamento delle simulazioni e dei nodi informati
-        self.get_flooding_plotting()
-
+        self.get_flooding_behaviour_plotting()
+        self.get_flooding_average_trend()
+        self.get_structural_plotting()
         return(self.stats_summary)
 
 
-    def get_flooding_plotting(self):
+    def get_flooding_behaviour_plotting(self):
         # using the average nodes in the network at each simulation
         # the number of informed nodes at each simulation
         # the average (d,cd)-regular nodes at each simulation
         #for sim in range(0,self.number_of_simulations):
         converged_simultatins = list(int(i) for i in (self.samples[self.samples['flood_status'] == "True"]['simulation'].values))
-        failed_simulations = set([i for i in range(0,self.number_of_simulations)]) - set(converged_simultatins)
-        flooding_percentage_line = [self.avg_flooding_convergence_percentage * self.nodes_in_each_sim[i] for i in range(0,self.number_of_simulations)]
+        failed_simulations = list(set([i for i in range(0,self.number_of_simulations)]) - set(converged_simultatins))
+        flooding_percentage_line = [self.flooding_convergence_percentage_in_each_sim[i] * self.nodes_in_each_sim[i] for i in range(0,self.number_of_simulations)]
         #flooding_percentage_std = [self.std_flooding_convergence_percentage  for i in range(0,self.number_of_simulations)]
         semiregular_percentge_line = [self.avg_semiregularity_convergence_percentage * self.nodes_in_each_sim[i] for i in range(0,self.number_of_simulations) ]
-        pl.figure(figsize=(10, 4))
-        pl.title("Stats")
+        pl.figure(figsize=(20, 4))
+        pl.title("Flooding")
+        pl.xlabel("Simulations")
+        pl.ylabel("Nodes")
         pl.plot(self.flooding_in_each_sim, color = "blue")
         if(converged_simultatins):
-            pl.plot(converged_simultatins,self.flooding_in_each_sim,'o',color = "green")
+
+            flooding_plot = [self.flooding_in_each_sim[elem] for elem in converged_simultatins]
+            pl.plot(converged_simultatins,flooding_plot,'o',color = "green")
         if(failed_simulations):
-            pl.plot(failed_simulations,self.flooding_in_each_sim, 'x', color="red")
+            failed_plot = [self.flooding_in_each_sim[elem] for elem in failed_simulations]
+            pl.plot(failed_simulations,failed_plot, 'x', color="red")
         pl.plot(self.nodes_in_each_sim, color = "red")
         #pl.plot(self.semiregualrity_in_each_sim, color = "green")
         pl.plot(flooding_percentage_line,'--',color = "orange")
-
         #pl.errorbar(converged_simultatins,flooding_percentage_line, yerr=flooding_percentage_std)
                      #pl.plot(semiregular_percentge_line,'.-', color = "pink")
-        pl.xlim(xmin = 0)
+        pl.xlim(xmin = -1)
         pl.xticks([i for i in range(0,self.number_of_simulations)])
-        pl.savefig("/home/antonio/Desktop/prova.png")
+        if(converged_simultatins):
+            if(failed_simulations):
+                pl.legend(['Informed ','Terminated','Failed', 'Avg network size', 'Convergence %'], title='Legend', bbox_to_anchor=(1, 1),
+                  loc='upper left')
+            else:
+                pl.legend(['Informed ', 'Terminated', 'Avg network size', 'Convergence %'], title='Legend',
+                          bbox_to_anchor=(1, 1),
+                          loc='upper left')
+        else:
+            pl.legend(['Informed ', 'Failed', 'Avg network size', 'Convergence %'], title='Legend',
+                      bbox_to_anchor=(1, 1),
+                      loc='upper left')
+        pl.savefig(self.outputPathPlottings+"/Flooding.png")
+        #pl.savefig("/home/antonio/Desktop/Flooding.png")
+        pl.close()
+
+
+    def get_flooding_average_trend(self):
+        converged_simulations = list(int(i) for i in (self.samples[self.samples['flood_status'] == "True"]['simulation'].values))
+        if(converged_simulations):
+            informed_nodes =[]
+            max = 0
+            # Normalizing the experiments
+            for sim in converged_simulations:
+                informed = list(self.samples[(self.samples['simulation'] == sim) ]['informed_nodes'].values)
+                informed_nodes.append(informed)
+                if(max<len(informed)):
+                    max = len(informed)
+            for i in range(0,len(informed_nodes)):
+                m = len(informed_nodes[i])
+                if(m<max):
+                    for j in range(m,max):
+                        informed_nodes[i].append(informed_nodes[i][m-1])
+
+            average_flooding_vector = [0 for i in range(0, len(informed_nodes[0][:]))]
+            for i in range(0,len(informed_nodes[0][:])):
+                for j in range(0,len(converged_simulations)):
+                    average_flooding_vector[i] += informed_nodes[j][i]
+                average_flooding_vector[i] = average_flooding_vector[i] / len(converged_simulations)
+
+            pl.figure(figsize=(10, 5))
+
+            pl.ylim(top = average_flooding_vector[-1]+30)
+
+            pl.plot([i for i in range(1,len(average_flooding_vector)+1)],average_flooding_vector)
+
+            if(mt.floor(self.avg_flooding_time) == len(average_flooding_vector)):
+                pl.plot(self.avg_flooding_time,average_flooding_vector[mt.floor(self.avg_flooding_time)-1],'v',color = 'red')
+                arrow_properties = dict(
+                    facecolor="black", width=0.5,
+                    headwidth=4, shrink=0.1)
+                x_arrow = self.avg_flooding_time - 1
+                y_arrow = average_flooding_vector[mt.floor(self.avg_flooding_time)-1]
+            else:
+                pl.plot(self.avg_flooding_time,average_flooding_vector[mt.floor(self.avg_flooding_time)],'v',color = 'red')
+
+                arrow_properties = dict(
+                    facecolor="black", width=0.5,
+                    headwidth=4, shrink=0.1)
+                x_arrow = self.avg_flooding_time -1
+                y_arrow = average_flooding_vector[mt.floor(self.avg_flooding_time)]
+            if(x_arrow - 3  <= 0):
+                x_label = x_arrow - 0.5
+            elif(x_arrow > 5):
+                x_label = x_arrow - 3
+            else:
+                x_label = x_arrow - 1
+            y_lable = y_arrow
+
+            pl.annotate(
+                str(self.avg_flooding_convergence_percentage*100)+"%",
+                xy= (x_arrow,y_arrow),
+                xytext=(x_label,y_lable),
+                arrowprops=arrow_properties
+            )
+            pl.title("Flooding trend")
+            pl.xlabel("Time")
+            pl.ylabel("Nodes")
+            pl.legend(['Average informed nodes ', 'Convergence'], title='Legend',
+                      loc='lower right')
+
+            pl.savefig(self.outputPathPlottings+"/FloodingTrend.png")
+            #pl.savefig("/home/antonio/Desktop/FloodingCurve.png")
+            pl.close()
+
+
+
+    def get_structural_plotting(self):
+        semiregular_percentge_line = [self.avg_semiregularity_convergence_percentage * self.semiregualrity_in_each_sim[i] for i in range(0,self.number_of_simulations) ]
+
+        pl.figure(figsize=(20, 4))
+        pl.title("Structural properties")
+        pl.xlabel("Simulations")
+        pl.ylabel("Nodes")
+        pl.plot(self.semiregualrity_in_each_sim, color="blue")
+        pl.plot(self.nodes_in_each_sim, color = "red")
+        pl.plot(semiregular_percentge_line,'--',color = "orange")
+        pl.xlim(xmin = -1)
+        pl.xticks([i for i in range(0,self.number_of_simulations)])
+        pl.legend(['(d,cd)-regular ', 'Avg network size', 'Convergence %'], title='Legend',
+                  bbox_to_anchor=(1, 1),
+                  loc='upper left')
+        pl.savefig(self.outputPathPlottings+"/Structural.png")
+        #pl.savefig("/home/antonio/Desktop/Structural.png")
+        pl.close()
+
+
+
