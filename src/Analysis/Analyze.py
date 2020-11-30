@@ -41,6 +41,29 @@ def process_data(inputPath,outputPath):
                     results.append(stat.pack_and_get_stats())
 
     write_info_dic_as_csv(output+"analyzed",results)
+
+def process_and_get_unique_csv(inputPath,inputPathList,outputPath,d,c):
+    results = []
+    create_folder(outputPath,'single')
+    outputPath = outputPath +"single/"
+    for dir in inputPathList:
+        file = pd.read_csv(inputPath+dir+"/results.csv")
+        samples = file[(file['d'] == d) & (file['c'] == c)]
+        r = samples['lambda'].values[0]
+        q = samples['beta'].values[0]
+        name = str(r) + "_" + str(q)
+        create_folder(outputPath, name)
+        output = outputPath + name + "/"
+
+        stat = Samples(samples, output)
+        stat.get_flooding_stats()
+        stat.get_structural_stats()
+        stat.get_diameter_stats()
+        stat.plot_statistics()
+        results.append(stat.pack_and_get_stats())
+    write_info_dic_as_csv(outputPath+"unique_table",results)
+
+
 #input = "/home/antonio/Desktop/DynamicGraphs/SimulazioniNuovoModello/VertexDynamic_in_1_out_0.001_f_True/results.csv"
 
 

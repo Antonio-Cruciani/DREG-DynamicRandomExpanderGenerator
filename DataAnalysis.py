@@ -1,4 +1,4 @@
-from src.Analysis.Analyze import process_data
+from src.Analysis.Analyze import process_data,process_and_get_unique_csv
 import sys,getopt,logging
 from os import walk
 import os
@@ -9,9 +9,10 @@ def main(argv):
     outputPath = "./"
     inputPath =" "
     all = True
+    constrained = False
     #print(output,input)
     try:
-        opts,args = getopt.getopt(argv,"hi:o:",["--input","--output"])
+        opts,args = getopt.getopt(argv,"hi:o:a:c:",["--input","--output","--all","--const"])
     except getopt.GetoptError:
         logging.error("ERROR!")
         sys.exit(2)
@@ -23,6 +24,9 @@ def main(argv):
         if(opt == "-a"):
             if(arg == "False"):
                 all = False
+        if(opt == "-c"):
+            if(arg == 'True'):
+                constrained = True
     if(all):
         f = []
         for (dirpath, dirnames, filenames) in walk(inputPath):
@@ -32,10 +36,17 @@ def main(argv):
         for dir in f[0]:
 
             process_data(inputPath+dir+"/results.csv",outputPath)
-    else:
+    elif(not(constrained)):
         process_data(inputPath,outputPath)
+    else:
+        f = []
+        for (dirpath, dirnames, filenames) in walk(inputPath):
+            f.append(dirnames)
+            break
 
-
+        d = 4
+        c = 3
+        process_and_get_unique_csv(inputPath, f[0], outputPath, d, c)
 
 
 if __name__ == "__main__":
