@@ -1,7 +1,10 @@
 import math as mt
 import numpy as np
 import rpy2.robjects as ro
-from src.FileOperations.WriteOnFile import create_folder
+import matplotlib.ticker as mtick
+import matplotlib.pyplot as pl
+
+#from ..src.FileOperations.WriteOnFile import create_folder
 import logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -62,7 +65,7 @@ class Samples:
 
         self.flooding_in_each_sim = []
         self.semiregualrity_in_each_sim = []
-        self.noed_in_each_sim = []
+        self.nodes_in_each_sim = []
 
         self.stats_summary = {}
         # Plotting variables
@@ -164,7 +167,7 @@ class Samples:
         n = len(summation)
         if(n!= 0):
             self.avg_flooding_time = sum(summation) / n
-            self.avg_flooding_convergence_percentage = sum(informed) / n
+            self.avg_flooding_convergence_percentage = (sum(informed) / n) / 100
             self.std_flooding_time = 0
             self.std_flooding_convergence_percentage = 0
             for sim in range(0 , n):
@@ -281,13 +284,41 @@ class Samples:
     def plot_statistics(self):
         logging.info("Creating folder for d = %r c = %r " % (self.d,self.c))
         folderName = str(self.d)+"_"+str(self.c)
-        create_folder(self.outputPath,folderName)
+        #create_folder(self.outputPath,folderName)
         outPath = self.outputPath + folderName
         # Aggiungere controllo sul se il flooding termina
         logging.info("Plotting flooding stats")
         # Funzione plotting flooding trend
         logging.info("Plotting structural stats and flooding")
         # Plottare l'andamento delle simulazioni e dei nodi informati
-
+        self.get_flooding_plotting()
 
         return(self.stats_summary)
+
+
+    def get_flooding_plotting(self):
+        # using the average nodes in the network at each simulation
+        # the number of informed nodes at each simulation
+        # the average (d,cd)-regular nodes at each simulation
+        #for sim in range(0,self.number_of_simulations):
+        converged_simultatins = list(int(i) for i in (self.samples[self.samples['flood_status'] == "True"]['simulation'].values))
+        failed_simulations = set([i for i in range(0,self.number_of_simulations)]) - set(converged_simultatins)
+        flooding_percentage_line = [self.avg_flooding_convergence_percentage * self.nodes_in_each_sim[i] for i in range(0,self.number_of_simulations)]
+        #flooding_percentage_std = [self.std_flooding_convergence_percentage  for i in range(0,self.number_of_simulations)]
+        semiregular_percentge_line = [self.avg_semiregularity_convergence_percentage * self.nodes_in_each_sim[i] for i in range(0,self.number_of_simulations) ]
+        pl.figure(figsize=(10, 4))
+        pl.title("Stats")
+        pl.plot(self.flooding_in_each_sim, color = "blue")
+        if(converged_simultatins):
+            pl.plot(converged_simultatins,self.flooding_in_each_sim,'o',color = "green")
+        if(failed_simulations):
+            pl.plot(failed_simulations,self.flooding_in_each_sim, 'x', color="red")
+        pl.plot(self.nodes_in_each_sim, color = "red")
+        #pl.plot(self.semiregualrity_in_each_sim, color = "green")
+        pl.plot(flooding_percentage_line,'--',color = "orange")
+
+        #pl.errorbar(converged_simultatins,flooding_percentage_line, yerr=flooding_percentage_std)
+                     #pl.plot(semiregular_percentge_line,'.-', color = "pink")
+        pl.xlim(xmin = 0)
+        pl.xticks([i for i in range(0,self.number_of_simulations)])
+        pl.savefig("/home/antonio/Desktop/prova.png")
