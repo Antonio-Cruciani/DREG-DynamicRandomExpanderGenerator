@@ -22,23 +22,42 @@ def process_data(inputPath,outputPath):
     out_rate_list = list(set(file['beta'].values))
 
     results = []
+    if(in_rate_list):
+        for r in in_rate_list:
+            for q in out_rate_list:
+                name = str(r)+"_"+str(q)
+                create_folder(outputPath,name)
+                output = outputPath + name +"/"
 
-    for r in in_rate_list:
-        for q in out_rate_list:
-            name = str(r)+"_"+str(q)
-            create_folder(outputPath,name)
-            output = outputPath + name +"/"
+                for d in d_list:
 
-            for d in d_list:
+                    for c in c_list:
+                        samples = file[(file['d'] == d)&(file['c'] == c)&(file['lambda'] == r)&(file['beta'] == q)]
+                        stat = Samples(samples,output)
+                        stat.get_flooding_stats()
+                        stat.get_structural_stats()
+                        stat.get_diameter_stats()
+                        stat.plot_statistics()
+                        results.append(stat.pack_and_get_stats())
+    else:
+        n_list = list(set(file['n'].values))
+        p_list = list(set(file['p'].values))
+        for n in n_list:
+            for p in p_list:
+                name = str(n) + "_" + str(p)
+                create_folder(outputPath, name)
+                output = outputPath + name + "/"
+                for d in d_list:
 
-                for c in c_list:
-                    samples = file[(file['d'] == d)&(file['c'] == c)&(file['lambda'] == r)&(file['beta'] == q)]
-                    stat = Samples(samples,output)
-                    stat.get_flooding_stats()
-                    stat.get_structural_stats()
-                    stat.get_diameter_stats()
-                    stat.plot_statistics()
-                    results.append(stat.pack_and_get_stats())
+                    for c in c_list:
+                        samples = file[
+                            (file['d'] == d) & (file['c'] == c) & (file['n'] == n) & (file['p'] == p)]
+                        stat = Samples(samples, output)
+                        stat.get_flooding_stats()
+                        stat.get_structural_stats()
+                        stat.get_diameter_stats()
+                        stat.plot_statistics()
+                        results.append(stat.pack_and_get_stats())
 
     write_info_dic_as_csv(output+"analyzed",results)
 

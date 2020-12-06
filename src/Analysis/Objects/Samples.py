@@ -122,7 +122,7 @@ class Samples:
         self.number_of_simulations = len(set(self.samples['simulation']))
         self.d = self.samples['d'].values[0]
         self.c = self.samples['c'].values[0]
-        if(self.samples['lambda'].values[0]!= 0):
+        if(len(self.samples['lambda'].values[0])!= 0):
             self.r = self.samples['lambda'].values[0]
             self.q = self.samples['beta'].values[0]
             self.n = self.samples['target_n'].values[0]
