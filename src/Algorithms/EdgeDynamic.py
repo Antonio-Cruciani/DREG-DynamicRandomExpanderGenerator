@@ -53,7 +53,7 @@ class EdgeDynamic:
                     for c in self.c_list:
                         logging.info(
                             "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %d" % (n, p, self.flooding, d,c))
-                        for sim in range(0,self.SimNumber):
+                        for sim in range(0,self.simNumber):
                             logging.info("Simulation: %d" % (sim))
                             #print("Simulation: ",sim)
                             start_time = time.time()
