@@ -18,11 +18,13 @@ def process_data(inputPath,outputPath):
     d_list = list(set(file['d'].values))
     c_list = list(set(file['c'].values))
     sim_number = len(list(set(file['simulation'].values)))
-    in_rate_list = list(set(file['lambda'].values))
-    out_rate_list = list(set(file['beta'].values))
+
+
 
     results = []
-    if(in_rate_list):
+    if("lambda" in list(file.keys())):
+        in_rate_list = list(set(file['lambda'].values))
+        out_rate_list = list(set(file['beta'].values))
         for r in in_rate_list:
             for q in out_rate_list:
                 name = str(r)+"_"+str(q)

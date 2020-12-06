@@ -3,7 +3,7 @@ import logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 def create_folder(path, dirname):
-    path = path+"/"+dirname + "/"
+    path = path+"/"+dirname
     try:
         # Create target Directory
         os.mkdir(path)
