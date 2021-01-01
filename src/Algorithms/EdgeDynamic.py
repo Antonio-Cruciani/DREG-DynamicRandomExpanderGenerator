@@ -49,18 +49,18 @@ class EdgeDynamic:
                 outpath = outpath + "results"
                 edgeDynamicStats = EdgeDynamicOutput()
                 for d in self.d_list:
-                    logging.info("Number of nodes: %d Falling probability: %r Flooding: %r d: %d" % (n,p,self.flooding,d))
+                    logging.info("Number of nodes: %d Falling probability: %r Flooding: %r d: %r" % (n,p,self.flooding,d))
                     for c in self.c_list:
                         logging.info(
-                            "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %d" % (n, p, self.flooding, d,c))
-                        for sim in range(0,self.SimNumber):
+                            "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %r" % (n, p, self.flooding, d,c))
+                        for sim in range(0,self.simNumber):
                             logging.info("Simulation: %d" % (sim))
                             #print("Simulation: ",sim)
                             start_time = time.time()
-                            stats = self.EdgeDynamicGenerator(d, c,p,n,sim)
+                            stats = self.EdgeDynamicGeneratorTest(d, c,p,n,sim)
                             edgeDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
-                            logging.info("Elapsed time %f" % time.time()-start_time)
+                            logging.info("Elapsed time %r" % (time.time()-start_time))
                             #print("Elapsed time: ",time.time()-start_time)
                 self.write_info_dic_as_csv(outpath,edgeDynamicStats)
         logging.info("----------------------------------------------------------------")
@@ -69,6 +69,54 @@ class EdgeDynamic:
 
         #print("Ending simulation")
         #print("Elapsed time : ", time.time() - sim_start)
+
+    def EdgeDynamicGeneratorTest(self, d, c, p, n, sim):
+        t = 0
+        final_stats = []
+
+
+        if (d <= 0 or c < 0):
+            logging.error("Error, input parameters must be: d>0 c>1")
+            # print("Error, input parameters must be: d>0 c>1")
+            return (-1)
+
+        G = DynamicGraph(n, d, c, falling_probability=p, model=self.model)
+        info ={
+            "n":n,
+            "d":d,
+            "c":c,
+            "p":p
+        }
+        while (t<G.get_n()):
+            G.add_phase()
+            G.del_phase()
+            # Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            # if (G.get_converged() == False):
+            #     stats_bef = {
+            #         "spectralGapBefore": spectralGap,
+            #         "lambdaNGapBefore": lambdaNGap
+            #     }
+
+            if (p != 0):
+                G.random_fall()
+            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            stats_aft ={
+                "spectral": spectralGap
+
+            }
+            # stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
+            # if (G.get_converged() == False):
+            #
+            #     stats_aft = {
+            #         "spectralGapAfter": spectralGap,
+            #         "lambdaNGapAfter": lambdaNGap
+            #     }
+            final_stats.append({**info,**stats_aft})
+
+            t += 1
+
+        return (final_stats)
+
 
     def EdgeDynamicGenerator(self, d, c, p,n, sim):
 

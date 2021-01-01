@@ -425,7 +425,7 @@ class Samples:
         pl.figure(figsize=(20, 4))
         pl.title("Flooding")
         pl.xlabel("Simulations")
-        pl.ylabel("Nodes")
+        pl.ylabel("Nodes %")
         # percentages
         flooding_in_each_sim_percentage = []
         for flood in self.flooding_in_each_sim:
