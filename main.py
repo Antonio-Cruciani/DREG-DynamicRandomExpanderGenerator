@@ -46,7 +46,7 @@ def main(argv):
         elif(opt in ("-p","--prob")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
-                p.append(int(elem))
+                p.append(float(elem))
         elif (opt in ("-r", "--rate")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
@@ -73,11 +73,13 @@ def main(argv):
         elif(opt in ("-o","--outfile")):
             outPath = arg
 
+
     if(algorithm == "VD"):
 
         ex = VertexDynamic(d,c,inRate,outRate,outPath,flooding=flood,regular_decay=0.5,model = model,simNumber=simNumber)
         ex.run()
     elif(algorithm == "ED"):
+
         ex = EdgeDynamic(d ,c,p,n ,outPath ,flooding = flood, epsilon = epsilon ,model =model,simNumber = simNumber )
         ex.run()
 

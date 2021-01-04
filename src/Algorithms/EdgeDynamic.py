@@ -45,22 +45,23 @@ class EdgeDynamic:
                 logging.info("----------------------------------------------------------------")
                 logging.info("Number of nodes: %d Falling probability: %r Flooding: %r" % (n,p,self.flooding))
                 #print("Number of nodes ",n," Falling probability: ",p," Flooding: ",self.flooding)
+
                 outpath = create_folder(self.outPath,"EdgeDynamic_n_"+str(n)+"_p_"+str(p)+"_f_"+str(self.flooding))
-                outpath = outpath + "results"
+                outpath = outpath + "/results"
                 edgeDynamicStats = EdgeDynamicOutput()
                 for d in self.d_list:
                     logging.info("Number of nodes: %d Falling probability: %r Flooding: %r d: %d" % (n,p,self.flooding,d))
                     for c in self.c_list:
                         logging.info(
-                            "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %d" % (n, p, self.flooding, d,c))
-                        for sim in range(0,self.SimNumber):
+                            "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %r" % (n, p, self.flooding, d,c))
+                        for sim in range(0,self.simNumber):
                             logging.info("Simulation: %d" % (sim))
                             #print("Simulation: ",sim)
                             start_time = time.time()
                             stats = self.EdgeDynamicGenerator(d, c,p,n,sim)
                             edgeDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
-                            logging.info("Elapsed time %f" % time.time()-start_time)
+                            logging.info("Elapsed time %r" % (time.time()-start_time))
                             #print("Elapsed time: ",time.time()-start_time)
                 self.write_info_dic_as_csv(outpath,edgeDynamicStats)
         logging.info("----------------------------------------------------------------")
