@@ -70,6 +70,11 @@ class Samples:
         self.semiregualrity_in_each_sim = []
         self.nodes_in_each_sim = []
 
+        # self.spectral_gaps_before = []
+        # self.spectral_gaps_after = []
+        # self.min_spectral_gap = []
+        # self.max_spectral_gap = []
+
         self.stats_summary = {}
         # Plotting variables
 
@@ -309,7 +314,10 @@ class Samples:
             self.std_disconnected = 0
             for elem in range(0,len(disconnected)):
                 self.std_disconnected += mt.pow((disconnected[elem]-self.avg_disconnected),2)
-            a = 1/(len(disconnected)-1)
+            if(len(disconnected) ==1):
+                a = 1
+            else:
+                a = 1/(len(disconnected)-1)
             self.std_disconnected = mt.sqrt(a * self.std_disconnected)
         else:
             self.avg_disconnected = 0
