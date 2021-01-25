@@ -18,6 +18,7 @@ class Samples:
         self.outputPathPlottings = outpath
         self.outputPathCSV = outpath
         self.samples = samples
+        self.legend = False
 
         self.graph = None
         self.d = None
@@ -210,7 +211,9 @@ class Samples:
             # Ho agigiunto un pezzo per calcolare il numero medio di nodi nella rete
             for sim in range(0,self.number_of_simulations):
                 result = list(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['t_flood'].values)
-                if(result):
+
+                if(result ):
+
                     summation.append(result[0])
                     convergence = self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0]
                     informed.append(convergence)
@@ -422,6 +425,9 @@ class Samples:
         #flooding_percentage_line = [self.flooding_convergence_percentage_in_each_sim[i] * self.nodes_in_each_sim[i] for i in range(0,self.number_of_simulations)]
 
         flooding_percentage_line = [self.percent(self.flooding_convergence_percentage_in_each_sim[i] * self.nodes_in_each_sim[i],self.n )for i in range(0,self.number_of_simulations)]
+        #is_converged = sum(flooding_percentage_line)
+        is_converged = 0
+
         target_n_percentage_line = [self.percent(self.n,self.n) for i in range(0,self.number_of_simulations)]
         zero_informed_simulations = []
         for fail in failed_simulations:
@@ -433,7 +439,7 @@ class Samples:
         pl.figure(figsize=(20, 4))
         pl.title("Flooding")
         pl.xlabel("Simulations")
-        pl.ylabel("Nodes")
+        pl.ylabel("Nodes %")
         # percentages
         flooding_in_each_sim_percentage = []
         for flood in self.flooding_in_each_sim:
@@ -457,25 +463,42 @@ class Samples:
         pl.plot(nodes_in_each_sim_percentage, color = "red")
         # pl.plot(self.nodes_in_each_sim, color = "red")
         #pl.plot(self.semiregualrity_in_each_sim, color = "green")
-        pl.plot(flooding_percentage_line,'--',color = "orange")
+        if(is_converged != 0):
+            pl.plot(flooding_percentage_line,'--',color = "orange")
         pl.plot(target_n_percentage_line,'-.',color ="magenta")
         #pl.errorbar(converged_simultatins,flooding_percentage_line, yerr=flooding_percentage_std)
                      #pl.plot(semiregular_percentge_line,'.-', color = "pink")
         pl.xlim(xmin = -1)
         pl.xticks([i for i in range(0,self.number_of_simulations)])
-        if(converged_simulations):
-            if(zero_informed_simulations):
-                pl.legend(['Informed ','Terminated','Failed', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
-                  loc='upper left')
-            else:
-                pl.legend(['Informed ', 'Terminated', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
-                          bbox_to_anchor=(1, 1),
+        if(self.legend):
+            if(converged_simulations):
+                if(zero_informed_simulations):
+                    if(is_converged != 0):
+                        pl.legend(['Informed ','Terminated','Failed', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
                           loc='upper left')
-        else:
-            pl.legend(['Informed ', 'Failed', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
-                      bbox_to_anchor=(1, 1),
-                      loc='upper left')
-        pl.savefig(self.outputPathPlottings+"/Flooding.png")
+                    else:
+                        pl.legend(['Informed ', 'Terminated', 'Failed', 'Avg network size',
+                                   r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
+                                  loc='upper left')
+                else:
+                    if (is_converged != 0):
+                        pl.legend(['Informed ', 'Terminated', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
+                                  bbox_to_anchor=(1, 1),
+                                  loc='upper left')
+                    else:
+                        pl.legend(['Informed ', 'Terminated', 'Failed', 'Avg network size',
+                                   r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
+                                  loc='upper left')
+            else:
+                if (is_converged != 0):
+                    pl.legend(['Informed ', 'Failed', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
+                              bbox_to_anchor=(1, 1),
+                              loc='upper left')
+                else:
+                    pl.legend(['Informed ', 'Terminated', 'Failed', 'Avg network size',
+                               r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
+                              loc='upper left')
+        pl.savefig(self.outputPathPlottings+"/Flooding.png",bbox_inches="tight")
         #pl.savefig("/home/antonio/Desktop/Flooding.png")
         pl.close()
 
@@ -524,11 +547,11 @@ class Samples:
                 pl.plot(self.avg_flooding_time,average_flooding_vector[mt.floor(self.avg_flooding_time)-1],'v',color = 'red')
                 #pl.plot(self.avg_flooding_time,percentage_vector[mt.floor(self.avg_flooding_time)-1],'v',color = 'red')
 
-                arrow_properties = dict(
-                    facecolor="black", width=0.5,
-                    headwidth=4, shrink=0.1)
-                x_arrow = self.avg_flooding_time - 1
-                y_arrow = average_flooding_vector[mt.floor(self.avg_flooding_time)-1]
+                # arrow_properties = dict(
+                #     facecolor="black", width=0.5,
+                #     headwidth=4, shrink=0.1)
+                # x_arrow = self.avg_flooding_time - 1
+                # y_arrow = average_flooding_vector[mt.floor(self.avg_flooding_time)-1]
                 # arrow_properties = dict(
                 #     facecolor="black", width=0.5,
                 #     headwidth=4, shrink=0.1)
@@ -539,41 +562,41 @@ class Samples:
                 pl.plot(self.avg_flooding_time,average_flooding_vector[mt.floor(self.avg_flooding_time)],'v',color = 'red')
                 #pl.plot(self.avg_flooding_time,percentage_vector[mt.floor(self.avg_flooding_time)],'v',color = 'red')
 
-                arrow_properties = dict(
-                    facecolor="black", width=0.5,
-                    headwidth=4, shrink=0.1)
-                x_arrow = self.avg_flooding_time -1
-                y_arrow = average_flooding_vector[mt.floor(self.avg_flooding_time)]
-                # arrow_properties = dict(
-                #     facecolor="black", width=0.5,
-                #     headwidth=4, shrink=0.1)
-                # x_arrow = self.avg_flooding_time - 1
-                # y_arrow = percentage_vector[mt.floor(self.avg_flooding_time)]
-            if(x_arrow - 3  <= 0):
-                x_label = x_arrow - 0.5
-            elif(x_arrow > 5):
-                x_label = x_arrow - 3
-            else:
-                x_label = x_arrow - 1
-            y_lable = y_arrow
-            if(self.graph == "VD"):
-                pl.annotate(
-                    str(self.avg_flooding_convergence_percentage*100)+"%",
-                    xy= (x_arrow,y_arrow),
-                    xytext=(x_label,y_lable),
-                    arrowprops=arrow_properties
-                )
-            elif(self.graph == "ED"):
-                pl.annotate(
-                    str(100) + "%",
-                    xy=(x_arrow, y_arrow),
-                    xytext=(x_label, y_lable),
-                    arrowprops=arrow_properties
-                )
+            #     arrow_properties = dict(
+            #         facecolor="black", width=0.5,
+            #         headwidth=4, shrink=0.1)
+            #     x_arrow = self.avg_flooding_time -1
+            #     y_arrow = average_flooding_vector[mt.floor(self.avg_flooding_time)]
+            #     # arrow_properties = dict(
+            #     #     facecolor="black", width=0.5,
+            #     #     headwidth=4, shrink=0.1)
+            #     # x_arrow = self.avg_flooding_time - 1
+            #     # y_arrow = percentage_vector[mt.floor(self.avg_flooding_time)]
+            # if(x_arrow - 3  <= 0):
+            #     x_label = x_arrow - 0.5
+            # elif(x_arrow > 5):
+            #     x_label = x_arrow - 3
+            # else:
+            #     x_label = x_arrow - 1
+            # y_lable = y_arrow
+            # if(self.graph == "VD"):
+            #     pl.annotate(
+            #         str(self.avg_flooding_convergence_percentage*100)+"%",
+            #         xy= (x_arrow,y_arrow),
+            #         xytext=(x_label,y_lable),
+            #         arrowprops=arrow_properties
+            #     )
+            # elif(self.graph == "ED"):
+            #     pl.annotate(
+            #         str(100) + "%",
+            #         xy=(x_arrow, y_arrow),
+            #         xytext=(x_label, y_lable),
+            #         arrowprops=arrow_properties
+            #     )
             pl.title("Flooding trend")
             pl.xlabel("Time")
             pl.ylabel("Nodes")
-            pl.legend(['Average informed nodes ', 'Convergence'], title='Legend',
+            pl.legend(['Average informed nodes ', 'Convergence at '+str(round(self.avg_flooding_convergence_percentage*100))+"%"], title='Legend',
                       loc='lower right')
 
             pl.savefig(self.outputPathPlottings+"/FloodingTrend.png")
@@ -584,18 +607,19 @@ class Samples:
 
     def get_structural_plotting(self):
         if(self.graph == "VD"):
-            semiregular_percentge_line = [self.avg_semiregularity_convergence_percentage * self.semiregualrity_in_each_sim[i] for i in range(0,self.number_of_simulations) ]
-
+            semiregular_percentge_line = [self.percent(self.avg_semiregularity_convergence_percentage * self.semiregualrity_in_each_sim[i],self.nodes_in_each_sim[i]) for i in range(0,self.number_of_simulations) ]
+            nodes_in_each_sim_percentage = [self.percent(self.nodes_in_each_sim[i], self.n) for i in range(0,self.number_of_simulations)]
+            semireg_percentage = [self.percent(elem,self.n) for elem in self.semiregualrity_in_each_sim]
             pl.figure(figsize=(20, 4))
             pl.title("Structural properties")
             pl.xlabel("Simulations")
-            pl.ylabel("Nodes")
-            pl.plot(self.semiregualrity_in_each_sim, color="blue")
-            pl.plot(self.nodes_in_each_sim, color = "red")
+            pl.ylabel("Nodes %")
+            pl.plot(semireg_percentage, color="blue")
+            pl.plot(nodes_in_each_sim_percentage, color = "red")
             pl.plot(semiregular_percentge_line,'--',color = "orange")
             pl.xlim(xmin = -1)
             pl.xticks([i for i in range(0,self.number_of_simulations)])
-            pl.legend(['(d,cd)-regular ', 'Avg network size', 'Convergence %'], title='Legend',
+            pl.legend(['(d,cd)-regular % ', 'Avg network size', 'Convergence %'], title='Legend',
                       bbox_to_anchor=(1, 1),
                       loc='upper left')
         elif(self.graph == "ED"):

@@ -67,6 +67,7 @@ def process_and_get_unique_csv(inputPath,inputPathList,outputPath,d,c):
     results = []
     create_folder(outputPath,'single')
     outputPath = outputPath +"single/"
+
     for dir in inputPathList:
         file = pd.read_csv(inputPath+dir+"/results.csv")
         samples = file[(file['d'] == d) & (file['c'] == c)]
