@@ -415,16 +415,18 @@ class DynamicGraph:
                     edge_list.append((i, int(v_sample[0])))
         # If is not the first round and there are nodes in the network,
         # then the new nodes sample d vertices in the network
-        # if(self.t>0 and len(nodes)>0):
-        #
-        #     # New nodes are connecting to the network
-        #     survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
-        #     for i in survived_entering_nodes:
-        #         sample_size = self.get_sample_add_phase([])
-        #
-        #         v_sample = rnd.choices(nodes, k=sample_size)
-        #         for x in v_sample:
-        #             edge_list.append((i, int(x)))
+        if (self.t > 0 and len(nodes) > 0):
+
+            # New nodes are connecting to the network
+            survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
+            if (len(survived_entering_nodes) > 0):
+
+                for i in survived_entering_nodes:
+                    sample_size = self.get_sample_add_phase([])
+
+                    v_sample = rnd.choices(nodes, k=sample_size)
+                    for x in v_sample:
+                        edge_list.append((i, int(x)))
 
                 #print(edge_list)
         # Now we have to transform the directed edge list in ad undirected edge list
