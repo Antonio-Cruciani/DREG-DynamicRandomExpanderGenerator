@@ -459,8 +459,8 @@ class Samples:
             failed_plot_percentage = [self.percent(elem,self.n) for elem in failed_plot]
             pl.plot(zero_informed_simulations,failed_plot_percentage, 'x', color="red")
             # pl.plot(zero_informed_simulations,failed_plot, 'x', color="red")
-        nodes_in_each_sim_percentage = [self.percent(elem,self.n) for elem in self.nodes_in_each_sim]
-        pl.plot(nodes_in_each_sim_percentage, color = "red")
+        #nodes_in_each_sim_percentage = [self.percent(elem,self.n) for elem in self.nodes_in_each_sim]
+        #pl.plot(nodes_in_each_sim_percentage, color = "red")
         # pl.plot(self.nodes_in_each_sim, color = "red")
         #pl.plot(self.semiregualrity_in_each_sim, color = "green")
         if(is_converged != 0):
@@ -474,28 +474,28 @@ class Samples:
             if(converged_simulations):
                 if(zero_informed_simulations):
                     if(is_converged != 0):
-                        pl.legend(['Informed ','Terminated','Failed', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
+                        pl.legend(['Informed ','Terminated','Failed', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
                           loc='upper left')
                     else:
-                        pl.legend(['Informed ', 'Terminated', 'Failed', 'Avg network size',
+                        pl.legend(['Informed ', 'Terminated', 'Failed',
                                    r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
                                   loc='upper left')
                 else:
                     if (is_converged != 0):
-                        pl.legend(['Informed ', 'Terminated', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
+                        pl.legend(['Informed ', 'Terminated', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
                                   bbox_to_anchor=(1, 1),
                                   loc='upper left')
                     else:
-                        pl.legend(['Informed ', 'Terminated', 'Failed', 'Avg network size',
+                        pl.legend(['Informed ', 'Terminated', 'Failed',
                                    r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
                                   loc='upper left')
             else:
                 if (is_converged != 0):
-                    pl.legend(['Informed ', 'Failed', 'Avg network size', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
+                    pl.legend(['Informed ', 'Failed', 'Convergence %',r'$\frac{\lambda}{q}$'], title='Legend',
                               bbox_to_anchor=(1, 1),
                               loc='upper left')
                 else:
-                    pl.legend(['Informed ', 'Terminated', 'Failed', 'Avg network size',
+                    pl.legend(['Informed ', 'Terminated', 'Failed',
                                r'$\frac{\lambda}{q}$'], title='Legend', bbox_to_anchor=(1, 1),
                               loc='upper left')
         pl.savefig(self.outputPathPlottings+"/Flooding.png",bbox_inches="tight")
