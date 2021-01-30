@@ -127,6 +127,7 @@ class VertexDynamic:
             if (G.get_converged()):
                 if (G.flooding.get_initiator() == -1):
                     G.set_flooding()
+                    G.flooding.set_stop_time(mt.floor(mt.log(G.get_target_n(),2)))
                     G.flooding.set_initiator()
                     G.flooding.update_flooding(G)
                 else:
@@ -159,6 +160,7 @@ class VertexDynamic:
                             logging.info("Number of informed nodes %d" % (G.flooding.get_informed_nodes()))
                             logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
                             logging.info("Percentage of informed nodes %r" % (G.flooding.get_percentage()))
+                            logging.info("Informed Ratio: %r"%(G.flooding.get_last_ratio()))
                             logging.info("Flooding Protocol status: Correctly Terminated")
                             logging.info("Flooding time: %d" %(G.flooding.get_t_flood()))
                             logging.info("----------------------------------------------------------------")
@@ -174,6 +176,7 @@ class VertexDynamic:
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
                             logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
                             logging.info("Percentage of informed nodes %r" % (G.flooding.get_percentage()))
+                            logging.info("Informed Ratio: %r"%(G.flooding.get_last_ratio()))
                             logging.info("Flooding Protocol status: Failed")
                             logging.info("Number of executed steps: %d  Step threshold: %d" % (
                             G.flooding.get_t_flood(), threshold))

@@ -13,6 +13,9 @@ class Flooding:
         self.converged = None
         self.failed = False
         self.percentage = 0
+        self.informed_ratio = []
+        self.stabilization = 0
+        self.stop_time = None
         # self.number_informed = None
         # self.number_uninformed = None
 
@@ -82,6 +85,7 @@ class Flooding:
         for i in to_inform:
             self.dic[i] = 1
         self.t_flood += 1
+        self.incremental_convergence()
         return(len(to_inform))
 
     def check_flooding_status(self):
@@ -89,6 +93,33 @@ class Flooding:
             if (self.get_informed_nodes() == 0):
                 return (False)
         return (True)
+
+    def set_stop_time(self,it):
+        self.stop_time = it
+
+    def incremental_convergence(self):
+        number_informed = self.get_informed_nodes()
+        number_uninformed = self.get_uninformed_nodes()
+        if(number_uninformed != 0):
+
+            informed_ratio = number_informed/number_uninformed
+        else:
+            informed_ratio = 0
+
+        self.informed_ratio.append(informed_ratio)
+        if(self.t_flood>1):
+            if(self.informed_ratio[-2]<=self.informed_ratio[-1]):
+                self.stabilization +=1
+
+        if(self.stabilization == self.stop_time):
+            self.set_converged(True)
+            nodes = len(list(self.dic.keys()))
+            ones = (self.get_informed_nodes() / nodes) * 100
+            self.set_percentage(ones)
+
+    def get_last_ratio(self):
+        return(self.informed_ratio[-1])
+
     def terminated(self):
         nodes = len(list(self.dic.keys()))
         ones = (self.get_informed_nodes() /nodes) * 100
