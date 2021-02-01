@@ -96,12 +96,16 @@ class EdgeDynamic:
             #         "spectralGapBefore": spectralGap,
             #         "lambdaNGapBefore": lambdaNGap
             #     }
+            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            stats_bef = {
+                "spectral_bef": spectralGap
 
+            }
             if (p != 0):
                 G.random_fall()
             Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
             stats_aft ={
-                "spectral": spectralGap
+                "spectral_aft": spectralGap
 
             }
             # stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
@@ -111,7 +115,7 @@ class EdgeDynamic:
             #         "spectralGapAfter": spectralGap,
             #         "lambdaNGapAfter": lambdaNGap
             #     }
-            final_stats.append({**info,**stats_aft})
+            final_stats.append({**info,**stats_bef,**stats_aft})
 
             t += 1
 
