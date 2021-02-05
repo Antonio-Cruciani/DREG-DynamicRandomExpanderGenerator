@@ -119,10 +119,10 @@ class Samples:
             self.t_test_diameter = 0
 
     def get_residual_flooding_time(self):
-        self.residual_flooding_time = ((self.avg_flooding_time - self.desidered_flooding_time) / self.desidered_flooding_time) * 100
+        self.residual_flooding_time = abs(self.avg_flooding_time - self.desidered_flooding_time)
 
     def get_residual_diameter(self):
-        self.residual_diameter = ((self.avg_diameter - self.desidered_diameter) / self.desidered_diameter) * 100
+        self.residual_diameter = abs(self.avg_diameter - self.desidered_diameter)
 
     def infer_experiment_infos(self):
         self.number_of_simulations = len(set(self.samples['simulation']))
