@@ -35,13 +35,19 @@ class EdgeDynamic:
         self.outPath = outpath
         self.simNumber = simNumber
         self.epsilon = epsilon
+        self.spectrumSim = True
 
     def run(self):
         logging.info("----------------------------------------------------------------")
         logging.info("Starting simulation")
         sim_start = time.time()
         for p in self.p_list:
+
            for n in self.n_list:
+                if(p != 0):
+                    epsilon = self.get_epsilon(p, n)
+                else:
+                    epsilon = self.epsilon
                 logging.info("----------------------------------------------------------------")
                 logging.info("Number of nodes: %d Falling probability: %r Flooding: %r" % (n,p,self.flooding))
                 #print("Number of nodes ",n," Falling probability: ",p," Flooding: ",self.flooding)
@@ -57,10 +63,13 @@ class EdgeDynamic:
                             logging.info("Simulation: %d" % (sim))
                             #print("Simulation: ",sim)
                             start_time = time.time()
-                            stats = self.EdgeDynamicGenerator(d, c,p,n,sim)
+                            if(self.spectrumSim):
+                                stats = self.EdgeDynamicGeneratorSpectrum(d, c,p,n,sim,epsilon)
+                            else:
+                                stats = self.EdgeDynamicGenerator(d, c,p,n,sim,epsilon)
                             edgeDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
-                            logging.info("Elapsed time %f" % time.time()-start_time)
+                            logging.info("Elapsed time %r" % (time.time()-start_time))
                             #print("Elapsed time: ",time.time()-start_time)
                 self.write_info_dic_as_csv(outpath,edgeDynamicStats)
         logging.info("----------------------------------------------------------------")
@@ -70,7 +79,7 @@ class EdgeDynamic:
         #print("Ending simulation")
         #print("Elapsed time : ", time.time() - sim_start)
 
-    def EdgeDynamicGenerator(self, d, c, p,n, sim):
+    def EdgeDynamicGenerator(self, d, c, p,n, sim,epsilon):
 
         def flood():
             flood_dictionary = {}
@@ -136,7 +145,8 @@ class EdgeDynamic:
 
         repeat = True
         sim = {
-            "simulation": sim
+            "simulation": sim,
+            "epsilon": epsilon
         }
         if (d <= 0 or c < 0):
             logging.error("Error, input parameters must be: d>0 c>1")
@@ -168,7 +178,7 @@ class EdgeDynamic:
             #         "lambdaNGapAfter": lambdaNGap
             #     }
             if (G.get_converged() == False):
-                spectral_queue = spectral_convergence( self.epsilon, spectralGap, spectral_queue)
+                spectral_queue = spectral_convergence( epsilon, spectralGap, spectral_queue)
             if (G.get_converged()):
                 if (nx.is_connected(G.get_G()) == False and p == 0):
                     flood_dictionary = {
@@ -199,6 +209,114 @@ class EdgeDynamic:
 
 
 
+    def EdgeDynamicGeneratorSpectrum(self, d, c, p,n, sim,epsilon):
+
+
+
+        def spectral_convergence( epsilon, spectral_gap, spectral_queue):
+            if (spectral_gap == "Null"):
+                new_spectral_gap = 0
+            else:
+                new_spectral_gap = spectral_gap
+            spectral_queue.add_element_to_queue(new_spectral_gap)
+
+            # Check the convergence of the spectral gap
+
+            if (
+                    spectral_queue.get_queue_lenght() == spectral_queue.get_max_lenght() and spectral_queue.get_converged() == False):
+                spectral_differences = []
+                s_q = spectral_queue.get_queue()
+                for i in range(0, spectral_queue.get_queue_lenght() - 1):
+                    spectral_differences.append(abs(s_q[i] - s_q[i + 1]))
+                terminate = True
+                for j in spectral_differences:
+                    if (j > epsilon):
+                        terminate = False
+                if (terminate):
+                    spectral_queue.set_converged(terminate)
+                    G.set_converged(terminate)
+                    G.flooding.set_converged(False)
+                    logging.info("Spectral Gap converged at %r" % (spectral_gap))
+                    #print("----- Spectral Gap Converged at: ", spectral_gap, " -----\n")
+            return (spectral_queue)
+
+        t = 0
+        final_stats = []
+
+        repeat = True
+        sim = {
+            "simulation": sim,
+            "epsilon": epsilon
+        }
+        if (d <= 0 or c < 0):
+            logging.error("Error, input parameters must be: d>0 c>1")
+            #print("Error, input parameters must be: d>0 c>1")
+            return (-1)
+        spectral_queue = Queue(mt.log(n, 2))
+        G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
+        c = 0
+        while(repeat ):
+            G.add_phase()
+            G.del_phase()
+            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+
+            stats_bef = {
+                "spectralGapBefore": spectralGap,
+                "lambdaNGapBefore": lambdaNGap
+            }
+
+            if (p != 0):
+                G.random_fall()
+            #Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+
+            stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
+            # stats_aft = {
+            #          "spectralGapAfter": spectralGap,
+            #          "lambdaNGapAfter": lambdaNGap
+            #      }
+            # if (G.get_converged() == False):
+            #
+            #     stats_aft = {
+            #         "spectralGapAfter": spectralGap,
+            #         "lambdaNGapAfter": lambdaNGap
+            #     }
+            if (G.get_converged() == False):
+                spectral_queue = spectral_convergence( epsilon, spectralGap, spectral_queue)
+            if (G.get_converged()):
+
+                if(c == 100):
+                    repeat = False
+                else:
+                    c+=1
+
+            final_stats.append({**sim, **stats_bef, **stats})
+
+            t+=1
+        return (final_stats)
+
+
+
+
+    def get_epsilon(self,p,n):
+        G = DynamicGraph(n, 4, 3, falling_probability = p,model = self.model)
+        t = 0
+        spectral_list =[]
+        while(t<n):
+            G.add_phase()
+            G.del_phase()
+            G.random_fall()
+            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            spectral_list.append(spectralGap)
+            t+=1
+        filtered = list(filter(lambda x: (x != 0), spectral_list))
+        if(len(filtered) == 0):
+            return (self.epsilon)
+        mean = sum(filtered) / len(filtered)
+        sq = [abs(filtered[i] - mean) for i in range(0, len(filtered))]
+        residual_mean = sum(sq) / len(sq)
+        residual_std = sum([(x - residual_mean) ** 2 for x in sq]) / len(sq)
+        logging.info(" Inferred epsilon %r with standard deviation of %r"%(residual_mean,residual_std))
+        return(residual_mean)
 
     def write_info_dic_as_csv(self, outPath, results):
         #print( list(results.get_stats()[0][0].keys()))
