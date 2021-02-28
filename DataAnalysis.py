@@ -2,8 +2,11 @@ from src.Analysis.Analyze import process_data,process_and_get_unique_csv
 import sys,getopt,logging
 from os import walk
 import os
+import pandas as pd
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
+def get_id(dataframe):
+    return (dataframe['p'].values[0])
 
 def main(argv):
     outputPath = "./"
@@ -29,13 +32,16 @@ def main(argv):
                 constrained = True
     if(all):
         f = []
+        filelist = []
         for (dirpath, dirnames, filenames) in walk(inputPath):
             f.append(dirnames)
             break
 
         for dir in f[0]:
-
-            process_data(inputPath+dir+"/results.csv",outputPath)
+            filelist.append(pd.read_csv(inputPath+dir+"/results.csv"))
+        filelist.sort(key = lambda x: get_id(x) )
+        process_data(filelist,outputPath)
+        #process_data(inputPath+dir+"/results.csv",outputPath)
     elif(not(constrained)):
         process_data(inputPath,outputPath)
     else:

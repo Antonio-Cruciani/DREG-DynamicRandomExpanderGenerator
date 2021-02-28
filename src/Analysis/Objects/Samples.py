@@ -80,7 +80,21 @@ class Samples:
         # Plotting variables
 
         #self.nodes = []
+        # Boolean variable for the spectral analysis
+        self.spectrum = False
 
+        self.median_spectral_gap = 0
+        self.avg_spectral_gap = 0
+        self.std_spectral_gap = 0
+
+        self.mean_converged_spectral_gap = 0
+        self.std_converged_spectral_gap = 0
+        self.median_converged_spectral_gap = 0
+
+        self.residual_mean_spectral_gap_after = None
+        self.residual_median_spectral_gap_after = None
+        self.residual_mean_spectral_gap_before = None
+        self.residual_median_spectral_gap_before = None
 
     def all_equal(self,iterable):
         g = groupby(iterable)
@@ -119,10 +133,10 @@ class Samples:
             self.t_test_diameter = 0
 
     def get_residual_flooding_time(self):
-        self.residual_flooding_time = abs(self.avg_flooding_time - self.desidered_flooding_time)
+        self.residual_flooding_time = (self.desidered_flooding_time - self.avg_flooding_time)
 
     def get_residual_diameter(self):
-        self.residual_diameter = abs(self.avg_diameter - self.desidered_diameter)
+        self.residual_diameter = (self.desidered_diameter - self.avg_diameter)
 
     def infer_experiment_infos(self):
         self.number_of_simulations = len(set(self.samples['simulation']))
@@ -134,11 +148,128 @@ class Samples:
             self.n = self.samples['target_n'].values[0]
             self.graph = "VD"
         else:
+            if("spectralGapBefore" in list(self.samples.keys())):
+                self.spectrum = True
             self.n = self.samples['n'].values[0]
             self.p = self.samples['p'].values[0]
             self.graph = "ED"
         self.desidered_flooding_time = self.desidered_diameter = mt.log(self.n, 2)
 
+    def get_spectral_analysis(self):
+        # All tuples (before,after)
+        sample_medians_before = []
+        sample_medians_after = []
+
+        sample_means_before = []
+        sample_means_after = []
+
+        sample_std_bef = []
+        sample_std_aft = []
+
+        median_spectral_gap = 0
+        avg_spectral_gap = 0
+        std_spectral_gap = 0
+
+        sample_convergence = []
+        # Getting the medians and means
+
+        for sim in range(0,self.number_of_simulations):
+            spectral_before = sorted(self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values)
+            spectral_after = sorted(self.samples[self.samples['simulation'] == sim]['spectralGap'].values)
+            n_bef = len(spectral_before)
+            n_aft = len(spectral_after)
+            # getting median of the spectral gap before random falling
+            # doing lenght % 2
+
+            if(n_bef & 1 == 0):
+                median_spectral_gap_before = ( spectral_before[int(n_bef / 2 )] + spectral_before[int((n_bef / 2 ) + 1)] ) / 2
+            else:
+                median_spectral_gap_before = spectral_before[int((n_bef +1 )/ 2)]
+            if(n_aft % 1 == 0):
+                median_spectral_gap_after = ( spectral_after[int(n_aft / 2)] + spectral_after[(int(n_aft /2)+1)] ) / 2
+            else:
+                median_spectral_gap_after = spectral_after[int((n_aft + 1) / 2)]
+            sample_medians_before.append(median_spectral_gap_before)
+            sample_medians_after.append(median_spectral_gap_after )
+
+           # getting the means
+
+            mean_spectral_gap_before =  sum(spectral_before) / n_bef
+
+            mean_spectral_gap_after = sum(spectral_after) / n_aft
+
+            sample_means_before.append( mean_spectral_gap_before )
+            sample_means_after.append( mean_spectral_gap_after)
+
+            # getting the standard deviation
+
+            std_spectral_gap_before = mt.sqrt( (1/ n_bef ) * sum([ mt.pow(x - mean_spectral_gap_before,2) for x in spectral_before]) )
+
+            std_spectral_gap_after = mt.sqrt( (1/ n_aft ) * sum([ mt.pow(x - mean_spectral_gap_after,2) for x in spectral_after]) )
+
+            sample_std_bef.append(  std_spectral_gap_before )
+            sample_std_aft.append( std_spectral_gap_after )
+
+            # stats on converged spectral gap
+            sample_convergence.append(
+                self.samples[self.samples['simulation'] == sim]['spectralGap'].values[
+                    self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
+                ]
+            )
+
+
+
+        # median of medians
+        sample_medians_before = sorted(sample_medians_before)
+        sample_medians_after = sorted(sample_medians_after)
+
+        if(len(sample_medians_before) % 1 == 0):
+                self.median_spectral_gap = (
+                    (
+                        (sample_medians_before[int(len(sample_medians_before) / 2 ) ] + sample_medians_before[int((len(sample_medians_before) / 2 )+1)])/2
+                        ,
+                        (sample_medians_after[int(len(sample_medians_after) / 2)] + sample_medians_after[
+                            int((len(sample_medians_after) / 2) + 1)])/2
+                    )
+                )
+                self.avg_spectral_gap = (
+                    sum(sample_means_before) / len(sample_means_before),
+                    sum(sample_means_after) / len(sample_means_after)
+
+                )
+                self.std_spectral_gap = (
+
+                    mt.sqrt(
+                        (1/len(sample_std_bef) * sum([mt.pow(x - self.avg_spectral_gap[0],2) for x in sample_means_before]))
+                    )
+                    ,
+                    mt.sqrt(
+                        (1/len(sample_std_aft) * sum([mt.pow(x - self.avg_spectral_gap[1],2) for x in sample_means_after]))
+                    )
+                )
+                sample_convergence = sorted(sample_convergence)
+                self.mean_converged_spectral_gap = sum(sample_convergence)/len(sample_convergence)
+                self.std_converged_spectral_gap = mt.sqrt((1/len(sample_convergence) * sum([mt.pow(x-self.mean_converged_spectral_gap,2) for x in sample_convergence])))
+                self.median_converged_spectral_gap = (sample_convergence[int(len(sample_convergence)/2)] + sample_convergence[int(len(sample_convergence)/2)+1])/2
+
+        logging.info("Spectral Analysis ")
+        logging.info("Median: Spectral gap before %r       Spectral gap after %r"%(self.median_spectral_gap[0],self.median_spectral_gap[0]))
+        logging.info("Mean: Spectral gap before %r       Spectral gap after %r"%(self.avg_spectral_gap[0],self.avg_spectral_gap[0]))
+        logging.info("STD: Spectral gap before %r       Spectral gap after %r"%(self.std_spectral_gap[0],self.std_spectral_gap[0]))
+
+    def get_spectral_gap_residuals(self,raes_mean_spectral_gap_before,raes_mean_spectral_gap_before_after,raes_median_spectral_gap_before,raes_median_spectral_gap_after):
+        self.residual_mean_spectral_gap_after = (raes_mean_spectral_gap_before_after - self.avg_spectral_gap[1])
+        self.residual_median_spectral_gap_after = (raes_median_spectral_gap_after - self.median_spectral_gap[1])
+        self.residual_median_spectral_gap_after = (raes_median_spectral_gap_after - self.median_spectral_gap[1])
+        self.residual_mean_spectral_gap_before = (raes_mean_spectral_gap_before- self.avg_spectral_gap[0])
+        self.residual_median_spectral_gap_before = (raes_median_spectral_gap_before - self.median_spectral_gap[0])
+        logging.info("Residuals between RAES and Edge Dynamics")
+        logging.info("Spectral gap before")
+        logging.info("|RaesMean - EDMean| = %r"%(self.residual_mean_spectral_gap_before))
+        logging.info("|RaesMedian - EDMedian| = %r"%(self.residual_median_spectral_gap_before))
+        logging.info("Spectral gap after")
+        logging.info("|RaesMean - EDMean| = %r" % (self.residual_mean_spectral_gap_after))
+        logging.info("|RaesMedian - EDMedian| = %r" % (self.residual_median_spectral_gap_after))
 
     def get_structural_stats(self):
         avg_nodes_in_network = []
@@ -148,7 +279,10 @@ class Samples:
             for sim in range(0,self.number_of_simulations):
                 nodes = list (self.samples[self.samples['simulation'] == sim]['n'].values)
                 avg_nodes_in_network.append(sum(nodes)/len(nodes))
-                regularity = list (self.samples[self.samples['simulation'] == sim]['semireg'].values)
+                if("semiReg" in self.samples.keys()):
+                    regularity = list(self.samples[self.samples['simulation'] == sim]['semiReg'].values)
+                else:
+                    regularity = list (self.samples[self.samples['simulation'] == sim]['semireg'].values)
                 semiregularity.append(sum(regularity)/len(regularity))
                 percentage.append(self.samples[self.samples['simulation'] == sim]['conv_percentage'].values[0])
                 # For plotting, taking average number of nodes and average semiregularity at each time step
@@ -177,7 +311,10 @@ class Samples:
             for sim in range(0, self.number_of_simulations):
                 nodes = list(self.samples[self.samples['simulation'] == sim]['n'].values)
                 avg_nodes_in_network.append(sum(nodes) / len(nodes))
-                regularity = list(self.samples[self.samples['simulation'] == sim]['semireg'].values)
+                if("semiReg" in self.samples.keys()):
+                    regularity = list(self.samples[self.samples['simulation'] == sim]['semiReg'].values)
+                else:
+                    regularity = list(self.samples[self.samples['simulation'] == sim]['semireg'].values)
 
                 semiregularity.append(sum(regularity) / len(regularity))
 
@@ -202,6 +339,7 @@ class Samples:
             logging.debug("\t\t STRUCTURAL INFOS")
             logging.debug("avg n = %r   std = %r" % (self.avg_n, self.std_n))
             logging.debug("avg semiregular = %r  std = %r" % (self.avg_semiregularity, self.std_semiregularity))
+
 
 
     def get_flooding_stats(self):
@@ -267,7 +405,7 @@ class Samples:
                 self.std_flooding_time = 0
                 for sim in range(0, n):
                     self.std_flooding_time += mt.pow((summation[sim] - self.avg_flooding_time), 2)
-
+                self.avg_flooding_convergence_percentage = 1
                 if (n > 1):
                     b = (1 / (n - 1))
                 else:
@@ -368,21 +506,58 @@ class Samples:
             self.stats_summary['std_disconnected'] = self.std_disconnected
 
         elif(self.graph == "ED"):
-            # Structure
-            self.stats_summary['avg_semireg'] = self.avg_semiregularity
-            self.stats_summary['std_semireg'] = self.std_semiregularity
-            # Flooding time
-            self.stats_summary['avg_flooding_time'] = self.avg_flooding_time
-            self.stats_summary['std_flooding_time'] = self.std_flooding_time
-            self.stats_summary['ttest_flooding_time'] = self.t_test_flooding_time
-            self.stats_summary['residual_flooding_time'] = self.residual_flooding_time
-            # Diameter
-            self.stats_summary['avg_diameter'] = self.avg_diameter
-            self.stats_summary['std_diameter'] = self.std_diameter
-            self.stats_summary['ttest_diameter'] = self.t_test_diameter
-            self.stats_summary['residual_diamter'] = self.residual_diameter
-            self.stats_summary['avg_disconnected'] = self.avg_disconnected
-            self.stats_summary['std_disconnected'] = self.std_disconnected
+            if(self.avg_flooding_time != None):
+                self.stats_summary['n'] = self.n
+                self.stats_summary['p'] = self.p
+
+                # Structure
+                self.stats_summary['avg_semireg'] = self.avg_semiregularity
+                self.stats_summary['std_semireg'] = self.std_semiregularity
+                # Flooding time
+                self.stats_summary['avg_flooding_time'] = self.avg_flooding_time
+                self.stats_summary['std_flooding_time'] = self.std_flooding_time
+                self.stats_summary['ttest_flooding_time'] = self.t_test_flooding_time
+                self.stats_summary['residual_flooding_time'] = self.residual_flooding_time
+                # Diameter
+                self.stats_summary['avg_diameter'] = self.avg_diameter
+                self.stats_summary['std_diameter'] = self.std_diameter
+                self.stats_summary['ttest_diameter'] = self.t_test_diameter
+                self.stats_summary['residual_diamter'] = self.residual_diameter
+                self.stats_summary['avg_disconnected'] = self.avg_disconnected
+                self.stats_summary['std_disconnected'] = self.std_disconnected
+            else:
+                # Nodes and falling probability
+                self.stats_summary['n'] = self.n
+                self.stats_summary['p'] = self.p
+                # Structure
+                self.stats_summary['avg_semireg'] = self.avg_semiregularity
+                self.stats_summary['std_semireg'] = self.std_semiregularity
+
+                # Diameter
+                self.stats_summary['avg_diameter'] = self.avg_diameter
+                self.stats_summary['std_diameter'] = self.std_diameter
+                self.stats_summary['ttest_diameter'] = self.t_test_diameter
+                self.stats_summary['residual_diamter'] = self.residual_diameter
+                self.stats_summary['avg_disconnected'] = self.avg_disconnected
+                self.stats_summary['std_disconnected'] = self.std_disconnected
+                # Spectral gap
+                if(self.spectrum):
+                    self.stats_summary['median_spectral_gap_before'] = self.median_spectral_gap[0]
+                    self.stats_summary['median_spectral_gap_after'] = self.median_spectral_gap[1]
+                    self.stats_summary['mean_spectral_gap_before'] = self.avg_spectral_gap[0]
+                    self.stats_summary['std_spectral_gap_before'] = self.std_spectral_gap[0]
+                    self.stats_summary['mean_spectral_gap_after'] = self.avg_spectral_gap[1]
+                    self.stats_summary['std_spectral_gap_after'] = self.std_spectral_gap[1]
+                    # converged spectral gap
+                    self.stats_summary['mean_convergence_spectral_gap'] = self.mean_converged_spectral_gap
+                    self.stats_summary['std_convergence_sprectral_gap'] = self.std_converged_spectral_gap
+                    self.stats_summary['median_convergence_spectral_gap'] = self.median_converged_spectral_gap
+                if(self.residual_median_spectral_gap_before != None):
+                    self.stats_summary['residual_mean_before'] = self.residual_mean_spectral_gap_before
+                    self.stats_summary['residual_median_before'] = self.residual_median_spectral_gap_before
+                    self.stats_summary['residual_mean_after'] = self.residual_mean_spectral_gap_after
+                    self.stats_summary['residual_median_after'] = self.residual_median_spectral_gap_after
+
         elif(self.graph == "EM"):
             # TO DO
             logging.debug("MUST BE DONE")
@@ -406,12 +581,13 @@ class Samples:
             self.get_structural_plotting()
         elif(self.graph == "ED"):
             # Aggiungere controllo sul se il flooding termina
-            logging.info("Plotting flooding stats")
-            # Funzione plotting flooding trend
-            logging.info("Plotting structural stats and flooding")
-            # Plottare l'andamento delle simulazioni e dei nodi informati
-            self.get_flooding_average_trend()
-            self.get_structural_plotting()
+            if("flood_status" in self.samples.keys() ):
+                logging.info("Plotting flooding stats")
+                # Funzione plotting flooding trend
+                logging.info("Plotting structural stats and flooding")
+                # Plottare l'andamento delle simulazioni e dei nodi informati
+                self.get_flooding_average_trend()
+                self.get_structural_plotting()
         return(self.stats_summary)
 
 
@@ -503,12 +679,13 @@ class Samples:
         pl.close()
 
 
+
+
     def get_flooding_average_trend(self):
         if(self.graph == "VD"):
             converged_simulations = list(int(i) for i in (self.samples[self.samples['flood_status'] == "True"]['simulation'].values))
         elif(self.graph == "ED"):
             converged_simulations = list(int(i) for i in (self.samples[self.samples['flood_status'] == True]['simulation'].values))
-
 
         if(converged_simulations):
             informed_nodes =[]
@@ -637,6 +814,12 @@ class Samples:
         pl.savefig(self.outputPathPlottings+"/Structural.png")
         #pl.savefig("/home/antonio/Desktop/Structural.png")
         pl.close()
+
+
+    def get_mean_spectral_gap(self):
+        return (self.avg_spectral_gap)
+    def get_median_spectral_gap(self):
+        return(self.median_spectral_gap)
 
 
 
