@@ -35,7 +35,7 @@ class EdgeDynamic:
         self.outPath = outpath
         self.simNumber = simNumber
         self.epsilon = epsilon
-        self.spectrumSim = True
+        self.spectrumSim = False
 
     def run(self):
         logging.info("----------------------------------------------------------------")
