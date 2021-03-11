@@ -26,7 +26,7 @@ def process_data(input_file,outputPath):
         sim_number = len(list(set(file['simulation'].values)))
 
 
-
+        s_analysis = True
         results = []
         if("lambda" in list(file.keys())):
             in_rate_list = list(set(file['lambda'].values))
@@ -42,10 +42,15 @@ def process_data(input_file,outputPath):
                         for c in c_list:
                             samples = file[(file['d'] == d)&(file['c'] == c)&(file['lambda'] == r)&(file['beta'] == q)]
                             stat = Samples(samples,output)
-                            stat.get_flooding_stats()
-                            stat.get_structural_stats()
-                            stat.get_diameter_stats()
-                            stat.plot_statistics()
+                            if(s_analysis):
+                                stat.get_spectral_analysis()
+                            if("flood" in list(file.keys()) or "flood_status" in list(file.keys())):
+                                stat.get_flooding_stats()
+                                stat.get_flooding_stats()
+                                stat.get_structural_stats()
+                                stat.get_diameter_stats()
+                                stat.plot_statistics()
+
                             results.append(stat.pack_and_get_stats())
         else:
             residual = True
@@ -102,18 +107,32 @@ def process_data(input_file,outputPath):
     # grouping by d and c and writing files for this groups
     create_folder(outputPath, "grouped_results")
     outGroupPath = outputPath + 'grouped_results' + "/"
+    if("p" in list(packing_list[0][0].keys())):
+        for d in d_list:
+            for c in c_list:
+                grouped = []
+                for dics in packing_list:
+                    for elem in dics:
+                        if(elem['d'] == d and elem['c'] == c):
+                            grouped.append(
+                                            elem
+                            )
+                grouped.sort(key = lambda x: (x['p'],x['n']) )
+                write_info_dic_as_csv(outGroupPath+'grouped_d_'+str(d)+'_c_'+str(c),grouped)
 
-    for d in d_list:
-        for c in c_list:
-            grouped = []
-            for dics in packing_list:
-                for elem in dics:
-                    if(elem['d'] == d and elem['c'] == c):
-                        grouped.append(
-                                        elem
-                        )
-            grouped.sort(key = lambda x: (x['p'],x['n']) )
-            write_info_dic_as_csv(outGroupPath+'grouped_d_'+str(d)+'_c_'+str(c),grouped)
+    else:
+        for d in d_list:
+            for c in c_list:
+                grouped = []
+                for dics in packing_list:
+                    for elem in dics:
+                        if (elem['d'] == d and elem['c'] == c):
+                            grouped.append(
+                                elem
+                            )
+                grouped.sort(key = lambda x: (x['r'],x['q']) )
+
+                write_info_dic_as_csv(outGroupPath+'grouped_d_'+str(d)+'_c_'+str(c),grouped)
 
 def process_and_get_unique_csv(inputPath,inputPathList,outputPath,d,c):
     results = []

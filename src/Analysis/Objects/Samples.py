@@ -81,7 +81,7 @@ class Samples:
 
         #self.nodes = []
         # Boolean variable for the spectral analysis
-        self.spectrum = False
+        self.spectrum = True
 
         self.median_spectral_gap = 0
         self.avg_spectral_gap = 0
@@ -90,6 +90,14 @@ class Samples:
         self.mean_converged_spectral_gap = 0
         self.std_converged_spectral_gap = 0
         self.median_converged_spectral_gap = 0
+
+        # Converged before random falling
+
+        self.mean_converged_spectral_gap_before = 0
+        self.std_converged_spectral_gap_before = 0
+        self.median_converged_spectral_gap_before = 0
+
+
 
         self.residual_mean_spectral_gap_after = None
         self.residual_median_spectral_gap_after = None
@@ -147,6 +155,8 @@ class Samples:
             self.q = self.samples['beta'].values[0]
             self.n = self.samples['target_n'].values[0]
             self.graph = "VD"
+            if ("SpectralGapBefore" in list(self.samples.keys())):
+                self.spectrum = True
         else:
             if("spectralGapBefore" in list(self.samples.keys())):
                 self.spectrum = True
@@ -171,11 +181,17 @@ class Samples:
         std_spectral_gap = 0
 
         sample_convergence = []
+
+        sample_convergence_before = []
         # Getting the medians and means
 
         for sim in range(0,self.number_of_simulations):
-            spectral_before = sorted(self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values)
-            spectral_after = sorted(self.samples[self.samples['simulation'] == sim]['spectralGap'].values)
+            if("spectralGapBefore" in list(self.samples.keys())):
+                spectral_before = sorted(self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values)
+                spectral_after = sorted(self.samples[self.samples['simulation'] == sim]['spectralGap'].values)
+            else:
+                spectral_before = sorted(self.samples[self.samples['simulation'] == sim]['SpectralGapBefore'].values)
+                spectral_after = sorted(self.samples[self.samples['simulation'] == sim]['SpectralGap'].values)
             n_bef = len(spectral_before)
             n_aft = len(spectral_after)
             # getting median of the spectral gap before random falling
@@ -211,11 +227,27 @@ class Samples:
             sample_std_aft.append( std_spectral_gap_after )
 
             # stats on converged spectral gap
-            sample_convergence.append(
-                self.samples[self.samples['simulation'] == sim]['spectralGap'].values[
-                    self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
-                ]
-            )
+            if("spectralGap" in list(self.samples.keys())):
+                sample_convergence.append(
+                    self.samples[self.samples['simulation'] == sim]['spectralGap'].values[
+                        self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
+                    ]
+                )
+                sample_convergence_before.append(  self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values[
+                        self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
+                    ])
+            else:
+
+                sample_convergence.append(
+                    self.samples[self.samples['simulation'] == sim]['SpectralGap'].values[0]
+
+                )
+
+                sample_convergence_before.append(
+                    self.samples[self.samples['simulation'] == sim]['SpectralGapBefore'].values[
+                        self.samples[self.samples['simulation'] == sim]['t'].values[-1] - 100
+                        ])
+
 
 
 
@@ -251,6 +283,12 @@ class Samples:
                 self.mean_converged_spectral_gap = sum(sample_convergence)/len(sample_convergence)
                 self.std_converged_spectral_gap = mt.sqrt((1/len(sample_convergence) * sum([mt.pow(x-self.mean_converged_spectral_gap,2) for x in sample_convergence])))
                 self.median_converged_spectral_gap = (sample_convergence[int(len(sample_convergence)/2)] + sample_convergence[int(len(sample_convergence)/2)+1])/2
+
+                sample_convergence_before = sorted(sample_convergence_before)
+
+                self.mean_converged_spectral_gap_before = sum(sample_convergence_before)/len(sample_convergence_before)
+                self.std_converged_spectral_gap_before = mt.sqrt((1/len(sample_convergence_before) * sum([mt.pow(x-self.mean_converged_spectral_gap_before,2) for x in sample_convergence_before])))
+                self.median_converged_spectral_gap_before = (sample_convergence_before[int(len(sample_convergence_before)/2)] + sample_convergence_before[int(len(sample_convergence_before)/2)+1])/2
 
         logging.info("Spectral Analysis ")
         logging.info("Median: Spectral gap before %r       Spectral gap after %r"%(self.median_spectral_gap[0],self.median_spectral_gap[0]))
@@ -505,6 +543,23 @@ class Samples:
             self.stats_summary['avg_disconnected'] = self.avg_disconnected
             self.stats_summary['std_disconnected'] = self.std_disconnected
 
+            if (self.spectrum):
+                self.stats_summary['median_spectral_gap_before'] = self.median_spectral_gap[0]
+                self.stats_summary['median_spectral_gap_after'] = self.median_spectral_gap[1]
+                self.stats_summary['mean_spectral_gap_before'] = self.avg_spectral_gap[0]
+                self.stats_summary['std_spectral_gap_before'] = self.std_spectral_gap[0]
+                self.stats_summary['mean_spectral_gap_after'] = self.avg_spectral_gap[1]
+                self.stats_summary['std_spectral_gap_after'] = self.std_spectral_gap[1]
+                # converged spectral gap
+                self.stats_summary['mean_convergence_spectral_gap'] = self.mean_converged_spectral_gap
+                self.stats_summary['std_convergence_sprectral_gap'] = self.std_converged_spectral_gap
+                self.stats_summary['median_convergence_spectral_gap'] = self.median_converged_spectral_gap
+
+                self.stats_summary['mean_convergence_spectral_gap_before'] = self.mean_converged_spectral_gap_before
+                self.stats_summary['std_convergence_sprectral_gap_before'] = self.std_converged_spectral_gap_before
+                self.stats_summary['median_convergence_spectral_gap_before'] = self.median_converged_spectral_gap_before
+
+
         elif(self.graph == "ED"):
             if(self.avg_flooding_time != None):
                 self.stats_summary['n'] = self.n
@@ -525,6 +580,30 @@ class Samples:
                 self.stats_summary['residual_diamter'] = self.residual_diameter
                 self.stats_summary['avg_disconnected'] = self.avg_disconnected
                 self.stats_summary['std_disconnected'] = self.std_disconnected
+
+                if (self.spectrum):
+                    self.stats_summary['median_spectral_gap_before'] = self.median_spectral_gap[0]
+                    self.stats_summary['median_spectral_gap_after'] = self.median_spectral_gap[1]
+                    self.stats_summary['mean_spectral_gap_before'] = self.avg_spectral_gap[0]
+                    self.stats_summary['std_spectral_gap_before'] = self.std_spectral_gap[0]
+                    self.stats_summary['mean_spectral_gap_after'] = self.avg_spectral_gap[1]
+                    self.stats_summary['std_spectral_gap_after'] = self.std_spectral_gap[1]
+                    # converged spectral gap
+                    self.stats_summary['mean_convergence_spectral_gap'] = self.mean_converged_spectral_gap
+                    self.stats_summary['std_convergence_sprectral_gap'] = self.std_converged_spectral_gap
+                    self.stats_summary['median_convergence_spectral_gap'] = self.median_converged_spectral_gap
+
+                    self.stats_summary['mean_convergence_spectral_gap_before'] = self.mean_converged_spectral_gap_before
+                    self.stats_summary['std_convergence_sprectral_gap_before'] = self.std_converged_spectral_gap_before
+                    self.stats_summary['median_convergence_spectral_gap_before'] = self.median_converged_spectral_gap_before
+
+
+
+
+
+
+
+
             else:
                 # Nodes and falling probability
                 self.stats_summary['n'] = self.n
@@ -552,6 +631,12 @@ class Samples:
                     self.stats_summary['mean_convergence_spectral_gap'] = self.mean_converged_spectral_gap
                     self.stats_summary['std_convergence_sprectral_gap'] = self.std_converged_spectral_gap
                     self.stats_summary['median_convergence_spectral_gap'] = self.median_converged_spectral_gap
+
+
+                    self.stats_summary['mean_convergence_spectral_gap_before'] = self.mean_converged_spectral_gap_before
+                    self.stats_summary['std_convergence_sprectral_gap_before'] = self.std_converged_spectral_gap_before
+                    self.stats_summary['median_convergence_spectral_gap_before'] = self.median_converged_spectral_gap_before
+
                 if(self.residual_median_spectral_gap_before != None):
                     self.stats_summary['residual_mean_before'] = self.residual_mean_spectral_gap_before
                     self.stats_summary['residual_median_before'] = self.residual_median_spectral_gap_before
@@ -820,6 +905,8 @@ class Samples:
         return (self.avg_spectral_gap)
     def get_median_spectral_gap(self):
         return(self.median_spectral_gap)
+
+
 
 
 
