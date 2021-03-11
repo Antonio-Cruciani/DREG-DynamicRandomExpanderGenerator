@@ -376,7 +376,8 @@ class DynamicGraph:
             self.consensus.del_nodes_from_dictionary(exiting_nodes)
         self.set_number_of_exiting_nodes_at_each_round(Z_t)
 
-
+    def get_nodes_t(self):
+        return(len(self.G.nodes()))
     def target_size_achieved(self):
         if(len(self.G.nodes()) >=self.target_n ):
             return True

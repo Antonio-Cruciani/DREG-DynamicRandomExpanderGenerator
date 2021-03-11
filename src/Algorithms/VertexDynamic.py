@@ -1,6 +1,8 @@
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_file_contents
-from src.StastModules.Snapshot import get_snapshot_dynamic
+from src.StastModules.Snapshot import get_snapshot_dynamic,get_snapshot_dynamicND
+from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
+
 import time
 import math as mt
 import logging
@@ -36,6 +38,7 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
+        self.spectrum = True
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -62,7 +65,10 @@ class VertexDynamic:
                             logging.info("Simulation %d" % (sim))
                             #print("Simulation: ", sim)
                             start_time = time.time()
-                            stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
+                            if(self.spectrum):
+                                stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim)
+                            else:
+                                stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
                             vertexDynamicStats.add_stats(stats)
                             # vertexDynamicStats.add_flood_infos(flood_info)
                             logging.info("Elapsed time %r" % (time.time() - start_time))
@@ -270,6 +276,139 @@ class VertexDynamic:
                 #print("Flooding Protocol status : FAILED")
                 #print("----------------------------------------------------------------")
         return (final_stats)
+
+
+    def VertexDynamicGeneratorSpectrum(self, d, c, inrate, outrate, sim):
+
+        def check_convergence_dynamic():
+
+            if (G.get_converged() == False):
+                # Getting the number of the vertices with less than d neighbours
+                # Number of the nodes with a degree >=d and <= cd
+                semireg = 0
+                # Number of nodes with a degree <d
+                underreg = 0
+                # Number of nodes with a degree >cd
+                overreg = 0
+                nodi = list(G.get_G().nodes())
+                for u in nodi:
+                    if (G.get_G().degree(u) < G.get_d()):
+                        underreg += 1
+                    elif (G.get_G().degree(u) > G.get_tolerance()):
+                        overreg += 1
+                    else:
+                        semireg += 1
+                G.increment_time_conv()
+
+                # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
+                percentages = [i for i in range(0,101)]
+                G.set_semiregular_percentage(percentages[-1])
+
+                if (semireg >= len(nodi) * G.get_semiregular_percentage()):
+                    G.set_converged(True)
+                    logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
+
+                else:
+                    a = 0
+                    b = 100
+                    while(a<=b):
+                        m = ((b+a) / 2)
+                        G.set_semiregular_percentage(m)
+                        #print("Nodi semireg = ", semireg, " Percentuale = ",G.get_semiregular_percentage(),"Nodi rete",len(nodi), " Nodi perc nodi = ",len(nodi) * G.get_semiregular_percentage())
+                        if(semireg >= len(nodi) * G.get_semiregular_percentage()):
+                            a = m + 1
+                            #print("Increasing (d,cd)-regularity range to ", a, " - ",b, "%")
+                        else:
+                            b = m - 1
+                            #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
+
+                    logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
+                    #print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
+                    #print("----------------------------------------------------------------")
+                    G.set_converged(True)
+
+
+
+
+        t = 0
+
+        final_stats = []
+        achieved = False
+
+        repeat = True
+        sim = {
+            "simulation": sim
+        }
+        if (d <= 0 or c < 0):
+            logging.error("Input parameters must be: d>0 c>1")
+            #print("Error, input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
+        c = 0
+        while (repeat):
+            G.disconnect_from_network()
+            if (achieved):
+                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+                spectralGapBefore = {"SpectralGapBefore": spectralGap}
+
+            G.connect_to_network()
+            # 1) Entrano nuovi nodi
+            # 2) Escono dei nodi
+            # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
+            # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
+            # NOTA 3)-4) deve essere in parallelo non seriale
+            # 5) Esegui flooding step sul grafo al tempo I
+            G.add_phase_vd()
+
+            #G.add_phase_MT()
+            #G.del_phase_MT()
+
+            G.del_phase_vd()
+
+            if (not achieved):
+                if (G.get_target_density()):
+                    logging.info("The Graph contains the desired number of nodes")
+                    #print("----------------------------------------------------------------")
+                    #print("The Graph contains the desired number of nodes ")
+                    #print("----------------------------------------------------------------")
+                    achieved = True
+                    stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
+                    check_convergence_dynamic()
+                    #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                    conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
+                    Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+                    spectralGaps = {"SpectralGap":spectralGap}
+                    spectralGapBefore = {'SpectralGapBefore':0}
+                    final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGaps})
+
+                # else:
+                #     conv_perc = {"conv_percentage":-1}
+                #     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
+                #
+                #     Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+                #     spectralGaps = {"SpectralGap": spectralGap}
+                #     final_stats.append({**sim, **conv_perc, **stats, **spectralGaps})
+            else:
+                #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
+                check_convergence_dynamic()
+                conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
+                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+                spectralGaps = {"SpectralGap": spectralGap}
+                final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGaps})
+            t += 1
+            if(G.get_converged()):
+
+
+                if(c == 100):
+                    repeat = False
+
+                    logging.info("Graph converged and 100 more steps simulated")
+                else:
+                    c+=1
+
+        return (final_stats)
+
 
     def write_info_dic_as_csv(self, outPath, results):
         create_file(outPath, list(results.get_stats()[0][0].keys()))
