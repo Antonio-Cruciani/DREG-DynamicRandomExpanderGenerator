@@ -87,7 +87,7 @@ def get_snapshot_dynamicND(G,d,c,t):
 def get_snapshot(G,p,d,c,t,n_in=None,n_out=None):
 
 
-    IsInvertible,spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+    #IsInvertible,spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
     n, avg_deg, stdv, var, semireg, underreg, overreg, vol,diameter,radius = get_graph_properties(G.get_G(),d,c)
     # Creating Dictionary with all the informations
     if (G.isregular()):
@@ -95,8 +95,6 @@ def get_snapshot(G,p,d,c,t,n_in=None,n_out=None):
     else:
         regularity = True
     dic={
-        "spectralGap": spectralGap,
-        "lambdaNGap":lambdaNGap,
         "p":p,
         "n":n,
         "d":d,

@@ -38,7 +38,7 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
-        self.spectrum = True
+        self.spectrum = False
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -228,9 +228,9 @@ class VertexDynamic:
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         while (repeat):
-
-            G.connect_to_network()
             G.disconnect_from_network()
+            G.connect_to_network()
+            #G.disconnect_from_network()
             # 1) Entrano nuovi nodi
             # 2) Escono dei nodi
             # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro

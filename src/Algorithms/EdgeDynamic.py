@@ -45,7 +45,11 @@ class EdgeDynamic:
 
            for n in self.n_list:
                 if(p != 0):
-                    epsilon = self.get_epsilon(p, n)
+                    logging.info(" Inferring epsilon , please wait")
+
+                    #epsilon = self.get_epsilon(p, n)
+                    epsilon = self.epsilon
+
                 else:
                     epsilon = self.epsilon
                 logging.info("----------------------------------------------------------------")
@@ -66,7 +70,8 @@ class EdgeDynamic:
                             if(self.spectrumSim):
                                 stats = self.EdgeDynamicGeneratorSpectrum(d, c,p,n,sim,epsilon)
                             else:
-                                stats = self.EdgeDynamicGenerator(d, c,p,n,sim,epsilon)
+                                #stats = self.EdgeDynamicGenerator(d, c,p,n,sim,epsilon)
+                                stats = self.EdgeDynamicFlooding(d,c,p,n,sim,epsilon)
                             edgeDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
                             logging.info("Elapsed time %r" % (time.time()-start_time))
@@ -158,17 +163,22 @@ class EdgeDynamic:
         while(repeat):
             G.add_phase()
             G.del_phase()
-            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-            if (G.get_converged() == False):
-                stats_bef = {
-                    "spectralGapBefore": spectralGap,
-                    "lambdaNGapBefore": lambdaNGap
-                }
+            #Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            #if (G.get_converged() == False):
+            #    stats_bef = {
+            #        "spectralGapBefore": spectralGap,
+            #        "lambdaNGapBefore": lambdaNGap
+            #    }
 
             if (p != 0):
 
                 G.random_fall()
-            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            if(G.get_converged() == False):
+
+                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            spectral = {
+                "spectralGap":spectralGap
+            }
             if (G.get_converged() == False):
                 stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
             # if (G.get_converged() == False):
@@ -192,7 +202,7 @@ class EdgeDynamic:
 
                     repeat = False
                     # final_stats.append({**sim, **stats_bef,**stats_aft, **stats, **flood_dictionary})
-                    final_stats.append({**sim, **stats_bef, **stats, **flood_dictionary})
+                    final_stats.append({**sim, **stats,**spectral, **flood_dictionary})
                     logging.info("The graph is not connected, flooding will always fail")
                     logging.info("Exiting")
                     #print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
@@ -200,14 +210,120 @@ class EdgeDynamic:
 
                     if (G.flooding.get_converged() == False):
                         flood_dictionary = flood()
-                        final_stats.append({**sim, **stats_bef, **stats, **flood_dictionary})
+                        final_stats.append({**sim, **stats, **flood_dictionary})
 
                     else:
                         repeat = False
             t+=1
+            print(" TIME STEP T = ",t," Spectral gap =",spectralGap)
         return (final_stats)
 
 
+    def EdgeDynamicFlooding(self, d, c, p, n, sim, epsilon):
+
+        def flood():
+            flood_dictionary = {}
+            if (G.get_converged()):
+                if (G.flooding.get_initiator() == -1):
+                    G.set_flooding()
+                    G.flooding.set_initiator()
+                    G.flooding.update_flooding(G)
+                    logging.info("Flooding Simulation : STARTED")
+                    # print("----- Flooding Simulation: STARTED -----\n")
+                else:
+                    if (G.flooding.get_started() == True):
+                        G.flooding.update_flooding(G)
+                    G.flooding.is_informed()
+                    if (G.flooding.get_converged()):
+                        logging.info("ALL NODES IN THE NETWORK ARE INFORMED")
+                        # print("--- ALL NODES IN THE NETWORK ARE INFORMED ---\n\n")
+                flood_dictionary['informed_nodes'] = G.flooding.get_informed_nodes()
+                flood_dictionary['uninformed_nodes'] = G.flooding.get_uninformed_nodes()
+                flood_dictionary['t_flood'] = G.flooding.get_t_flood()
+                flood_dictionary['process_status'] = G.get_converged()
+                flood_dictionary['flood_status'] = G.flooding.get_converged()
+                flood_dictionary['initiator'] = G.flooding.get_initiator()
+            else:
+                flood_dictionary['informed_nodes'] = 0
+                flood_dictionary['uninformed_nodes'] = len(G.get_list_of_nodes())
+                flood_dictionary['t_flood'] = 0
+                flood_dictionary['process_status'] = G.get_converged()
+                flood_dictionary['flood_status'] = G.flooding.get_converged()
+                flood_dictionary['initiator'] = G.flooding.get_initiator()
+
+            return (flood_dictionary)
+
+
+
+        t = 0
+        final_stats = []
+
+        repeat = True
+        sim = {
+            "simulation": sim,
+            "epsilon": epsilon
+        }
+        if (d <= 0 or c < 0):
+            logging.error("Error, input parameters must be: d>0 c>1")
+            # print("Error, input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(n, d, c, falling_probability=p, model=self.model)
+
+        while (repeat):
+            G.add_phase()
+            G.del_phase()
+            # Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            # if (G.get_converged() == False):
+            #    stats_bef = {
+            #        "spectralGapBefore": spectralGap,
+            #        "lambdaNGapBefore": lambdaNGap
+            #    }
+
+            if (p != 0):
+                G.random_fall()
+
+            if (G.get_converged() == False):
+                stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
+            # if (G.get_converged() == False):
+            #
+            #     stats_aft = {
+            #         "spectralGapAfter": spectralGap,
+            #         "lambdaNGapAfter": lambdaNGap
+            #     }
+            if(t==100):
+
+                G.set_converged(True)
+                G.flooding.set_converged(False)
+                ##Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+
+            if (G.get_converged()):
+                if (nx.is_connected(G.get_G()) == False and p == 0):
+                    flood_dictionary = {
+                        'informed_nodes': 0,
+                        'uninformed_nodes': len(G.get_list_of_nodes()),
+                        't_flood': 0,
+                        'process_status': G.get_converged(),
+                        'flood_status': False,
+                        'initiator': G.flooding.get_initiator()
+                    }
+
+                    repeat = False
+                    # final_stats.append({**sim, **stats_bef,**stats_aft, **stats, **flood_dictionary})
+                    final_stats.append({**sim, **stats,**flood_dictionary})
+                    logging.info("The graph is not connected, flooding will always fail")
+                    logging.info("Exiting")
+                    # print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
+                if (repeat):
+
+                    if (G.flooding.get_converged() == False):
+                        flood_dictionary = flood()
+                        final_stats.append({**sim, **stats, **flood_dictionary})
+
+                    else:
+                        repeat = False
+            t += 1
+
+        return (final_stats)
 
     def EdgeDynamicGeneratorSpectrum(self, d, c, p,n, sim,epsilon):
 
@@ -300,8 +416,8 @@ class EdgeDynamic:
     def get_epsilon(self,p,n):
         G = DynamicGraph(n, 4, 3, falling_probability = p,model = self.model)
         t = 0
-        spectral_list =[]
-        while(t<n):
+        spectral_list = []
+        while(t<25):
             G.add_phase()
             G.del_phase()
             G.random_fall()

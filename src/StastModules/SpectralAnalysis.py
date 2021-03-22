@@ -2,6 +2,8 @@ import networkx as nx
 import numpy as np
 import scipy as sc
 import math as mt
+import cupy as cp
+
 # Function that return the spectral Gap of the Transition Matrix P
 def get_spectral_gap_transition_matrix(G):
     Isinvertible = False
@@ -28,24 +30,35 @@ def get_spectral_gap_transition_matrix(G):
             I = np.identity(n)
             invD = invDiags*I
             # Getting the Transition Matrix
-            P =  invD* A
-            check = P.sum(axis=1).flatten()
-            # Getting the spectral gap of P
-            spectrumP = np.linalg.eigvals(P)
 
+            #P =  invD* A
+            cpInvD = cp.asarray(invD)
+            cpA = cp.asarray(A)
+
+            P = cp.matmul(cpInvD,cpA)
+            #check = P.sum(axis=1).flatten()
+            # Getting the spectral gap of P
+            #spectrumP = np.linalg.eigvals(P)
+            spectrumP,v = cp.linalg.eigh(P)
+            cp.cuda.Stream.null.synchronize()
 
             # The first eigenvalue of the transition matrix is always 1
-            lamba1 = 1
-            # Getting the second Eigenvalue
-            ordered_spectrum = sorted(spectrumP,reverse = True)
+            #lamba1 = 1
 
-            lambda2 =ordered_spectrum[1]
+            # Getting the second Eigenvalue
+            #ordered_spectrum = sorted(spectrumP,reverse = True)
+            ordered_spectrum = cp.sort(spectrumP[0])
+            lamba1 = ordered_spectrum[-1]
+            #lambda2 =ordered_spectrum[1]
+            #lambda_n = ordered_spectrum[-1]
+            #lambda_n_1 = ordered_spectrum[-2]
+            lambda2 = ordered_spectrum[-2]
             if (np.iscomplex(lambda2)):
                 lambda2 = lambda2.real
-            spectralGap = lamba1 - lambda2
+            spectralGap = float(lamba1 - lambda2)
             # Getting the n-th Eigenvalue
-            lambdaN = ordered_spectrum[-1]
-            lambdaNGap = 1 - lambdaN
+            lambdaN = ordered_spectrum[-2]
+            lambdaNGap = ordered_spectrum[-1] - lambdaN
             if isinstance(spectralGap, complex):
                 return(Isinvertible,0,0)
             return (Isinvertible,spectralGap, lambdaNGap)

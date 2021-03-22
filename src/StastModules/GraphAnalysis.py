@@ -39,12 +39,12 @@ def get_graph_properties(G,d,c):
             vol += G.degree(u)
 
         # Getting Radius and Diameter of the Graph
-        if(nx.is_connected(G)):
-            diameter = nx.diameter(G)
-            radius = nx.radius(G)
-        else:
-            diameter = "Null"
-            radius =  "Null"
+        #if(nx.is_connected(G)):
+        #    diameter = nx.diameter(G)
+        #    radius = nx.radius(G)
+        #else:
+        diameter = "Null"
+        radius =  "Null"
     else:
         n=0
         avg_deg ="NULL"
