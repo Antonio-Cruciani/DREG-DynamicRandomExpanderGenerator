@@ -112,6 +112,7 @@ class Flooding:
                 self.stabilization +=1
 
         if(self.stabilization == self.stop_time):
+
             self.set_converged(True)
             nodes = len(list(self.dic.keys()))
             ones = (self.get_informed_nodes() / nodes) * 100

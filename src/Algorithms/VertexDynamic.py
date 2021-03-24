@@ -137,6 +137,7 @@ class VertexDynamic:
                     G.flooding.set_initiator()
                     G.flooding.update_flooding(G)
                 else:
+
                     # Updating Flooding
                     if (G.flooding.get_t_flood() == 1):
                         logging.info("Flooding protocol STARTED %r"%(G.flooding.get_started()))
@@ -147,7 +148,7 @@ class VertexDynamic:
 
                         if (not G.flooding.check_flooding_status()):
                             G.set_converged(True)
-                            G.flooding.set_converged(False)
+                            #G.flooding.set_converged(False)
                             if (G.flooding.get_number_of_restart() == 0):
                                 logging.info("All the informed nodes left the network")
                                 logging.info("Flooding Protocol status: Failed")
@@ -159,7 +160,7 @@ class VertexDynamic:
                                 #print("----------------------------------------------------------------")
                                 G.flooding.set_converged(False)
                                 G.flooding.set_failed(True)
-                        G.flooding.terminated()
+                        #G.flooding.terminated()
                         if (G.flooding.get_converged()):
                             #logging.info("\t FLOODING INFOS")
                             logging.info("AL NODES IN THE NETWORK ARE INFORMED")
@@ -263,6 +264,9 @@ class VertexDynamic:
                 conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                 final_stats.append({**sim, **conv_perc, **stats, **flood_info})
             t += 1
+            #print("REP = ",repeat)
+            #print("CONV = ",G.flooding.get_converged())
+            #print("GET FAIL ",not(G.flooding.get_failed()))
 
             if (G.flooding.get_converged() and (not (G.flooding.get_failed()))):
                 repeat = False
