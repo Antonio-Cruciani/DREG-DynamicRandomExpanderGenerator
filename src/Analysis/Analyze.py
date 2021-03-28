@@ -6,7 +6,7 @@ def get_id(dataframe):
     return (dataframe['p'])
 
 def write_info_dic_as_csv( outPath, results):
-    create_file(outPath, list(results[6].keys()))
+    create_file(outPath, list(results[0].keys()))
 
     write_on_file_contents(outPath, results)
 
@@ -26,7 +26,7 @@ def process_data(input_file,outputPath):
         sim_number = len(list(set(file['simulation'].values)))
 
 
-        s_analysis = True
+        s_analysis = False
         results = []
         if("lambda" in list(file.keys())):
             in_rate_list = list(set(file['lambda'].values))
@@ -45,7 +45,6 @@ def process_data(input_file,outputPath):
                             if(s_analysis):
                                 stat.get_spectral_analysis()
                             if("flood" in list(file.keys()) or "flood_status" in list(file.keys())):
-                                stat.get_flooding_stats()
                                 stat.get_flooding_stats()
                                 stat.get_structural_stats()
                                 stat.get_diameter_stats()

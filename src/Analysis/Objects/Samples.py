@@ -18,7 +18,7 @@ class Samples:
         self.outputPathPlottings = outpath
         self.outputPathCSV = outpath
         self.samples = samples
-        self.legend = False
+        self.legend = True
 
         self.graph = None
         self.d = None
@@ -70,6 +70,7 @@ class Samples:
         self.flooding_in_each_sim = []
         self.semiregualrity_in_each_sim = []
         self.nodes_in_each_sim = []
+        self.number_of_failed_sim = None
 
         # self.spectral_gaps_before = []
         # self.spectral_gaps_after = []
@@ -81,7 +82,7 @@ class Samples:
 
         #self.nodes = []
         # Boolean variable for the spectral analysis
-        self.spectrum = True
+        self.spectrum = False
 
         self.median_spectral_gap = 0
         self.avg_spectral_gap = 0
@@ -384,6 +385,9 @@ class Samples:
         summation = []
         informed = []
         if(self.graph == "VD"):
+            converged_simulations = list(int(i) for i in (self.samples[self.samples['flood_status'] == "True"]['simulation'].values))
+            failed_simulations = list(set([i for i in range(0, self.number_of_simulations)]) - set(converged_simulations))
+            self.number_of_failed_sim = (len(failed_simulations))
             # Ho agigiunto un pezzo per calcolare il numero medio di nodi nella rete
             for sim in range(0,self.number_of_simulations):
                 result = list(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['t_flood'].values)
@@ -535,6 +539,7 @@ class Samples:
             self.stats_summary['residual_flooding_time'] = self.residual_flooding_time
             self.stats_summary['avg_flooding_convergence'] = self.avg_flooding_convergence_percentage
             self.stats_summary['std_flooding_convergence'] = self.std_flooding_convergence_percentage
+            self.stats_summary['number_failed_simulations'] = self.number_of_failed_sim
             # Diameter
             self.stats_summary['avg_diameter'] = self.avg_diameter
             self.stats_summary['std_diameter'] = self.std_diameter
