@@ -38,7 +38,7 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
-        self.spectrum = False
+        self.spectrum = True
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -409,6 +409,8 @@ class VertexDynamic:
 
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
+                    #logging.info("Step %r "%c)
+
                     c+=1
 
         return (final_stats)
