@@ -82,7 +82,7 @@ class Samples:
 
         #self.nodes = []
         # Boolean variable for the spectral analysis
-        self.spectrum = False
+        self.spectrum = True
 
         self.median_spectral_gap = 0
         self.avg_spectral_gap = 0
@@ -228,29 +228,47 @@ class Samples:
             sample_std_aft.append( std_spectral_gap_after )
 
             # stats on converged spectral gap
-            if("spectralGap" in list(self.samples.keys())):
-                sample_convergence.append(
-                    self.samples[self.samples['simulation'] == sim]['spectralGap'].values[
-                        self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
-                    ]
-                )
-                sample_convergence_before.append(  self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values[
-                        self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
-                    ])
-            else:
-
-                sample_convergence.append(
-                    self.samples[self.samples['simulation'] == sim]['SpectralGap'].values[0]
-
-                )
-
-                sample_convergence_before.append(
-                    self.samples[self.samples['simulation'] == sim]['SpectralGapBefore'].values[
-                        self.samples[self.samples['simulation'] == sim]['t'].values[-1] - 100
+            if(self.graph == "ED"):
+                if("spectralGap" in list(self.samples.keys())):
+                    sample_convergence.append(
+                        self.samples[self.samples['simulation'] == sim]['spectralGap'].values[
+                            self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
+                        ]
+                    )
+                    sample_convergence_before.append(  self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values[
+                            self.samples[self.samples['simulation'] == sim]['t'].values[-1] -100
                         ])
+                else:
 
+                    sample_convergence.append(
+                        self.samples[self.samples['simulation'] == sim]['SpectralGap'].values[-1] -100
 
+                    )
 
+                    sample_convergence_before.append(
+                        self.samples[self.samples['simulation'] == sim]['SpectralGapBefore'].values[
+                            self.samples[self.samples['simulation'] == sim]['t'].values[-1] - 100
+                            ])
+            else:
+                if ("spectralGap" in list(self.samples.keys())):
+                    sample_convergence.append(
+                        self.samples[self.samples['simulation'] == sim]['spectralGap'].values[0]
+
+                    )
+                    sample_convergence_before.append(
+                        self.samples[self.samples['simulation'] == sim]['spectralGapBefore'].values[0]
+                    )
+
+                else:
+
+                    sample_convergence.append(
+                        self.samples[self.samples['simulation'] == sim]['SpectralGap'].values[0]
+
+                    )
+
+                    sample_convergence_before.append(
+                        self.samples[self.samples['simulation'] == sim]['SpectralGapBefore'].values[0]
+                            )
 
         # median of medians
         sample_medians_before = sorted(sample_medians_before)
