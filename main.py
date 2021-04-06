@@ -50,7 +50,7 @@ def main(argv):
         elif (opt in ("-r", "--rate")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
-                inRate.append(int(elem))
+                inRate.append(float(elem))
         elif (opt in ("-q", "--quit")):
             splittedInput = arg.split(",")
             for elem in splittedInput:

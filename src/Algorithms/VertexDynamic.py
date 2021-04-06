@@ -38,7 +38,7 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
-        self.spectrum = True
+        self.spectrum = False
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -178,6 +178,7 @@ class VertexDynamic:
                         #threshold = 2* mt.floor(mt.log(G.get_target_n(),2))
                         threshold = G.get_target_n()
                         if (G.flooding.get_t_flood() > threshold):
+                            logging.info("Iterations > threshold")
                             #logging.info("\t FLOODING INFOS")
                             logging.info("The Flooding protocol is too slow, stopping the simulation")
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
