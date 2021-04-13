@@ -290,7 +290,7 @@ class EdgeDynamic:
             #         "spectralGapAfter": spectralGap,
             #         "lambdaNGapAfter": lambdaNGap
             #     }
-            if(t==100):
+            if(t==mt.log(n,2)):
 
                 G.set_converged(True)
                 G.flooding.set_converged(False)
