@@ -47,6 +47,14 @@ class Samples:
         self.avg_flooding_convergence_percentage = None
         self.std_flooding_convergence_percentage = None
 
+        self.avg_90_flooding_time = None
+        self.std_90_flooding_time = None
+        self.avg_90_flooding_convergence_percentage = None
+        self.std_90_flooding_convergence_percentage = None
+
+        self.avg_decrements = None
+        self.std_decrements = None
+
         self.avg_diameter = None
         self.std_diameter = None
         self.avg_disconnected = None
@@ -68,6 +76,7 @@ class Samples:
 
         self.flooding_convergence_percentage_in_each_sim = []
         self.flooding_in_each_sim = []
+        self.flooding_90_in_each_sim = []
         self.semiregualrity_in_each_sim = []
         self.nodes_in_each_sim = []
         self.number_of_failed_sim = None
@@ -459,11 +468,12 @@ class Samples:
                 result = list(self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['t_flood'].values)
 
                 if(result ):
-
                     summation.append(result[0])
                     convergence = self.samples[(self.samples['simulation'] == sim) & (self.samples['flood_status'] == "True")]['percentage_informed'].values[0]
                     informed.append(convergence)
                     self.flooding_convergence_percentage_in_each_sim.append(convergence/100)
+
+
                 else:
                     self.flooding_convergence_percentage_in_each_sim.append(0)
 
@@ -471,6 +481,23 @@ class Samples:
                 t_flood = max(self.samples[self.samples['simulation'] == sim]['t_flood'].values)
                 self.flooding_in_each_sim.append(self.samples[(self.samples['simulation'] == sim)&(self.samples['t_flood'] == t_flood)]['informed_nodes'].values[0])
 
+            # Getting the 90% convergence
+            indexes_converged_simulations = sorted(list(set(self.samples[self.samples['flood_status'] == "True"]['simulation'].values)))
+            #indexes_simulations = [i for i in range(0,len(list(set(self.samples['simulation'].values))))]
+            informed_90_perc = []
+            for sim in indexes_converged_simulations:
+                experiment = self.samples[self.samples['simulation'] == sim][['informed_nodes','uninformed_nodes','t_flood']].values
+                k = 0
+                found = False
+                while(k<len(experiment) and found == False):
+                    elem = experiment[k]
+                    if(elem[0]/(elem[0]+elem[1])>=0.90):
+                        self.flooding_90_in_each_sim.append(elem[2])
+                        informed_90_perc.append(elem[0]/(elem[0]+elem[1]))
+                        found = True
+                    k+=1
+
+            n90 = len(self.flooding_90_in_each_sim)
             n = len(summation)
 
             if (n != 0):
@@ -491,8 +518,50 @@ class Samples:
                 self.std_flooding_convergence_percentage = mt.sqrt(b * self.avg_flooding_convergence_percentage)
                 self.get_t_test_flooding_time(summation)
                 self.get_residual_flooding_time()
+
+                decrements = []
+                for elem in summation:
+                    decrements.append(
+                        elem - mt.log(self.n,2)
+                    )
+                self.avg_decrements = sum(decrements)/n
+                self.std_decrements = 0
+                for sim in range(0, n):
+                    self.std_decrements += mt.pow((decrements[sim] - self.avg_decrements), 2)
+                if (n > 1):
+                    b = (1 / (n - 1))
+                else:
+                    b = 0
+                a = (self.std_decrements)
+                self.std_decrements = mt.sqrt(b * a)
+                logging.info("\t\t FLOODING INFOS")
+
+
             else:
                 logging.info("Flooding never converge")
+
+            if (n90 != 0):
+                self.avg_90_flooding_time = sum(self.flooding_90_in_each_sim) / n90
+
+                self.avg_90_flooding_convergence_percentage = (sum(informed_90_perc) / n90)
+                self.std_90_flooding_time = 0
+                self.std_90_flooding_convergence_percentage = 0
+                for sim in range(0, n90):
+                    self.std_90_flooding_time += mt.pow((self.flooding_90_in_each_sim[sim] - self.avg_90_flooding_time), 2)
+                    self.std_90_flooding_convergence_percentage += mt.pow(
+                        (self.flooding_90_in_each_sim[sim] - self.avg_90_flooding_convergence_percentage), 2)
+                if (n90 > 1):
+                    b = (1 / (n90 - 1))
+                else:
+                    b = 0
+                a = (self.std_90_flooding_time)
+                self.std_90_flooding_time = mt.sqrt(b * a)
+                self.std_90_flooding_convergence_percentage = mt.sqrt(b * self.avg_90_flooding_convergence_percentage)
+                #self.get_t_test_flooding_time(summation)
+                #self.get_residual_flooding_time()
+            else:
+                logging.info("Flooding 90% never converge")
+
         elif(self.graph == "ED"):
             for sim in range(0, self.number_of_simulations):
                 result = list(
@@ -606,6 +675,18 @@ class Samples:
             self.stats_summary['avg_flooding_convergence'] = self.avg_flooding_convergence_percentage
             self.stats_summary['std_flooding_convergence'] = self.std_flooding_convergence_percentage
             self.stats_summary['number_failed_simulations'] = self.number_of_failed_sim
+
+            # Flooding 90%
+            # Flooding time
+            self.stats_summary['avg_90_flooding_time'] = self.avg_90_flooding_time
+            self.stats_summary['std_90_flooding_time'] = self.std_90_flooding_time
+            self.stats_summary['avg_90_flooding_convergence'] = self.avg_90_flooding_convergence_percentage
+            self.stats_summary['std_90_flooding_convergence'] = self.std_90_flooding_convergence_percentage
+
+            # Flooding Decrements
+
+            self.stats_summary['avg_decrements'] = self.avg_decrements
+            self.stats_summary['std_decrements'] = self.std_decrements
             # Diameter
             self.stats_summary['avg_diameter'] = self.avg_diameter
             self.stats_summary['std_diameter'] = self.std_diameter
@@ -676,12 +757,6 @@ class Samples:
                     self.stats_summary['mean_convergence_spectral_gap_before'] = self.mean_converged_spectral_gap_before
                     self.stats_summary['std_convergence_sprectral_gap_before'] = self.std_converged_spectral_gap_before
                     self.stats_summary['median_convergence_spectral_gap_before'] = self.median_converged_spectral_gap_before
-
-
-
-
-
-
 
 
             else:
