@@ -91,7 +91,7 @@ class Samples:
 
         #self.nodes = []
         # Boolean variable for the spectral analysis
-        self.spectrum = False
+        self.spectrum = True
 
         self.median_spectral_gap = 0
         self.avg_spectral_gap = 0
@@ -367,9 +367,9 @@ class Samples:
                                                                  int(len(sample_convergence_before_logn) / 2) + 1]) / 2
 
         logging.info("Spectral Analysis ")
-        logging.info("Median: Spectral gap before %r       Spectral gap after %r"%(self.median_spectral_gap[0],self.median_spectral_gap[0]))
-        logging.info("Mean: Spectral gap before %r       Spectral gap after %r"%(self.avg_spectral_gap[0],self.avg_spectral_gap[0]))
-        logging.info("STD: Spectral gap before %r       Spectral gap after %r"%(self.std_spectral_gap[0],self.std_spectral_gap[0]))
+        logging.info("Median: Spectral gap before %r       Spectral gap after %r"%(self.median_spectral_gap[0],self.median_spectral_gap[1]))
+        logging.info("Mean: Spectral gap before %r       Spectral gap after %r"%(self.avg_spectral_gap[0],self.avg_spectral_gap[1]))
+        logging.info("STD: Spectral gap before %r       Spectral gap after %r"%(self.std_spectral_gap[0],self.std_spectral_gap[1]))
 
     def get_spectral_gap_residuals(self,raes_mean_spectral_gap_before,raes_mean_spectral_gap_before_after,raes_median_spectral_gap_before,raes_median_spectral_gap_after):
         self.residual_mean_spectral_gap_after = (raes_mean_spectral_gap_before_after - self.avg_spectral_gap[1])

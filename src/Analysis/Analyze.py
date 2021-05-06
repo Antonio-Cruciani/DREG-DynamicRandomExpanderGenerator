@@ -1,3 +1,5 @@
+import logging
+
 from src.Analysis.Objects.Samples import  Samples
 from src.FileOperations.WriteOnFile import create_folder,create_file,write_on_file_contents
 import pandas as pd
@@ -26,7 +28,7 @@ def process_data(input_file,outputPath):
         sim_number = len(list(set(file['simulation'].values)))
 
 
-        s_analysis = False
+        s_analysis = True
         results = []
         if("lambda" in list(file.keys())):
             in_rate_list = list(set(file['lambda'].values))
@@ -139,7 +141,12 @@ def process_and_get_unique_csv(inputPath,inputPathList,outputPath,d,c):
     outputPath = outputPath +"single/"
 
     for dir in inputPathList:
-        file = pd.read_csv(inputPath+dir+"/results.csv")
+        try:
+            file = pd.read_csv(inputPath+dir+"/results.csv")
+        except:
+            logging.info("No results file in %r"%(inputPath+dir))
+            continue
+
         samples = file[(file['d'] == d) & (file['c'] == c)]
         r = samples['lambda'].values[0]
         q = samples['beta'].values[0]
