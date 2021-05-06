@@ -1,3 +1,5 @@
+import networkx as nx
+
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_file_contents
 from src.StastModules.Snapshot import get_snapshot_dynamic,get_snapshot_dynamicND
@@ -6,6 +8,7 @@ from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
 import time
 import math as mt
 import logging
+import os
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class VertexDynamicOutput:
@@ -38,7 +41,7 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
-        self.spectrum = False
+        self.spectrum = True
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -48,25 +51,26 @@ class VertexDynamic:
         for inrate in self.inrate_list:
             for outrate in self.outrate_list:
                 logging.info("----------------------------------------------------------------")
-                logging.info("Inrate: %d Outrate: %r Flooding: %r" % (inrate, outrate,self.flooding ))
+                logging.info("Inrate: %r Outrate: %r Flooding: %r" % (inrate, outrate,self.flooding ))
                 #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding)
                 outpath = create_folder(self.outPath,
                                         "VertexDynamic_in_" + str(inrate) + "_out_" + str(outrate) + "_f_" + str(
                                             self.flooding))
+                path = outpath
                 outpath = outpath + "results"
                 vertexDynamicStats = VertexDynamicOutput()
                 for d in self.d_list:
-                    logging.info("Inrate: %d Outrate: %r Flooding %r d: %d" % (inrate,outrate,self.flooding,d))
+                    logging.info("Inrate: %r Outrate: %r Flooding %r d: %d" % (inrate,outrate,self.flooding,d))
                     #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, "d: ",d)
                     for c in self.c_list:
-                        logging.info("Inrate: %d Outrate: %r Flooding %r d: %d c: %r " % (inrate,outrate,self.flooding,d,c))
+                        logging.info("Inrate: %r Outrate: %r Flooding %r d: %d c: %r " % (inrate,outrate,self.flooding,d,c))
                         #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, " d: ",d," c: ",c)
                         for sim in range(0, self.simNumber):
                             logging.info("Simulation %d" % (sim))
                             #print("Simulation: ", sim)
                             start_time = time.time()
                             if(self.spectrum):
-                                stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim)
+                                stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim,path = path  )
                             else:
                                 stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
                             vertexDynamicStats.add_stats(stats)
@@ -283,7 +287,7 @@ class VertexDynamic:
         return (final_stats)
 
 
-    def VertexDynamicGeneratorSpectrum(self, d, c, inrate, outrate, sim):
+    def VertexDynamicGeneratorSpectrum(self, d, c, inrate, outrate, sim,path=""):
 
         def check_convergence_dynamic():
 
@@ -332,10 +336,28 @@ class VertexDynamic:
                     #print("----------------------------------------------------------------")
                     G.set_converged(True)
 
+        try:
+            # Create sim Directory
+            os.mkdir(path+str(sim))
+            print("Directory ", path+"sim", " Created ")
+        except FileExistsError:
+            print("Directory ",  path+"sim", " already exists")
 
-
+        try:
+            # Create sim Directory
+            os.mkdir(path + str(sim)+"/before")
+            print("Directory ", path + "sim/before", " Created ")
+        except FileExistsError:
+            print("Directory ", path + "sim/before", " already exists")
+        try:
+            # Create sim Directory
+            os.mkdir(path + str(sim)+"/after")
+            print("Directory ", path + "sim/after", " Created ")
+        except FileExistsError:
+            print("Directory ", path + "sim/after", " already exists")
 
         t = 0
+
 
         final_stats = []
         achieved = False
@@ -350,6 +372,8 @@ class VertexDynamic:
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         c = 0
+        graph_before = []
+        graph_after = []
         while (repeat):
             G.disconnect_from_network()
             if (achieved):
@@ -357,6 +381,8 @@ class VertexDynamic:
                 spectralGapBefore = {"SpectralGapBefore": spectralGap}
 
             G.connect_to_network()
+            # Salva grafo
+            graph_before.append(G.get_G())
             # 1) Entrano nuovi nodi
             # 2) Escono dei nodi
             # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
@@ -369,6 +395,9 @@ class VertexDynamic:
             #G.del_phase_MT()
 
             G.del_phase_vd()
+            # Salva grafo
+            graph_after.append(G.get_G())
+
 
             if (not achieved):
                 if (G.get_target_density()):
@@ -413,6 +442,16 @@ class VertexDynamic:
                     #logging.info("Step %r "%c)
 
                     c+=1
+        i = 0
+        for g in graph_before:
+            nx.write_edgelist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist",
+                          delimiter=":")
+            i+=1
+        i = 0
+        for g in graph_after:
+            nx.write_edgelist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist",
+                          delimiter=":")
+            i+=1
 
         return (final_stats)
 

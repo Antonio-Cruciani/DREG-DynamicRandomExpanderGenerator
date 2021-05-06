@@ -40,6 +40,7 @@ class DynamicGraph:
         self.time_conv = 0
         self.reset_number = 0
         self.t = 0
+        self.max_label = -1
         if(starting_edge_list):
             self.G.add_edges_from(starting_edge_list)
         if(model == "EdgeMarkovian"):
@@ -326,16 +327,19 @@ class DynamicGraph:
         # Poisson Process of parameter Lambda for the number of nodes accessing in the network
         X_t = np.random.poisson(self.inrate)
         # Getting the maximum label in the Graph
-        nodes = self.get_list_of_nodes()
-        if(nodes):
-            max_label = max(nodes)
-        else:
-            max_label = -1
+        #nodes = self.get_list_of_nodes()
+        # if(nodes):
+        #     max_label = max(nodes)
+        # else:
+        #     max_label = -1
         # Defining labels of the new nodes
         entering_nodes = []
+        # for i in range(X_t):
+        #     entering_nodes.append(max_label + 1)
+        #     max_label += 1
         for i in range(X_t):
-            entering_nodes.append(max_label + 1)
-            max_label += 1
+            entering_nodes.append(self.max_label + 1)
+            self.max_label += 1
         # Adding the list of nodes in the Graph
         self.G.add_nodes_from(entering_nodes)
         self.entering_nodes = entering_nodes
