@@ -382,7 +382,9 @@ class VertexDynamic:
 
             G.connect_to_network()
             # Salva grafo
-            graph_before.append(G.get_G())
+            nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/before/" + str(t) + ".adjlist")
+
+            #graph_before.append(G.get_G())
             # 1) Entrano nuovi nodi
             # 2) Escono dei nodi
             # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
@@ -396,7 +398,9 @@ class VertexDynamic:
 
             G.del_phase_vd()
             # Salva grafo
-            graph_after.append(G.get_G())
+            nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/after/" + str(t) + ".adjlist")
+
+            #graph_after.append(G.get_G())
 
 
             if (not achieved):
@@ -442,16 +446,18 @@ class VertexDynamic:
                     #logging.info("Step %r "%c)
 
                     c+=1
+        '''
         i = 0
         for g in graph_before:
-            nx.write_edgelist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist",
-                          delimiter=":")
+            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist"
+                         )
             i+=1
         i = 0
         for g in graph_after:
-            nx.write_edgelist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist",
-                          delimiter=":")
+            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist"
+                          )
             i+=1
+        '''
 
         return (final_stats)
 

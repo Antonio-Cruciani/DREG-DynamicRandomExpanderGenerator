@@ -338,7 +338,7 @@ class DynamicGraph:
         #     entering_nodes.append(max_label + 1)
         #     max_label += 1
         for i in range(X_t):
-            entering_nodes.append(self.max_label + 1)
+            entering_nodes.append(str(self.max_label + 1))
             self.max_label += 1
         # Adding the list of nodes in the Graph
         self.G.add_nodes_from(entering_nodes)
@@ -439,7 +439,7 @@ class DynamicGraph:
         # Now we have to transform the directed edge list in ad undirected edge list
         preprocessed = []
         for i in edge_list:
-            if i[0] > i[1]:
+            if int(i[0] )> int(i[1]):
                 preprocessed.append((i[1], i[0]))
             else:
                 preprocessed.append((i[0], i[1]))
@@ -466,7 +466,7 @@ class DynamicGraph:
         # Now we have to transform the directed edge list in ad undirected edge list
         preprocessed = []
         for i in edge_list:
-            if i[0] > i[1]:
+            if int(i[0]) > int(i[1]):
                 preprocessed.append((i[1], i[0]))
             else:
                 preprocessed.append((i[0], i[1]))

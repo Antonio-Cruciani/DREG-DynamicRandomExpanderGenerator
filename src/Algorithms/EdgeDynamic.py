@@ -6,6 +6,7 @@ from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
 import networkx as nx
 import time
 import math as mt
+import os
 import logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -36,6 +37,8 @@ class EdgeDynamic:
         self.simNumber = simNumber
         self.epsilon = epsilon
         self.spectrumSim = False
+        self.MC = True
+        self.max_iter  = 1000
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -69,14 +72,19 @@ class EdgeDynamic:
                             start_time = time.time()
                             if(self.spectrumSim):
                                 stats = self.EdgeDynamicGeneratorSpectrum(d, c,p,n,sim,epsilon)
+                            elif(self.MC):
+                                res = self.EdgeDynamicGeneratorMCConfigurations( d, c, p, n, outpath, sim)
+
                             else:
                                 #stats = self.EdgeDynamicGenerator(d, c,p,n,sim,epsilon)
                                 stats = self.EdgeDynamicFlooding(d,c,p,n,sim,epsilon)
-                            edgeDynamicStats.add_stats(stats)
+                            if(not self.MC):
+                                edgeDynamicStats.add_stats(stats)
                             #vertexDynamicStats.add_flood_infos(flood_info)
                             logging.info("Elapsed time %r" % (time.time()-start_time))
                             #print("Elapsed time: ",time.time()-start_time)
-                self.write_info_dic_as_csv(outpath,edgeDynamicStats)
+                if(not self.MC):
+                    self.write_info_dic_as_csv(outpath,edgeDynamicStats)
         logging.info("----------------------------------------------------------------")
         logging.info("Ending Simulation")
         logging.info("Elapsed time of the entire simulation %r" % (time.time() - sim_start))
@@ -325,6 +333,47 @@ class EdgeDynamic:
 
         return (final_stats)
 
+    def EdgeDynamicGeneratorMCConfigurations(self,d,c,p,n,path,sim):
+        t = 0
+        if (d <= 0 or c < 0):
+            logging.error("Error, input parameters must be: d>0 c>1")
+            # print("Error, input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
+        repeat = True
+        try:
+            # Create sim Directory
+            os.mkdir(path + str(sim))
+            logging.info("Directory %r sim  Created "%(path))
+        except FileExistsError:
+            logging.error("Directory %r sim already exists"%(path))
+
+        try:
+            # Create sim Directory
+            os.mkdir(path + str(sim) + "/before")
+            logging.info("Directory %r sim/before Created "%(path))
+        except FileExistsError:
+            logging.error("Directory %r sim/before already exists"%(path))
+        try:
+            # Create sim Directory
+            os.mkdir(path + str(sim) + "/after")
+            logging.info("Directory %r sim/after Created "%(path))
+        except FileExistsError:
+            logging.error("Directory %r sim/after already exists"%(path))
+
+        while (repeat):
+            G.add_phase()
+            G.del_phase()
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
+
+            if (p != 0):
+                G.random_fall()
+                nx.write_adjlist(G.get_G(), path=path + str(sim) + "/after/" + str(t) + ".adjlist")
+
+            if(t == self.max_iter):
+                repeat = False
+            t+=1
+        return True
     def EdgeDynamicGeneratorSpectrum(self, d, c, p,n, sim,epsilon):
 
 
