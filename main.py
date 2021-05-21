@@ -38,7 +38,7 @@ def main(argv):
         elif(opt in ("-d","--deg")):
             splittedInput = arg.split(",")
             for elem in splittedInput:
-                d.append(int(elem))
+                d.append(float(elem))
         elif(opt in ("-c","--const")):
             splittedInput = arg.split(",")
             for elem in splittedInput:

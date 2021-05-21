@@ -41,7 +41,8 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
-        self.spectrum = True
+        self.spectrum = False
+        self.MC = True
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -71,6 +72,9 @@ class VertexDynamic:
                             start_time = time.time()
                             if(self.spectrum):
                                 stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim,path = path  )
+                            elif(self.MC):
+                                stats = self.VertexDynamicGeneratorMCConfigurations( d, c, inrate, outrate, sim, path=path)
+
                             else:
                                 stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
                             vertexDynamicStats.add_stats(stats)
@@ -286,6 +290,172 @@ class VertexDynamic:
                 #print("----------------------------------------------------------------")
         return (final_stats)
 
+    def VertexDynamicGeneratorMCConfigurations(self, d, c, inrate, outrate, sim,path=""):
+        def check_convergence_dynamic():
+
+            if (G.get_converged() == False):
+                # Getting the number of the vertices with less than d neighbours
+                # Number of the nodes with a degree >=d and <= cd
+                semireg = 0
+                # Number of nodes with a degree <d
+                underreg = 0
+                # Number of nodes with a degree >cd
+                overreg = 0
+                nodi = list(G.get_G().nodes())
+                for u in nodi:
+                    if (G.get_G().degree(u) < G.get_d()):
+                        underreg += 1
+                    elif (G.get_G().degree(u) > G.get_tolerance()):
+                        overreg += 1
+                    else:
+                        semireg += 1
+                G.increment_time_conv()
+
+                # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
+                percentages = [i for i in range(0,101)]
+                G.set_semiregular_percentage(percentages[-1])
+
+                if (semireg >= len(nodi) * G.get_semiregular_percentage()):
+                    G.set_converged(True)
+                    logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
+
+                else:
+                    a = 0
+                    b = 100
+                    while(a<=b):
+                        m = ((b+a) / 2)
+                        G.set_semiregular_percentage(m)
+                        #print("Nodi semireg = ", semireg, " Percentuale = ",G.get_semiregular_percentage(),"Nodi rete",len(nodi), " Nodi perc nodi = ",len(nodi) * G.get_semiregular_percentage())
+                        if(semireg >= len(nodi) * G.get_semiregular_percentage()):
+                            a = m + 1
+                            #print("Increasing (d,cd)-regularity range to ", a, " - ",b, "%")
+                        else:
+                            b = m - 1
+                            #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
+
+                    logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
+                    #print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
+                    #print("----------------------------------------------------------------")
+                    G.set_converged(True)
+
+        try:
+            # Create sim Directory
+            os.mkdir(path + "/" + str(sim))
+            logging.info("Directory %r sim  Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim already exists" % (path))
+
+        try:
+            # Create sim Directory
+            os.mkdir(path + "/" + str(sim) + "/before")
+            logging.info("Directory %r sim/before Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim/before already exists" % (path))
+        try:
+            # Create sim Directory
+            os.mkdir(path + "/" + str(sim) + "/after")
+            logging.info("Directory %r sim/after Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim/after already exists" % (path))
+
+        t = 0
+
+
+        final_stats = []
+        achieved = False
+
+        repeat = True
+
+        if (d <= 0 or c < 0):
+            logging.error("Input parameters must be: d>0 c>1")
+            #print("Error, input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
+        c = 0
+        graph_before = []
+        graph_after = []
+        stats = {"d": G.get_d(), "c": G.get_c(), "n": G.get_target_n(),"lambda":G.get_inrate(),"beta":G.get_outrate()}
+
+        while (repeat):
+            G.disconnect_from_network()
+            # Salva grafo
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
+
+            G.connect_to_network()
+
+            #graph_before.append(G.get_G())
+            # 1) Entrano nuovi nodi
+            # 2) Escono dei nodi
+            # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
+            # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
+            # NOTA 3)-4) deve essere in parallelo non seriale
+            # 5) Esegui flooding step sul grafo al tempo I
+            G.add_phase_vd()
+
+            #G.add_phase_MT()
+            #G.del_phase_MT()
+
+            G.del_phase_vd()
+            # Salva grafo
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/after/" + str(t) + ".adjlist")
+
+            #graph_after.append(G.get_G())
+
+
+            if (not achieved):
+                if (G.get_target_density()):
+                    logging.info("The Graph contains the desired number of nodes")
+                    #print("----------------------------------------------------------------")
+                    #print("The Graph contains the desired number of nodes ")
+                    #print("----------------------------------------------------------------")
+                    achieved = True
+                    check_convergence_dynamic()
+                    #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+
+
+                # else:
+                #     conv_perc = {"conv_percentage":-1}
+                #     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
+                #
+                #     Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+                #     spectralGaps = {"SpectralGap": spectralGap}
+                #     final_stats.append({**sim, **conv_perc, **stats, **spectralGaps})
+            else:
+                #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
+                check_convergence_dynamic()
+            t += 1
+            if(G.get_converged()):
+
+
+                if(c == 100):
+                    repeat = False
+
+                    logging.info("Graph converged and 100 more steps simulated")
+                else:
+                    #logging.info("Step %r "%c)
+
+                    c+=1
+        '''
+        i = 0
+        for g in graph_before:
+            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist"
+                         )
+            i+=1
+        i = 0
+        for g in graph_after:
+            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist"
+                          )
+            i+=1
+        '''
+        #stats2 = {"d": d, "c": c, "n": G.get_target_n(),"lambda":inrate,"beta":outrate}
+        stats3 = [stats, stats]
+        return (stats3)
+
+
+
+
+
+
 
     def VertexDynamicGeneratorSpectrum(self, d, c, inrate, outrate, sim,path=""):
 
@@ -379,10 +549,11 @@ class VertexDynamic:
             if (achieved):
                 Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGap}
+            nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/before/" + str(t) + ".adjlist")
 
             G.connect_to_network()
             # Salva grafo
-            nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/before/" + str(t) + ".adjlist")
+            #nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/before/" + str(t) + ".adjlist")
 
             #graph_before.append(G.get_G())
             # 1) Entrano nuovi nodi
