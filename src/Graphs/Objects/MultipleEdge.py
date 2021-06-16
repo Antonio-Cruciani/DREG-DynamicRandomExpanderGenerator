@@ -338,7 +338,9 @@ class DynamicGraph:
         #     entering_nodes.append(max_label + 1)
         #     max_label += 1
         for i in range(X_t):
-            entering_nodes.append(str(self.max_label + 1))
+            #entering_nodes.append(str(self.max_label + 1))
+            entering_nodes.append(self.max_label + 1)
+
             self.max_label += 1
         # Adding the list of nodes in the Graph
         self.G.add_nodes_from(entering_nodes)
@@ -432,7 +434,9 @@ class DynamicGraph:
 
                     v_sample = rnd.choices(nodes, k=sample_size)
                     for x in v_sample:
+                        #edge_list.append((i, str(x)))
                         edge_list.append((i, int(x)))
+
 
 
                 #print(edge_list)
@@ -453,6 +457,7 @@ class DynamicGraph:
         self.t += 1
         nodes = list(set(self.G.nodes())-set(self.entering_nodes))
         edge_list = []
+        lista_rimozioni = []
         for i in nodes:
             neig = [n for n in self.G.neighbors(i)]
             if (len(neig) > self.tolerance):
@@ -460,18 +465,24 @@ class DynamicGraph:
                 sample_size = self.get_sample_del_phase(neig)
                 # Sampling a node from the neighborhood
                 v_sample = rnd.choices(neig, k=sample_size)
+
+                lista_rimozioni.append(i)
                 # Adding the samples to the list of nodes to remove
                 for x in v_sample:
-                    edge_list.append((i, int(x)))
+                    #edge_list.append((str(i), str(x)))
+                    edge_list.append((int(i), int(x)))
+
         # Now we have to transform the directed edge list in ad undirected edge list
-        preprocessed = []
-        for i in edge_list:
-            if int(i[0]) > int(i[1]):
-                preprocessed.append((i[1], i[0]))
-            else:
-                preprocessed.append((i[0], i[1]))
-        # Removing the undirected edge list from the graph
-        self.G.remove_edges_from(list(set(preprocessed)))
+        #preprocessed = []
+        #set_preprocessed = list(set(edge_list))
+        preprocessed = edge_list
+                # Removing the undirected edge list from the graph
+        #print(list(set(preprocessed)))
+        to_delete  =list(set(preprocessed))
+
+        self.G.remove_edges_from(to_delete)
+        #self.G.remove_edges_from(list(preprocessed))
+
 
     def edge_markovian(self):
 

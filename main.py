@@ -3,9 +3,10 @@ from src.Algorithms.VertexDynamic import VertexDynamic
 from src.Algorithms.EdgeDynamic import EdgeDynamic
 import sys, getopt
 import logging
+import json
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-def main(argv):
+'''def main(argv):
     algorithm = ""
     model = "Multiple"
     d = []
@@ -72,15 +73,48 @@ def main(argv):
             epsilon = float(arg)
         elif(opt in ("-o","--outfile")):
             outPath = arg
+'''
+def main():
+    with open('./properties.json') as f:
+        properties = json.load(f)
+    algorithm = properties['dynamicGraph']
+    n_list = properties['n']
+    d_list = properties['d']
+    c_list = properties['c']
+    outPath = properties['outputPath']
+    flood =  properties['flooding'] in ['true', '1', 't', 'y', 'True']
+    simNumber = properties['simulations']
+    onlySpectral = properties["onlySpectral"] in ['true', '1', 't', 'y', 'True']
+    offline = properties["offline"] in ['true', '1', 't', 'y', 'True']
+    gpu = properties["gpuLinearAlgebra"] in ['true', '1', 't', 'y', 'True']
+    max_iter = properties['max_iter']
 
+    model = "Multiple"
     if(algorithm == "VD"):
+        q_list = properties['q']
+        if(properties['lambda']):
+            inRate = properties['lambda']
+            ex = VertexDynamic(d_list, c_list, inRate, q_list, outPath, flooding=flood, regular_decay=0.5,
+                               model="Multiple",  simNumber=simNumber,maxIter=max_iter,onlySpectral=onlySpectral,Offline=offline,GPU=gpu)
+            ex.run()
+        else:
+            inputs = []
+            for n in n_list:
+                for x in q_list:
+                    inputs.append([n * x, x])
+            for elem in inputs:
+                ex = VertexDynamic(d_list, c_list, [elem[0]], [elem[1]], outPath, flooding=flood, regular_decay=0.5,
+                                   model="Multiple", simNumber=simNumber,maxIter=max_iter,onlySpectral=onlySpectral,Offline=offline,GPU=gpu)
+                ex.run()
 
-        ex = VertexDynamic(d,c,inRate,outRate,outPath,flooding=flood,regular_decay=0.5,model = model,simNumber=simNumber)
-        ex.run()
+
     elif(algorithm == "ED"):
-        ex = EdgeDynamic(d ,c,p,n ,outPath ,flooding = flood, epsilon = epsilon ,model =model,simNumber = simNumber )
+        p_list = properties['p']
+        epsilon = properties['epsilon']
+        ex = EdgeDynamic(d_list ,c_list,p_list,n_list ,outPath ,flooding = flood, epsilon = epsilon ,model =model,simNumber = simNumber,maxIter=max_iter,onlySpectral=onlySpectral,Offline = offline,GPU = gpu )
         ex.run()
 
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+   #main(sys.argv[1:])
+   main()

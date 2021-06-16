@@ -3,7 +3,7 @@ import networkx as nx
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_file_contents
 from src.StastModules.Snapshot import get_snapshot_dynamic,get_snapshot_dynamicND
-from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
+from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix,spectral_gap_sparse
 
 import time
 import math as mt
@@ -30,7 +30,10 @@ class VertexDynamicOutput:
 class VertexDynamic:
 
     def __init__(self, d, c, inrate, outrate, outpath, flooding=True, regular_convergence=0.9, regular_decay=0.5
-                 , model="Multiple", simNumber=30):
+                 , model="Multiple", simNumber=30, maxIter=100, onlySpectral=False, Offline=False, GPU=False):
+
+
+
         self.d_list = d
         self.c_list = c
         self.inrate_list = inrate
@@ -41,19 +44,19 @@ class VertexDynamic:
         self.model = model
         self.outPath = outpath
         self.simNumber = simNumber
-        self.spectrum = False
-        self.MC = True
+        self.spectrum = onlySpectral
+        self.MC = Offline
+        self.max_iter = maxIter
+        self.GPU = GPU
 
     def run(self):
         logging.info("----------------------------------------------------------------")
         logging.info("Starting simulation")
-        #print("Starting simulation ")
         sim_start = time.time()
         for inrate in self.inrate_list:
             for outrate in self.outrate_list:
                 logging.info("----------------------------------------------------------------")
                 logging.info("Inrate: %r Outrate: %r Flooding: %r" % (inrate, outrate,self.flooding ))
-                #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding)
                 outpath = create_folder(self.outPath,
                                         "VertexDynamic_in_" + str(inrate) + "_out_" + str(outrate) + "_f_" + str(
                                             self.flooding))
@@ -68,7 +71,6 @@ class VertexDynamic:
                         #print("Inrate: ", inrate, " Outrate: ", outrate, " Flooding: ", self.flooding, " d: ",d," c: ",c)
                         for sim in range(0, self.simNumber):
                             logging.info("Simulation %d" % (sim))
-                            #print("Simulation: ", sim)
                             start_time = time.time()
                             if(self.spectrum):
                                 stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim,path = path  )
@@ -78,15 +80,11 @@ class VertexDynamic:
                             else:
                                 stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
                             vertexDynamicStats.add_stats(stats)
-                            # vertexDynamicStats.add_flood_infos(flood_info)
                             logging.info("Elapsed time %r" % (time.time() - start_time))
                             logging.info("----------------------------------------------------------------")
-                            #print("Elapsed time: ", time.time() - start_time)
                 self.write_info_dic_as_csv(outpath, vertexDynamicStats)
         logging.info("Ending simulation")
         logging.info("Total elapsed time %r" % (time.time() - sim_start))
-        #print("Ending simulation")
-        #print("Elapsed time : ", time.time() - sim_start)
 
     def VertexDynamicGenerator(self, d, c, inrate, outrate, sim):
 
@@ -122,17 +120,12 @@ class VertexDynamic:
                     while(a<=b):
                         m = ((b+a) / 2)
                         G.set_semiregular_percentage(m)
-                        #print("Nodi semireg = ", semireg, " Percentuale = ",G.get_semiregular_percentage(),"Nodi rete",len(nodi), " Nodi perc nodi = ",len(nodi) * G.get_semiregular_percentage())
                         if(semireg >= len(nodi) * G.get_semiregular_percentage()):
                             a = m + 1
-                            #print("Increasing (d,cd)-regularity range to ", a, " - ",b, "%")
                         else:
                             b = m - 1
-                            #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
 
                     logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
-                    #print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
-                    #print("----------------------------------------------------------------")
                     G.set_converged(True)
 
 
@@ -149,28 +142,18 @@ class VertexDynamic:
                     # Updating Flooding
                     if (G.flooding.get_t_flood() == 1):
                         logging.info("Flooding protocol STARTED %r"%(G.flooding.get_started()))
-                        #print("Flooding Protocol STARTED", G.flooding.get_started())
-                        #print("----------------------------------------------------------------")
                     if (G.flooding.get_started() == True):
                         G.flooding.update_flooding(G)
 
                         if (not G.flooding.check_flooding_status()):
                             G.set_converged(True)
-                            #G.flooding.set_converged(False)
                             if (G.flooding.get_number_of_restart() == 0):
                                 logging.info("All the informed nodes left the network")
                                 logging.info("Flooding Protocol status: Failed")
-                                #logging.info("Number of attempts 1 FLOODING PROTOCOL FAILED")
-                                #logging.info("END of the simulation")
                                 logging.info("----------------------------------------------------------------")
-                                #print("Number of attempts: ", 1, " FLOODING PROTOCOL FAILED")
-                                #print("END of the simulation")
-                                #print("----------------------------------------------------------------")
                                 G.flooding.set_converged(False)
                                 G.flooding.set_failed(True)
-                        #G.flooding.terminated()
                         if (G.flooding.get_converged()):
-                            #logging.info("\t FLOODING INFOS")
                             logging.info("AL NODES IN THE NETWORK ARE INFORMED")
                             logging.info("Number of informed nodes %d" % (G.flooding.get_informed_nodes()))
                             logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
@@ -179,15 +162,10 @@ class VertexDynamic:
                             logging.info("Flooding Protocol status: Correctly Terminated")
                             logging.info("Flooding time: %d" %(G.flooding.get_t_flood()))
                             logging.info("----------------------------------------------------------------")
-                            #print("--- ALL NODES IN THE NETWORK ARE INFORMED ---")
 
-                            #print("Flooding Protocol status : TERMINATED\n\n")
-                            #print("----------------------------------------------------------------")
-                        #threshold = 2* mt.floor(mt.log(G.get_target_n(),2))
                         threshold = G.get_target_n()
                         if (G.flooding.get_t_flood() > threshold):
                             logging.info("Iterations > threshold")
-                            #logging.info("\t FLOODING INFOS")
                             logging.info("The Flooding protocol is too slow, stopping the simulation")
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
                             logging.info("Number of uninformed nodes %d " %(G.flooding.get_uninformed_nodes()))
@@ -197,9 +175,6 @@ class VertexDynamic:
                             logging.info("Number of executed steps: %d  Step threshold: %d" % (
                             G.flooding.get_t_flood(), threshold))
                             logging.info("----------------------------------------------------------------")
-                            #print("The Flooding protocol is too slow, stopping the simulation")
-                            #print("Number of informed nodes: ", G.flooding.get_informed_nodes())
-                            #print("----------------------------------------------------------------")
                             G.set_converged(True)
                             G.flooding.set_converged(False)
                             G.flooding.set_failed(True)
@@ -234,60 +209,41 @@ class VertexDynamic:
         }
         if (d <= 0 or c < 0):
             logging.error("Input parameters must be: d>0 c>1")
-            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         while (repeat):
             G.disconnect_from_network()
             G.connect_to_network()
-            #G.disconnect_from_network()
-            # 1) Entrano nuovi nodi
-            # 2) Escono dei nodi
-            # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
-            # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
-            # NOTA 3)-4) deve essere in parallelo non seriale
-            # 5) Esegui flooding step sul grafo al tempo I
+
             G.add_phase_vd()
 
-            #G.add_phase_MT()
-            #G.del_phase_MT()
 
             G.del_phase_vd()
 
             if (not achieved):
                 if (G.get_target_density()):
                     logging.info("The Graph contains the desired number of nodes")
-                    #print("----------------------------------------------------------------")
-                    #print("The Graph contains the desired number of nodes ")
-                    #print("----------------------------------------------------------------")
                     achieved = True
                     stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
-                    #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                     flood_info = check_convergence_dynamic()
                     conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                     final_stats.append({**sim, **conv_perc, **stats, **flood_info})
             else:
-                #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                 stats = get_snapshot_dynamic(G, G.get_d(), G.get_c(), t)
                 flood_info = check_convergence_dynamic()
                 conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
                 final_stats.append({**sim, **conv_perc, **stats, **flood_info})
             t += 1
-            #print("REP = ",repeat)
-            #print("CONV = ",G.flooding.get_converged())
-            #print("GET FAIL ",not(G.flooding.get_failed()))
+
 
             if (G.flooding.get_converged() and (not (G.flooding.get_failed()))):
                 repeat = False
             if ((self.cdPercentage - (G.get_reset_number() * self.decay)) <= -1):
                 logging.info("The graph does not converge")
-                #print("The graph does not converge")
                 repeat = False
             if (G.flooding.get_failed()):
                 repeat = False
                 logging.info("Flooding protocol: FAILED")
-                #print("Flooding Protocol status : FAILED")
-                #print("----------------------------------------------------------------")
         return (final_stats)
 
     def VertexDynamicGeneratorMCConfigurations(self, d, c, inrate, outrate, sim,path=""):
@@ -325,17 +281,12 @@ class VertexDynamic:
                     while(a<=b):
                         m = ((b+a) / 2)
                         G.set_semiregular_percentage(m)
-                        #print("Nodi semireg = ", semireg, " Percentuale = ",G.get_semiregular_percentage(),"Nodi rete",len(nodi), " Nodi perc nodi = ",len(nodi) * G.get_semiregular_percentage())
                         if(semireg >= len(nodi) * G.get_semiregular_percentage()):
                             a = m + 1
-                            #print("Increasing (d,cd)-regularity range to ", a, " - ",b, "%")
                         else:
                             b = m - 1
-                            #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
 
                     logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
-                    #print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
-                    #print("----------------------------------------------------------------")
                     G.set_converged(True)
 
         try:
@@ -361,93 +312,56 @@ class VertexDynamic:
         t = 0
 
 
-        final_stats = []
         achieved = False
 
         repeat = True
 
         if (d <= 0 or c < 0):
             logging.error("Input parameters must be: d>0 c>1")
-            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         c = 0
-        graph_before = []
-        graph_after = []
         stats = {"d": G.get_d(), "c": G.get_c(), "n": G.get_target_n(),"lambda":G.get_inrate(),"beta":G.get_outrate()}
 
         while (repeat):
             G.disconnect_from_network()
-            # Salva grafo
+            # Saving graph
             nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
 
             G.connect_to_network()
 
-            #graph_before.append(G.get_G())
-            # 1) Entrano nuovi nodi
-            # 2) Escono dei nodi
-            # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
-            # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
-            # NOTA 3)-4) deve essere in parallelo non seriale
-            # 5) Esegui flooding step sul grafo al tempo I
             G.add_phase_vd()
 
-            #G.add_phase_MT()
-            #G.del_phase_MT()
 
             G.del_phase_vd()
-            # Salva grafo
+            # Saving graph
             nx.write_adjlist(G.get_G(), path=path + str(sim) + "/after/" + str(t) + ".adjlist")
 
-            #graph_after.append(G.get_G())
 
 
             if (not achieved):
                 if (G.get_target_density()):
                     logging.info("The Graph contains the desired number of nodes")
-                    #print("----------------------------------------------------------------")
-                    #print("The Graph contains the desired number of nodes ")
-                    #print("----------------------------------------------------------------")
+
                     achieved = True
                     check_convergence_dynamic()
-                    #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
 
 
-                # else:
-                #     conv_perc = {"conv_percentage":-1}
-                #     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
-                #
-                #     Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-                #     spectralGaps = {"SpectralGap": spectralGap}
-                #     final_stats.append({**sim, **conv_perc, **stats, **spectralGaps})
+
             else:
-                #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                 check_convergence_dynamic()
             t += 1
             if(G.get_converged()):
 
 
-                if(c == 100):
+                if(c == self.max_iter):
                     repeat = False
 
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
-                    #logging.info("Step %r "%c)
 
                     c+=1
-        '''
-        i = 0
-        for g in graph_before:
-            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist"
-                         )
-            i+=1
-        i = 0
-        for g in graph_after:
-            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist"
-                          )
-            i+=1
-        '''
-        #stats2 = {"d": d, "c": c, "n": G.get_target_n(),"lambda":inrate,"beta":outrate}
+
         stats3 = [stats, stats]
         return (stats3)
 
@@ -479,7 +393,6 @@ class VertexDynamic:
                         semireg += 1
                 G.increment_time_conv()
 
-                # if (semireg >= len(nodi) * (self.cdPercentage - (G.get_reset_number() * self.decay))):
                 percentages = [i for i in range(0,101)]
                 G.set_semiregular_percentage(percentages[-1])
 
@@ -493,38 +406,15 @@ class VertexDynamic:
                     while(a<=b):
                         m = ((b+a) / 2)
                         G.set_semiregular_percentage(m)
-                        #print("Nodi semireg = ", semireg, " Percentuale = ",G.get_semiregular_percentage(),"Nodi rete",len(nodi), " Nodi perc nodi = ",len(nodi) * G.get_semiregular_percentage())
                         if(semireg >= len(nodi) * G.get_semiregular_percentage()):
                             a = m + 1
-                            #print("Increasing (d,cd)-regularity range to ", a, " - ",b, "%")
                         else:
                             b = m - 1
-                            #print("Lowering (d,cd)-regularity range to ", a, " - ",b, "%")
 
                     logging.info("Structural convergence at %r "%(G.get_semiregular_percentage() * 100))
-                    #print("Structural convergence at ", (G.get_semiregular_percentage()) * 100, "%")
-                    #print("----------------------------------------------------------------")
                     G.set_converged(True)
 
-        try:
-            # Create sim Directory
-            os.mkdir(path+str(sim))
-            print("Directory ", path+"sim", " Created ")
-        except FileExistsError:
-            print("Directory ",  path+"sim", " already exists")
 
-        try:
-            # Create sim Directory
-            os.mkdir(path + str(sim)+"/before")
-            print("Directory ", path + "sim/before", " Created ")
-        except FileExistsError:
-            print("Directory ", path + "sim/before", " already exists")
-        try:
-            # Create sim Directory
-            os.mkdir(path + str(sim)+"/after")
-            print("Directory ", path + "sim/after", " Created ")
-        except FileExistsError:
-            print("Directory ", path + "sim/after", " already exists")
 
         t = 0
 
@@ -538,84 +428,65 @@ class VertexDynamic:
         }
         if (d <= 0 or c < 0):
             logging.error("Input parameters must be: d>0 c>1")
-            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         c = 0
-        graph_before = []
-        graph_after = []
+
         while (repeat):
             G.disconnect_from_network()
             if (achieved):
-                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-                spectralGapBefore = {"SpectralGapBefore": spectralGap}
-            nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/before/" + str(t) + ".adjlist")
+                if(self.GPU):
+                    IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(G.get_G())
+                else:
+                    spectralGapBefore = spectral_gap_sparse(G.get_G())
+                spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
 
             G.connect_to_network()
-            # Salva grafo
-            #nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/before/" + str(t) + ".adjlist")
 
-            #graph_before.append(G.get_G())
-            # 1) Entrano nuovi nodi
-            # 2) Escono dei nodi
-            # 3) I nodi al presenti nel grafo anche al tempo I-1 fanno raes tra di loro
-            # 4) I nodi che sono entrati al tempo I fanno raes verso quelli al tempo I-1
-            # NOTA 3)-4) deve essere in parallelo non seriale
-            # 5) Esegui flooding step sul grafo al tempo I
             G.add_phase_vd()
 
-            #G.add_phase_MT()
-            #G.del_phase_MT()
+
 
             G.del_phase_vd()
-            # Salva grafo
-            nx.write_adjlist(G.get_G(), path=path + str(sim['simulation']) + "/after/" + str(t) + ".adjlist")
 
-            #graph_after.append(G.get_G())
 
 
             if (not achieved):
                 if (G.get_target_density()):
                     logging.info("The Graph contains the desired number of nodes")
-                    #print("----------------------------------------------------------------")
-                    #print("The Graph contains the desired number of nodes ")
-                    #print("----------------------------------------------------------------")
                     achieved = True
                     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
                     check_convergence_dynamic()
-                    #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                     conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
-                    Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-                    spectralGaps = {"SpectralGap":spectralGap}
-                    spectralGapBefore = {'SpectralGapBefore':0}
-                    final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGaps})
+                    if (self.GPU):
+                        IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(
+                            G.get_G())
+                    else:
+                        spectralGapAfter = spectral_gap_sparse(G.get_G())
+                    spectralGapsAfter = {"SpectralGap":spectralGapAfter}
+                    #spectralGapBefore = {'SpectralGapBefore':0}
+                    final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
 
-                # else:
-                #     conv_perc = {"conv_percentage":-1}
-                #     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
-                #
-                #     Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-                #     spectralGaps = {"SpectralGap": spectralGap}
-                #     final_stats.append({**sim, **conv_perc, **stats, **spectralGaps})
             else:
-                #conv_perc = {"conv_percentage": (self.cdPercentage - (G.get_reset_number() * self.decay))}
                 stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
                 check_convergence_dynamic()
                 conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
-                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-                spectralGaps = {"SpectralGap": spectralGap}
-                final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGaps})
+                if (self.GPU):
+                    IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(
+                        G.get_G())
+                else:
+                    spectralGapAfter = spectral_gap_sparse(G.get_G())
+                spectralGaps = {"SpectralGap": spectralGapAfter}
+                final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
             t += 1
             if(G.get_converged()):
 
 
-                if(c == 100):
+                if(c == self.max_iter):
                     repeat = False
 
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
-                    #logging.info("Step %r "%c)
-
                     c+=1
         '''
         i = 0

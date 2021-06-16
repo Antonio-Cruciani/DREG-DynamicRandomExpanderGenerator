@@ -2,7 +2,7 @@ from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file,create_folder,write_on_file_contents
 from src.Graphs.Objects.Queue import Queue
 from src.StastModules.Snapshot import get_snapshot
-from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix
+from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix,spectral_gap_sparse
 import networkx as nx
 import time
 import math as mt
@@ -26,7 +26,7 @@ class EdgeDynamicOutput:
 
 class EdgeDynamic:
 
-    def __init__(self,d ,c,p,n ,outpath ,flooding = True, epsilon = 0.05 ,model ="Multiple",simNumber = 30 ):
+    def __init__(self,d ,c,p,n ,outpath ,flooding = True, epsilon = 0.05 ,model ="Multiple",simNumber = 30 ,maxIter = 100,onlySpectral = False,Offline =False,GPU = False):
         self.d_list = d
         self.c_list = c
         self.p_list = p
@@ -36,9 +36,11 @@ class EdgeDynamic:
         self.outPath = outpath
         self.simNumber = simNumber
         self.epsilon = epsilon
-        self.spectrumSim = False
-        self.MC = True
-        self.max_iter  = 100
+        self.spectrumSim = onlySpectral
+        self.MC = Offline
+        self.max_iter = maxIter
+        self.GPU = GPU
+        self.epsilon_steps = 25
 
     def run(self):
         logging.info("----------------------------------------------------------------")
@@ -47,30 +49,27 @@ class EdgeDynamic:
         for p in self.p_list:
 
            for n in self.n_list:
-                if(p != 0):
-                    logging.info(" Inferring epsilon , please wait")
 
-                    #epsilon = self.get_epsilon(p, n)
-                    epsilon = self.epsilon
-
-                else:
-                    epsilon = self.epsilon
                 logging.info("----------------------------------------------------------------")
-                logging.info("Number of nodes: %d Falling probability: %r Flooding: %r" % (n,p,self.flooding))
-                #print("Number of nodes ",n," Falling probability: ",p," Flooding: ",self.flooding)
+                logging.info("Number of nodes: %r Falling probability: %r Flooding: %r" % (n,p,self.flooding))
                 outpath = create_folder(self.outPath,"EdgeDynamic_n_"+str(n)+"_p_"+str(p)+"_f_"+str(self.flooding))
                 outpath = outpath + "results"
                 os.mkdir(outpath)
 
                 edgeDynamicStats = EdgeDynamicOutput()
                 for d in self.d_list:
-                    logging.info("Number of nodes: %d Falling probability: %r Flooding: %r d: %d" % (n,p,self.flooding,d))
+                    logging.info("Number of nodes: %r Falling probability: %r Flooding: %r d: %r" % (n,p,self.flooding,d))
                     for c in self.c_list:
                         logging.info(
-                            "Number of nodes: %d Falling probability: %r Flooding: %r d: %d c: %d" % (n, p, self.flooding, d,c))
+                            "Number of nodes: %r Falling probability: %r Flooding: %r d: %d c: %r" % (n, p, self.flooding, d,c))
+                        if (p != 0):
+                            logging.info(" Inferring epsilon , please wait")
+                            epsilon = self.get_epsilon(d, c, p, n)
+                        else:
+                            epsilon = self.epsilon
+                        logging.info("Inferred Epsilon: %r " % (epsilon))
                         for sim in range(0,self.simNumber):
                             logging.info("Simulation: %d" % (sim))
-                            #print("Simulation: ",sim)
                             start_time = time.time()
                             if(self.spectrumSim):
                                 stats = self.EdgeDynamicGeneratorSpectrum(d, c,p,n,sim,epsilon)
@@ -78,21 +77,14 @@ class EdgeDynamic:
                                 stats = self.EdgeDynamicGeneratorMCConfigurations( d, c, p, n, outpath, sim)
 
                             else:
-                                #stats = self.EdgeDynamicGenerator(d, c,p,n,sim,epsilon)
                                 stats = self.EdgeDynamicFlooding(d,c,p,n,sim,epsilon)
-                            #if(not self.MC):
                             edgeDynamicStats.add_stats(stats)
-                            #vertexDynamicStats.add_flood_infos(flood_info)
                             logging.info("Elapsed time %r" % (time.time()-start_time))
-                            #print("Elapsed time: ",time.time()-start_time)
-                #if(not self.MC):
                 self.write_info_dic_as_csv(outpath,edgeDynamicStats)
         logging.info("----------------------------------------------------------------")
         logging.info("Ending Simulation")
         logging.info("Elapsed time of the entire simulation %r" % (time.time() - sim_start))
 
-        #print("Ending simulation")
-        #print("Elapsed time : ", time.time() - sim_start)
 
     def EdgeDynamicGenerator(self, d, c, p,n, sim,epsilon):
 
@@ -104,14 +96,12 @@ class EdgeDynamic:
                     G.flooding.set_initiator()
                     G.flooding.update_flooding(G)
                     logging.info("Flooding Simulation : STARTED")
-                    #print("----- Flooding Simulation: STARTED -----\n")
                 else:
                     if (G.flooding.get_started() == True):
                         G.flooding.update_flooding(G)
                     G.flooding.is_informed()
                     if (G.flooding.get_converged()):
                         logging.info("ALL NODES IN THE NETWORK ARE INFORMED")
-                        #print("--- ALL NODES IN THE NETWORK ARE INFORMED ---\n\n")
                 flood_dictionary['informed_nodes'] = G.flooding.get_informed_nodes()
                 flood_dictionary['uninformed_nodes'] = G.flooding.get_uninformed_nodes()
                 flood_dictionary['t_flood'] = G.flooding.get_t_flood()
@@ -142,6 +132,7 @@ class EdgeDynamic:
                 spectral_differences = []
                 s_q = spectral_queue.get_queue()
                 for i in range(0, spectral_queue.get_queue_lenght() - 1):
+                    print(s_q[i])
                     spectral_differences.append(abs(s_q[i] - s_q[i + 1]))
                 terminate = True
                 for j in spectral_differences:
@@ -152,7 +143,6 @@ class EdgeDynamic:
                     G.set_converged(terminate)
                     G.flooding.set_converged(False)
                     logging.info("Spectral Gap converged at %r" % (spectral_gap))
-                    #print("----- Spectral Gap Converged at: ", spectral_gap, " -----\n")
             return (spectral_queue)
 
         t = 0
@@ -165,7 +155,6 @@ class EdgeDynamic:
         }
         if (d <= 0 or c < 0):
             logging.error("Error, input parameters must be: d>0 c>1")
-            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         spectral_queue = Queue(mt.log(n, 2))
         G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
@@ -173,32 +162,32 @@ class EdgeDynamic:
         while(repeat):
             G.add_phase()
             G.del_phase()
-            #Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-            #if (G.get_converged() == False):
-            #    stats_bef = {
-            #        "spectralGapBefore": spectralGap,
-            #        "lambdaNGapBefore": lambdaNGap
-            #    }
+            if(self.GPU):
+                IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(G.get_G())
 
+            else:
+                spectralGapBefore = spectral_gap_sparse(G.get_G())
+
+            spectral_bef = {
+               "spectralGapBefore": spectralGapBefore
+            }
             if (p != 0):
 
                 G.random_fall()
-            if(G.get_converged() == False):
+            #if(G.get_converged() == False):
+            if(self.GPU):
+                IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(G.get_G())
+            else:
+                spectralGapAfter = spectral_gap_sparse(G.get_G())
 
-                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-            spectral = {
-                "spectralGap":spectralGap
+            spectral_aft = {
+                "spectralGap":spectralGapAfter
             }
             if (G.get_converged() == False):
                 stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
-            # if (G.get_converged() == False):
-            #
-            #     stats_aft = {
-            #         "spectralGapAfter": spectralGap,
-            #         "lambdaNGapAfter": lambdaNGap
-            #     }
+
             if (G.get_converged() == False):
-                spectral_queue = spectral_convergence( epsilon, spectralGap, spectral_queue)
+                spectral_queue = spectral_convergence( epsilon, spectralGapAfter, spectral_queue)
             if (G.get_converged()):
                 if (nx.is_connected(G.get_G()) == False and p == 0):
                     flood_dictionary = {
@@ -212,10 +201,9 @@ class EdgeDynamic:
 
                     repeat = False
                     # final_stats.append({**sim, **stats_bef,**stats_aft, **stats, **flood_dictionary})
-                    final_stats.append({**sim, **stats,**spectral, **flood_dictionary})
+                    final_stats.append({**sim, **stats,**spectral_bef,**spectral_aft, **flood_dictionary})
                     logging.info("The graph is not connected, flooding will always fail")
                     logging.info("Exiting")
-                    #print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
                 if (repeat):
 
                     if (G.flooding.get_converged() == False):
@@ -225,7 +213,6 @@ class EdgeDynamic:
                     else:
                         repeat = False
             t+=1
-            print(" TIME STEP T = ",t," Spectral gap =",spectralGap)
         return (final_stats)
 
 
@@ -282,29 +269,18 @@ class EdgeDynamic:
         while (repeat):
             G.add_phase()
             G.del_phase()
-            # Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-            # if (G.get_converged() == False):
-            #    stats_bef = {
-            #        "spectralGapBefore": spectralGap,
-            #        "lambdaNGapBefore": lambdaNGap
-            #    }
+
 
             if (p != 0):
                 G.random_fall()
 
             if (G.get_converged() == False):
                 stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
-            # if (G.get_converged() == False):
-            #
-            #     stats_aft = {
-            #         "spectralGapAfter": spectralGap,
-            #         "lambdaNGapAfter": lambdaNGap
-            #     }
-            if(t==mt.log(n,2)):
+
+            if(t==self.max_iter):
 
                 G.set_converged(True)
                 G.flooding.set_converged(False)
-                ##Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
 
             if (G.get_converged()):
                 if (nx.is_connected(G.get_G()) == False and p == 0):
@@ -318,11 +294,9 @@ class EdgeDynamic:
                     }
 
                     repeat = False
-                    # final_stats.append({**sim, **stats_bef,**stats_aft, **stats, **flood_dictionary})
                     final_stats.append({**sim, **stats,**flood_dictionary})
                     logging.info("The graph is not connected, flooding will always fail")
                     logging.info("Exiting")
-                    # print("THE GRAPH IS NOT CONNECTED, flooding will always fail, exiting ")
                 if (repeat):
 
                     if (G.flooding.get_converged() == False):
@@ -339,7 +313,6 @@ class EdgeDynamic:
         t = 0
         if (d <= 0 or c < 0):
             logging.error("Error, input parameters must be: d>0 c>1")
-            # print("Error, input parameters must be: d>0 c>1")
             return (-1)
         G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
         repeat = True
@@ -407,7 +380,6 @@ class EdgeDynamic:
                     G.set_converged(terminate)
                     G.flooding.set_converged(False)
                     logging.info("Spectral Gap converged at %r" % (spectral_gap))
-                    #print("----- Spectral Gap Converged at: ", spectral_gap, " -----\n")
             return (spectral_queue)
 
         t = 0
@@ -420,7 +392,6 @@ class EdgeDynamic:
         }
         if (d <= 0 or c < 0):
             logging.error("Error, input parameters must be: d>0 c>1")
-            #print("Error, input parameters must be: d>0 c>1")
             return (-1)
         spectral_queue = Queue(mt.log(n, 2))
         G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
@@ -428,38 +399,36 @@ class EdgeDynamic:
         while(repeat ):
             G.add_phase()
             G.del_phase()
-            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
-
+            if(self.GPU):
+                IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(G.get_G())
+            else:
+                spectralGapBefore = spectral_gap_sparse(G.get_G())
             stats_bef = {
-                "spectralGapBefore": spectralGap,
-                "lambdaNGapBefore": lambdaNGap
+                "spectralGapBefore": spectralGapBefore,
             }
 
             if (p != 0):
                 G.random_fall()
-            #Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            if (self.GPU):
+                IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(G.get_G())
+            else:
+                spectralGapAfter = spectral_gap_sparse(G.get_G())
+            stats_aft = {
+                "spectralGapAfter": spectralGapAfter,
+            }
 
             stats = get_snapshot(G, p, G.get_d(), G.get_c(), t)
-            # stats_aft = {
-            #          "spectralGapAfter": spectralGap,
-            #          "lambdaNGapAfter": lambdaNGap
-            #      }
-            # if (G.get_converged() == False):
-            #
-            #     stats_aft = {
-            #         "spectralGapAfter": spectralGap,
-            #         "lambdaNGapAfter": lambdaNGap
-            #     }
+
             if (G.get_converged() == False):
-                spectral_queue = spectral_convergence( epsilon, spectralGap, spectral_queue)
+                spectral_queue = spectral_convergence( epsilon, stats_aft, spectral_queue)
             if (G.get_converged()):
 
-                if(c == 100):
+                if(c == self.max_iter):
                     repeat = False
                 else:
                     c+=1
 
-            final_stats.append({**sim, **stats_bef, **stats})
+            final_stats.append({**sim, **stats_bef,**stats_aft, **stats})
 
             t+=1
         return (final_stats)
@@ -467,15 +436,18 @@ class EdgeDynamic:
 
 
 
-    def get_epsilon(self,p,n):
-        G = DynamicGraph(n, 4, 3, falling_probability = p,model = self.model)
+    def get_epsilon(self,d,c,p,n):
+        G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
         t = 0
         spectral_list = []
-        while(t<25):
+        while(t<self.epsilon_steps):
             G.add_phase()
             G.del_phase()
             G.random_fall()
-            Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            if(self.GPU):
+                Isinvertible, spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+            else:
+                spectralGap = spectral_gap_sparse(G.get_G())
             spectral_list.append(spectralGap)
             t+=1
         filtered = list(filter(lambda x: (x != 0), spectral_list))
@@ -489,7 +461,6 @@ class EdgeDynamic:
         return(residual_mean)
 
     def write_info_dic_as_csv(self, outPath, results):
-        #print( list(results.get_stats()[0][0].keys()))
         create_file(outPath, list(results.get_stats()[0][0].keys()))
         for i in results.get_stats():
             write_on_file_contents(outPath, i)
