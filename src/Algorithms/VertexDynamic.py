@@ -440,6 +440,16 @@ class VertexDynamic:
                 else:
                     spectralGapBefore = spectral_gap_sparse(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
+            else:
+                if (self.GPU):
+                    IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(
+                        G.get_G())
+                else:
+                    spectralGapBefore = spectral_gap_sparse(G.get_G())
+                spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
+
+
+
 
             G.connect_to_network()
 
@@ -463,7 +473,7 @@ class VertexDynamic:
                             G.get_G())
                     else:
                         spectralGapAfter = spectral_gap_sparse(G.get_G())
-                    spectralGapsAfter = {"SpectralGap":spectralGapAfter}
+                    spectralGapsAfter = {"SpectralGapAfter":spectralGapAfter}
                     #spectralGapBefore = {'SpectralGapBefore':0}
                     final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
 
@@ -476,7 +486,7 @@ class VertexDynamic:
                         G.get_G())
                 else:
                     spectralGapAfter = spectral_gap_sparse(G.get_G())
-                spectralGaps = {"SpectralGap": spectralGapAfter}
+                spectralGapsAfter = {"SpectralGapAfter": spectralGapAfter}
                 final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
             t += 1
             if(G.get_converged()):
