@@ -23,7 +23,6 @@ class EdgeDynamicOutput:
     # def get_flood_infos(self):
     #     return(self.flood_infos)
 
-
 class EdgeDynamic:
 
     def __init__(self,d ,c,p,n ,outpath ,flooding = True, epsilon = 0.05 ,model ="Multiple",simNumber = 30 ,maxIter = 100,onlySpectral = False,Offline =False,GPU = False):
