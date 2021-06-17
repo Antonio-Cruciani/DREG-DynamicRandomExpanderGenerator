@@ -1,9 +1,11 @@
-#!/usr/bin/python
+
 from src.Algorithms.VertexDynamic import VertexDynamic
 from src.Algorithms.EdgeDynamic import EdgeDynamic
 import sys, getopt
 import logging
 import json
+import configparser
+
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 '''def main(argv):
@@ -74,7 +76,132 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
         elif(opt in ("-o","--outfile")):
             outPath = arg
 '''
+
+
 def main():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    nodes = []
+    degrees = []
+    tolerances = []
+    probabilities = []
+
+    flooding = False
+    simulations = 30
+    only_spectral = False
+    offline = False
+
+    gpu_opt = False
+    eps = 0.005
+    max_iter = 100
+
+    outPath = "./"
+
+    in_rates = []
+
+    if (config['advanced']['min_degree'] != "None" and config['advanced']['max_degree'] != "None" and
+            config['advanced']['step_degree'] != "None"):
+        min_degree = int(config['advanced']['min_degree'])
+        max_degree = int(config['advanced']['max_degree'])
+        step_degree = int(config['advanced']['step_degree'])
+        degrees = [x + min_degree for x in range(min_degree, max_degree, step_degree)]
+    else:
+        string_degrees = config['model']['degree'][1:-1]
+        string_degrees_split = string_degrees.split(",")
+        degrees = [int(d) for d in string_degrees_split]
+
+    if (config['advanced']['min_tolerance'] != "None" and config['advanced']['max_tolerance'] != "None" and
+            config['advanced']['step_tolerance'] != "None"):
+        min_tolerance = int(config['advanced']['min_tolerance'])
+        max_tolerance = int(config['advanced']['max_tolerance'])
+        step_tolerance = int(config['advanced']['step_tolerance'])
+        tolerances = [x + min_tolerance for x in range(min_tolerance, max_tolerance, step_tolerance)]
+    else:
+        string_tolerances = config['model']['tolerance'][1:-1]
+        string_tolerances_split = string_tolerances.split(",")
+        tolerances = [float(c) for c in string_tolerances_split]
+
+    if (config['advanced']['min_edge_node_falling_probability'] != "None" and config['advanced']['max_edge_node_falling_probability'] != "None" and
+            config['advanced']['step_edge_node_falling_probability'] != "None"):
+        min_probability = int(config['advanced']['min_edge_node_falling_probability'])
+        max_probability = int(config['advanced']['max_edge_node_falling_probability'])
+        step_probability = int(config['advanced']['step_edge_node_falling_probability'])
+        probabilities = [x + min_probability for x in range(min_probability, max_probability, step_probability)]
+    else:
+        string_probability = config['model']['edge_node_falling_probability'][1:-1]
+        string_probability_split = string_probability.split(",")
+        probabilities = [float(p) for p in string_probability_split]
+
+    flooding = config['simulations']['flooding_protocol'] in ['true', '1', 't', 'y', 'True']
+    simulations = int(config['simulations']['simultaions_number'])
+    only_spectral = config['simulations']['only_spectral_properties'] in ['true', '1', 't', 'y', 'True']
+    offline = config['simulations']['offline_simulation'] in ['true', '1', 't', 'y', 'True']
+
+    gpu_opt = config['other_parameters']['gpu_optimization'] in ['true', '1', 't', 'y', 'True']
+    eps = float(config['other_parameters']['epsilon'])
+    max_iter = int(config['other_parameters']['max_iterations'])
+
+    if (config['advanced']['min_nodes'] != "None" and config['advanced']['max_nodes'] != "None" and config['advanced'][
+        'step_nodes'] != "None"):
+        min_nodes = int(config['advanced']['min_nodes'])
+        max_nodes = int(config['advanced']['max_nodes'])
+        step_nodes = int(config['advanced']['step_nodes'])
+        nodes = [x + min_nodes for x in range(min_nodes, max_nodes, step_nodes)]
+    else:
+        string_nodes = config['model']['nodes'][1:-1]
+        string_nodes_split = string_nodes.split(",")
+        nodes = [int(n) for n in string_nodes_split]
+
+    outPath = config['output_path']['outputpath']
+
+    if(config['model']['graph'] == 'ED'):
+
+        ex = EdgeDynamic(degrees, tolerances, probabilities, nodes, outPath, flooding=flooding, epsilon=eps, model="Multiple",
+                         simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral, Offline=offline, GPU=gpu_opt)
+        ex.run()
+
+    elif(config['model']['graph'] == 'VD'):
+
+        if (config['advanced']['min_nodes_poisson_rate'] != "None" and config['advanced']['max_nodes_poisson_rate'] != "None" and
+                config['advanced']['step_nodes_poisson_rate'] != "None"):
+            min_poisson = int(config['advanced']['min_nodes_poisson_rate'])
+            max_poisson = int(config['advanced']['max_nodes_poisson_rate'])
+            step_poisson = int(config['advanced']['step_nodes_poisson_rate'])
+            in_rates = [x + min_poisson for x in range(min_poisson, max_poisson, step_poisson)]
+            ex = VertexDynamic(degrees, tolerances, in_rates, probabilities, outPath, flooding=flooding, regular_decay=0.5,
+                               model="Multiple", simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral,
+                               Offline=offline, GPU=gpu_opt)
+            ex.run()
+
+
+
+
+        elif(config['model']['nodes_poisson_rate'] != "None"):
+            string_poisson = config['model']['nodes_poisson_rate'][1:-1]
+            string_poisson_split = string_poisson.split(",")
+            in_rates = [float(l) for l in string_poisson_split]
+
+            ex = VertexDynamic(degrees, tolerances, in_rates, probabilities, outPath, flooding=flooding,
+                               regular_decay=0.5,
+                               model="Multiple", simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral,
+                               Offline=offline, GPU=gpu_opt)
+            ex.run()
+
+
+        else:
+            inputs = []
+            for n in nodes:
+                for x in probabilities:
+                    inputs.append([n * x, x])
+            for elem in inputs:
+                ex = VertexDynamic(degrees, tolerances, [elem[0]], [elem[1]], outPath, flooding=flooding, regular_decay=0.5,
+                                   model="Multiple", simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral,
+                                   Offline=offline, GPU=gpu_opt)
+                ex.run()
+
+
+
+def main1():
     with open('./properties.json') as f:
         properties = json.load(f)
     algorithm = properties['dynamicGraph']
@@ -97,6 +224,7 @@ def main():
             ex = VertexDynamic(d_list, c_list, inRate, q_list, outPath, flooding=flood, regular_decay=0.5,
                                model="Multiple",  simNumber=simNumber,maxIter=max_iter,onlySpectral=onlySpectral,Offline=offline,GPU=gpu)
             ex.run()
+
         else:
             inputs = []
             for n in n_list:
