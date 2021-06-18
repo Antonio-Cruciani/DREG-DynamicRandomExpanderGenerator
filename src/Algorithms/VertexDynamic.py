@@ -3,7 +3,7 @@ import networkx as nx
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_file_contents
 from src.StastModules.Snapshot import get_snapshot_dynamic,get_snapshot_dynamicND
-from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix,spectral_gap_sparse
+from src.StastModules.SpectralAnalysis import spectral_gap_sparse
 
 import time
 import math as mt
@@ -435,17 +435,12 @@ class VertexDynamic:
         while (repeat):
             G.disconnect_from_network()
             if (achieved):
-                if(self.GPU):
-                    IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(G.get_G())
-                else:
-                    spectralGapBefore = spectral_gap_sparse(G.get_G())
+
+                spectralGapBefore = spectral_gap_sparse(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
             else:
-                if (self.GPU):
-                    IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(
-                        G.get_G())
-                else:
-                    spectralGapBefore = spectral_gap_sparse(G.get_G())
+
+                spectralGapBefore = spectral_gap_sparse(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
 
 
@@ -468,11 +463,8 @@ class VertexDynamic:
                     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
                     check_convergence_dynamic()
                     conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
-                    if (self.GPU):
-                        IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(
-                            G.get_G())
-                    else:
-                        spectralGapAfter = spectral_gap_sparse(G.get_G())
+
+                    spectralGapAfter = spectral_gap_sparse(G.get_G())
                     spectralGapsAfter = {"SpectralGapAfter":spectralGapAfter}
                     #spectralGapBefore = {'SpectralGapBefore':0}
                     final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
@@ -481,11 +473,8 @@ class VertexDynamic:
                 stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
                 check_convergence_dynamic()
                 conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
-                if (self.GPU):
-                    IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(
-                        G.get_G())
-                else:
-                    spectralGapAfter = spectral_gap_sparse(G.get_G())
+
+                spectralGapAfter = spectral_gap_sparse(G.get_G())
                 spectralGapsAfter = {"SpectralGapAfter": spectralGapAfter}
                 final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
             t += 1
@@ -498,18 +487,7 @@ class VertexDynamic:
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
                     c+=1
-        '''
-        i = 0
-        for g in graph_before:
-            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist"
-                         )
-            i+=1
-        i = 0
-        for g in graph_after:
-            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist"
-                          )
-            i+=1
-        '''
+
 
         return (final_stats)
 
