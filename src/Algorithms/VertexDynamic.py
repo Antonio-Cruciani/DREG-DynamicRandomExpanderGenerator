@@ -437,6 +437,7 @@ class VertexDynamic:
             if (achieved):
                 if(self.GPU):
                     IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(G.get_G())
+
                 else:
                     spectralGapBefore = spectral_gap_sparse(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}

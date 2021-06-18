@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import math as mt
 import cupy as cp
+
 import scipy as sp
 
 # Function that return the spectral Gap of the Transition Matrix P
@@ -97,3 +98,4 @@ def spectral_gap_sparse(G):
 
     sg_trans = float(sg)
     return (sg_trans)
+
