@@ -9,6 +9,8 @@ import time
 import math as mt
 import logging
 import os
+
+
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class VertexDynamicOutput:
@@ -79,6 +81,8 @@ class VertexDynamic:
 
                             else:
                                 stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
+
+
                             vertexDynamicStats.add_stats(stats)
                             logging.info("Elapsed time %r" % (time.time() - start_time))
                             logging.info("----------------------------------------------------------------")
@@ -499,6 +503,9 @@ class VertexDynamic:
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
                     c+=1
+
+
+
         '''
         i = 0
         for g in graph_before:
