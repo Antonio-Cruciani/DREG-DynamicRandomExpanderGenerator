@@ -1,4 +1,3 @@
-<img src="https://github.com/Antonio-Cruciani/dynamic-random-graph-generator/blob/master/img/Dynamic.png?v=3&s=200" title="Dynamic Random Graph" alt="DynamicRG" height=256 width=386>
 
 
 # Dynamic Random Graph Generator
