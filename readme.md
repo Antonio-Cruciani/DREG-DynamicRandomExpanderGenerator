@@ -24,6 +24,15 @@
 - [License](#License)
 
 
+## General info
+This python package is a dynamic random graphs generator. It allows defining bounded degree dynamic undirected networks i.e., evolving graphs in which each node has bounded degree.
+### What is a Dynamic Random Graph?
+A dynamic graph is a sequence of graphs <img src="https://bit.ly/35x8Ux6" align="center" border="0" alt="\mathcal{G} =\{G_t = (V_t, E_t) \,:\, t \in \mathbb{N}\}" width="219" height="18" />
+where the sets of nodes and edges
+can change at any discrete round. If they can change randomly we call the
+corresponding random process a dynamic random graph.
+
+### Why Dynamic Random Graphs?
 
 
 ## Description
