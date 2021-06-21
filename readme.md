@@ -13,14 +13,9 @@
 ## Table of Contents 
 
 
-- [General info](#general-info)
+- [General info](#General-info)
 - [Description](#Description)
-- [RAES Random Graph](#RAES)
-- [Edge Dynamic Random Graph](#Edge-Dynamic)
-- [Vertex Dynamic Random Graph](#Vertex-Dynamic)
-- [Edge Markovian Random Graph](#Edge-Markovian)
-- [Distributed Protocols](#Distributed-Protocols)
-- [Heuristic Convergence ](#Heuristic-Convergence)
+- [How to define and execute a model](#How-to-define-and-execute-a-model)
 - [License](#License)
 
 
