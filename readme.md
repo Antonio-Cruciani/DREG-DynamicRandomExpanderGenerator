@@ -13,7 +13,7 @@
 ## Table of Contents 
 
 
-
+- [General info](#general-info)
 - [Description](#Description)
 - [RAES Random Graph](#RAES)
 - [Edge Dynamic Random Graph](#Edge-Dynamic)
@@ -33,10 +33,12 @@ can change at any discrete round. If they can change randomly we call the
 corresponding random process a dynamic random graph.
 
 ### Why Dynamic Random Graphs?
-
+Dynamic random graphs analysis allows us to define more accurate models that represent real phenomena.
 
 ## Description
-This package allows you to create random dynamic graphs inspired by P2P networks where each node at each time step chooses one or more neighbors uniformly at random (u.a.r.) and inspired by Radio Networks where each edge is a Birth-Death Markov Chain. We propose you four different dynamic random graphs:
+In these models each node individually execute a distributed protocol in order to maintain a bounded number of connections.
+It is possible to define " external events " that causes the edge or node disappearance at each time instant.
+
 
 ### P2P  
 - **RAES** ( Request a link, then Accept if Enough Space ) proposed by Becchetti et al. 
@@ -45,7 +47,31 @@ This package allows you to create random dynamic graphs inspired by P2P networks
 - **Vertex Dynamic** proposed by Antonio Cruciani ([More details (ITA)](./Thesis/AntonioCruciani_Master's_Degree_Thesis(ITA).pdf) [More details (ENG)](./Thesis/AntonioCrucianiExtracted.pdf)) that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
 ### Radio Networks 
 - **Edge Markovian** You can read about it at the following [link](https://dl.acm.org/doi/pdf/10.1145/1400751.1400781 ) in this model you have a fixed number of nodes and each edge is a Birth-Death Markov Chain.
+
+## How to define and execute a model
+Given the **config.ini** file set up the model that you want to simulate
+
+### Defining the model
+Modify the **.ini** file under the section: **[model]**
+* **graph** use **ED** to define an Edge Dyanamics or **VD** to define a Vertex Dynamic model
+* **nodes** is the number of nodes of the dynamic random graph. Must be a list of nodes, if more than one integer is in such list the tool will simulate sequentially the model with all the nodes in such list.
+* **degree** is the "target\min" degree that each node must have. Must be a list of integers, if more than one integer is in such list the tool will simulate sequentially the model with all the degrees in such list. 
+* **tolerance** is the max degree that each node can have. Can be a list of integers or floats, if more than one value is in such list the tool will simulate sequentially the model with all the tolerances in such list.
+* **edge_node_falling_probability** is the edge-disappearance probability at each round in case of the Edge Dynamics or the node-exiting probability in case of the Vertex Dynamics. Is a list of floats, must be between 0 and 1, if more than one value is in such list the tool will simulate sequentially the model with all the probabilities in such list.
+* **nodes_poisson_rate** is the node-joining rate of the Poisson Process of the Vertex Dynamics. If it is equal to **None** the tool will use as rates the product of the number of nodes **n** and the exiting probabilities **q**. Is a list of floats, if more than one value is in such list the tool will simulate sequentially the model with all the probabilities in such list.
+
+### Simulations parametes
+Modify the **.ini** file under the section: **[simulations]**
+* **flooding_protocol** If **True** the protocol will simulate the Flooding process.
+* **simultaions_number**  Number of simulation that you want to perform for each fixed model. Must be an integer
+* **only_spectral_properties** If **True** simulate the model saving only the Spectral Gaps at each round.
+* **offline_simulation** If **True** saves as a file the adjacency list of the Dynamic Graph before and after the execution of the distributed protocol. **WARNING:** It performs a high amount of file writings on the disk.
+
+## Other parameters
+Modify the **.ini** file under the section: **[other_parameters]**
+
 ## RAES
+
 Dynamic Random Graph G(n,d,c) where:
 
 -	 **n** is the number of vertices 
