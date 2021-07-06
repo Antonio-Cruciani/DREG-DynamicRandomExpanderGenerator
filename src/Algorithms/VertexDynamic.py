@@ -31,9 +31,25 @@ class VertexDynamic:
 
     def __init__(self, d, c, inrate, outrate, outpath, flooding=True, regular_convergence=0.9, regular_decay=0.5
                  , model="Multiple", simNumber=30, maxIter=100, onlySpectral=False, Offline=False, GPU=False):
+        """
 
 
 
+
+        :param d: int, minimum degree that each node must have
+        :param c: float, tolerance constant, c*d is the maximum degree that each node can have
+        :param inrate: float, intensity parameter of the Poisson Process
+        :param outrate: float, node-falling probability
+        :param outpath: str, output path for the results
+        :param flooding: bool, if True, simulates the flooding process
+        :param regular_convergence: Threshold for the (d,c*d)-regularity convergence, NOTE: The Algorithm will compute the best percentage anyway.
+        :param model: str, if Multiple each node will sample more than one node at each round, NOTE: Leave it as Multiple
+        :param simNumber: int, number of experiments to perfom
+        :param maxIter: int, maximum number of steps for the simulations
+        :param onlySpectral: bool, if true will save only the spectral properties of the graph
+        :param Offline: bool, if true, will simulate the model saving the adjacency list of the model at each time step without computing any statistic
+        :param GPU: bool, if true, will be used the GPU instead of the CPU for solving the eigen-problem
+        """
         self.d_list = d
         self.c_list = c
         self.inrate_list = inrate
