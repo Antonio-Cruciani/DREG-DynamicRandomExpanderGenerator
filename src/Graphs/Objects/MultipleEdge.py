@@ -13,6 +13,19 @@ from src.Protocols.Consensus import Consensus
 class DynamicGraph:
 
     def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = None ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
+        """
+
+        :param n: int, number of nodes.
+        :param d: int, minimum degree that each node must have
+        :param c: float, tolerance constant d*c defines the maximum degree that each node can have
+        :param lam: float, intensity parameter of the Poisson process
+        :param beta: float, node-falling probability of each node
+        :param falling_probability: float, edge-falling probability
+        :param model: string, model type
+        :param starting_edge_list: list, edge list of the graph at time 0
+        :param edge_birth_rate:
+        :param edge_death_rate:
+        """
         self.G = nx.Graph()
         self.entering_nodes =[]
         self.G.add_nodes_from([i for i in range(0,n)])
@@ -315,6 +328,24 @@ class DynamicGraph:
         # If all nodes have degree d <=|N(u)| <= c*d  then the process can stop
         # so we return False
         return False
+
+    def random_fall_dep(self):
+        removed = []
+        survived = []
+        for e in list(self.G.edges()):
+            if (flip(self.p) == 'H'):
+                removed.append(e)
+            else:
+                survived.append(e)
+        if(len(survived)<=len(removed)):
+            G = nx.Graph()
+            G.add_nodes_from([i for i in range(0, self.n)])
+            for e in survived:
+                G.add_edge(e[0],e[1])
+            self.G = G
+        else:
+            for e in removed:
+                self.G.remove_edge(e[0], e[1])
 
     # Function that iterate on all edges in the graph and delete them with probability p
     def random_fall(self):

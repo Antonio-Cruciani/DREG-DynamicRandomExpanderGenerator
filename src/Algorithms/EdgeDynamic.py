@@ -60,7 +60,7 @@ class EdgeDynamic:
         self.max_iter = maxIter
         self.GPU = GPU
         self.epsilon_steps = 25
-
+        logging.debug("MAX ITER = %r"%(self.max_iter))
     def run(self):
         logging.info("----------------------------------------------------------------")
         logging.info("Starting simulation")
@@ -81,7 +81,7 @@ class EdgeDynamic:
                     for c in self.c_list:
                         logging.info(
                             "Number of nodes: %r Falling probability: %r Flooding: %r d: %d c: %r" % (n, p, self.flooding, d,c))
-                        if (p != 0):
+                        if (p != 0 and (not self.spectrumSim) and (not self.MC) and False):
                             logging.info(" Inferring epsilon , please wait")
                             epsilon = self.get_epsilon(d, c, p, n)
                         else:
@@ -279,6 +279,8 @@ class EdgeDynamic:
         G = DynamicGraph(n, d, c, falling_probability=p, model=self.model)
 
         while (repeat):
+            logging.debug("ITERATION = %r"%(t))
+
             G.add_phase()
             G.del_phase()
 
@@ -328,7 +330,7 @@ class EdgeDynamic:
             return (-1)
         G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
         repeat = True
-
+        logging.info("OFFLINE MODE")
         try:
             # Create sim Directory
             os.mkdir(path +"/"+ str(sim))
@@ -412,6 +414,7 @@ class EdgeDynamic:
 
 
         while(repeat ):
+
             G.add_phase()
             G.del_phase()
 
@@ -442,7 +445,6 @@ class EdgeDynamic:
             final_stats.append({**sim, **stats_bef,**stats_aft, **stats})
 
             t+=1
-
 
         return (final_stats)
 
