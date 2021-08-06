@@ -60,7 +60,7 @@ class EdgeDynamic:
         self.max_iter = maxIter
         self.GPU = GPU
         self.epsilon_steps = 25
-        logging.debug("MAX ITER = %r"%(self.max_iter))
+        #logging.debug("MAX ITER = %r"%(self.max_iter))
     def run(self):
         logging.info("----------------------------------------------------------------")
         logging.info("Starting simulation")
@@ -279,7 +279,7 @@ class EdgeDynamic:
         G = DynamicGraph(n, d, c, falling_probability=p, model=self.model)
 
         while (repeat):
-            logging.debug("ITERATION = %r"%(t))
+            #logging.debug("ITERATION = %r"%(t))
 
             G.add_phase()
             G.del_phase()
