@@ -91,7 +91,7 @@ class Samples:
 
         #self.nodes = []
         # Boolean variable for the spectral analysis
-        self.spectrum = True
+        self.spectrum = False
 
         self.median_spectral_gap = 0
         self.avg_spectral_gap = 0

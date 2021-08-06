@@ -28,7 +28,7 @@ def process_data(input_file,outputPath):
         sim_number = len(list(set(file['simulation'].values)))
 
 
-        s_analysis = True
+        s_analysis = False
         results = []
         if("lambda" in list(file.keys())):
             in_rate_list = list(set(file['lambda'].values))
