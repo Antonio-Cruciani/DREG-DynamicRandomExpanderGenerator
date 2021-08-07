@@ -180,7 +180,7 @@ class VertexDynamic:
                             logging.info("----------------------------------------------------------------")
 
                         threshold = G.get_target_n()
-                        if (G.flooding.get_t_flood() > threshold):
+                        if (G.flooding.get_t_flood() >100* threshold):
                             logging.info("Iterations > threshold")
                             logging.info("The Flooding protocol is too slow, stopping the simulation")
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
