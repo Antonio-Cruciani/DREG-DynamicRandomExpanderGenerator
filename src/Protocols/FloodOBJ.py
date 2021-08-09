@@ -99,7 +99,7 @@ class Flooding:
     def set_stop_time(self,it):
         self.stop_time = it
 
-    def incremental_convergence(self):
+    def incremental_convergence_dep(self):
         number_informed = self.get_informed_nodes()
         number_uninformed = self.get_uninformed_nodes()
 
@@ -129,7 +129,7 @@ class Flooding:
             ones = (self.get_informed_nodes() / nodes) * 100
             self.set_percentage(ones)
 
-    def incremental_convergence_dep(self):
+    def incremental_convergence(self):
         number_informed = self.get_informed_nodes()
         number_uninformed = self.get_uninformed_nodes()
         if(number_uninformed != 0):
