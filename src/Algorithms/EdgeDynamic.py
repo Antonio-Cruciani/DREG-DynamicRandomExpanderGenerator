@@ -2,7 +2,7 @@ from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file,create_folder,write_on_file_contents
 from src.Graphs.Objects.Queue import Queue
 from src.StastModules.Snapshot import get_snapshot
-from src.StastModules.SpectralAnalysis import spectral_gap_sparse
+from src.StastModules.SpectralAnalysis import spectral_gap_sparse,spectral_gap
 import networkx as nx
 import time
 import math as mt
@@ -340,6 +340,13 @@ class EdgeDynamic:
 
         try:
             # Create sim Directory
+            os.mkdir(path + "/"+str(sim) + "/beforeA")
+            logging.info("Directory %r sim/before Created "%(path))
+        except FileExistsError:
+            logging.error("Directory %r sim/before already exists"%(path))
+
+        try:
+            # Create sim Directory
             os.mkdir(path + "/"+str(sim) + "/before")
             logging.info("Directory %r sim/before Created "%(path))
         except FileExistsError:
@@ -351,8 +358,12 @@ class EdgeDynamic:
         except FileExistsError:
             logging.error("Directory %r sim/after already exists"%(path))
         stats = {"d":d,"c":c,"n":n,"p":p}
+        nx.write_adjlist(G.get_G(), path=path + "/" + str(sim) +"_" + str(t) + ".adjlist")
+
         while (repeat):
             G.add_phase()
+            nx.write_adjlist(G.get_G(), path=path +"/"+ str(sim) + "/beforeA/" + str(t) + ".adjlist")
+
             G.del_phase()
             nx.write_adjlist(G.get_G(), path=path +"/"+ str(sim) + "/before/" + str(t) + ".adjlist")
 
@@ -418,7 +429,7 @@ class EdgeDynamic:
             G.add_phase()
             G.del_phase()
 
-            spectralGapBefore = spectral_gap_sparse(G.get_G())
+            spectralGapBefore,lambda1Before,lambda2Before = spectral_gap(G.get_G())
             stats_bef = {
                 "spectralGapBefore": spectralGapBefore,
             }
@@ -426,7 +437,7 @@ class EdgeDynamic:
             if (p != 0):
                 G.random_fall()
 
-            spectralGapAfter = spectral_gap_sparse(G.get_G())
+            spectralGapAfter,lambda1After,lambda2After = spectral_gap(G.get_G())
             stats_aft = {
                 "spectralGapAfter": spectralGapAfter,
             }
@@ -443,7 +454,7 @@ class EdgeDynamic:
                     c+=1
 
             final_stats.append({**sim, **stats_bef,**stats_aft, **stats})
-
+            logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapAfter))
             t+=1
 
         return (final_stats)
@@ -460,7 +471,7 @@ class EdgeDynamic:
             G.del_phase()
             G.random_fall()
 
-            spectralGap = spectral_gap_sparse(G.get_G())
+            spectralGap = spectral_gap(G.get_G())
             spectral_list.append(spectralGap)
             t+=1
         filtered = list(filter(lambda x: (x != 0), spectral_list))

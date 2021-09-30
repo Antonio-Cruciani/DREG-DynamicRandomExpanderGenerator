@@ -245,9 +245,36 @@ class DynamicGraph:
         # Removing the undirected edge list from the graph
         self.G.remove_edges_from(list(set(edge_list)))
 
-
-
     def add_phase(self):
+        nodes = list(self.G.nodes())
+        edge_list = []
+        for i in nodes:
+            neighbors = [n for n in self.G.neighbors(i)]
+            if (len(neighbors) < self.d):
+                # Calculating the set of the elements over random sampling
+                if (len(neighbors) > 0):
+                    app = list(set(nodes) - set(neighbors) - set([i]))
+                else:
+                    app = list(set(nodes) - set([i]))
+                if (app):
+                    # Converting in int the element sampled over the list
+                    # Calculating the sample size
+                    sample_size = self.get_sample_add_phase(neighbors)
+                    v_sample = rnd.choices(app, k=sample_size)
+                    # Adding the edge (i,v) to the graph
+                    for x in v_sample:
+                        edge_list.append((i, int(x)))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        '''preprocessed = []
+        for i in edge_list:
+            if i[0] > i[1]:
+                preprocessed.append((i[1], i[0]))
+            else:
+                preprocessed.append((i[0], i[1]))'''
+        # Adding the undirected edge list to the graph
+        self.G.add_edges_from(edge_list)
+
+    def add_phase_dep(self):
         nodes = list(self.G.nodes())
         edge_list = []
         for i in nodes:
@@ -276,8 +303,32 @@ class DynamicGraph:
         # Adding the undirected edge list to the graph
         self.G.add_edges_from(list(set(preprocessed)))
 
-    # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
+
     def del_phase(self):
+        self.t +=1
+        nodes = list(self.G.nodes())
+        edge_list = []
+        for i in nodes:
+            neig = [n for n in self.G.neighbors(i)]
+            if (len(neig) > self.tolerance):
+                # Calculating the sample size
+
+                sample_size = self.get_sample_del_phase(neig)
+
+                # Sampling a node from the neighborhood
+                v_sample = rnd.choices(neig,k=sample_size)
+                # Adding the samples to the list of nodes to remove
+                for x in v_sample:
+                    edge_list.append((i, int(x)))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        for edge in edge_list:
+            try:
+                self.G.remove_edge(edge)
+            except:
+                continue
+
+    # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
+    def del_phase_dep(self):
         self.t +=1
         nodes = list(self.G.nodes())
         edge_list = []

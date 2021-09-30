@@ -314,10 +314,24 @@ class VertexDynamic:
 
         try:
             # Create sim Directory
+            os.mkdir(path + "/" + str(sim) + "/beforeA")
+            logging.info("Directory %r sim/before Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim/before already exists" % (path))
+
+        try:
+            # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/before")
             logging.info("Directory %r sim/before Created " % (path))
         except FileExistsError:
             logging.error("Directory %r sim/before already exists" % (path))
+        try:
+            # Create sim Directory
+            os.mkdir(path + "/" + str(sim) + "/afterA")
+            logging.info("Directory %r sim/after Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim/after already exists" % (path))
+
         try:
             # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/after")
@@ -342,11 +356,13 @@ class VertexDynamic:
         while (repeat):
             G.disconnect_from_network()
             # Saving graph
-            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/afterA/" + str(t) + ".adjlist")
 
             G.connect_to_network()
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/beforeA/" + str(t) + ".adjlist")
 
             G.add_phase_vd()
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
 
 
             G.del_phase_vd()
