@@ -423,11 +423,15 @@ class EdgeDynamic:
         G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
         c = 0
 
-
+        start = time.time()
         while(repeat ):
+            if ( t % 50 == 0):
+                partial = time.time() - start
+                logging.info("Computed %r steps in %r"%(t,partial))
 
-            G.add_phase()
-            G.del_phase()
+
+            G.add_phase_MT()
+            G.del_phase_MT()
 
             #spectralGapBefore,lambda1Before,lambda2Before = spectral_gap(G.get_G())
             spectralGapBefore = spectral_gap(G.get_G())
@@ -437,7 +441,7 @@ class EdgeDynamic:
             }
 
             if (p != 0):
-                G.random_fall()
+                G.random_fall_MT()
 
             #spectralGapAfter,lambda1After,lambda2After = spectral_gap(G.get_G())
             spectralGapAfter = spectral_gap(G.get_G())
@@ -458,7 +462,7 @@ class EdgeDynamic:
                     c+=1
 
             final_stats.append({**sim, **stats_bef,**stats_aft, **stats})
-            logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapAfter))
+            #logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapAfter))
             t+=1
 
         return (final_stats)
@@ -471,9 +475,9 @@ class EdgeDynamic:
         t = 0
         spectral_list = []
         while(t<self.epsilon_steps):
-            G.add_phase()
-            G.del_phase()
-            G.random_fall()
+            G.add_phase_MT()
+            G.del_phase_MT()
+            G.random_fall_MT()
 
             spectralGap = spectral_gap(G.get_G())
             spectral_list.append(spectralGap)

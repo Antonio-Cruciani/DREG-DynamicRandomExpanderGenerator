@@ -5,7 +5,7 @@ import math as mt
 import scipy
 import scipy.sparse
 import threading
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor
 
 from src.MathModules.MathTools import flip
 from src.Protocols.FloodOBJ import Flooding
@@ -177,6 +177,7 @@ class DynamicGraph:
         nodes = list(self.G.nodes())
         neighbors = [n for n in self.G.neighbors(u)]
         edge_list = []
+
         if (len(neighbors) < self.d):
             # Calculating the set of the elements over random sampling
             if (len(neighbors) > 0):
@@ -191,21 +192,18 @@ class DynamicGraph:
                 # Adding the edge (i,v) to the graph
                 for x in v_sample:
                     edge_list.append((u, int(x)))
-        # Now we have to transform the directed edge list in ad undirected edge list
-        preprocessed = []
-        for i in edge_list:
-            if i[0] > i[1]:
-                preprocessed.append((i[1], i[0]))
-            else:
-                preprocessed.append((i[0], i[1]))
-        return(preprocessed)
+
+
+        return(edge_list)
 
 
     def add_phase_MT(self):
         nodes = list(self.G.nodes())
         edge_list = []
-        with ThreadPoolExecutor(max_workers=2) as executor:
+
+        with ThreadPoolExecutor(32) as executor:
             results = executor.map(self.add_MT, nodes)
+
         for result in results:
             edge_list.extend(result)
         # Adding the undirected edge list to the graph
@@ -215,6 +213,8 @@ class DynamicGraph:
 
         edge_list = []
         neig = [n for n in self.G.neighbors(u)]
+
+
         if (len(neig) > self.tolerance):
             # Calculating the sample size
 
@@ -225,25 +225,43 @@ class DynamicGraph:
             # Adding the samples to the list of nodes to remove
             for x in v_sample:
                 edge_list.append((u, int(x)))
-        # Now we have to transform the directed edge list in ad undirected edge list
-        preprocessed = []
-        for i in edge_list:
-            if i[0] > i[1]:
-                preprocessed.append((i[1], i[0]))
-            else:
-                preprocessed.append((i[0], i[1]))
-        return (preprocessed)
+
+        return (edge_list)
 
     def del_phase_MT(self):
         nodes = list(self.G.nodes())
         edge_list = []
-        with ThreadPoolExecutor(max_workers=2) as executor:
+        with ThreadPoolExecutor(32) as executor:
             results = executor.map(self.del_MT, nodes)
         for result in results:
             edge_list.extend(result)
 
         # Removing the undirected edge list from the graph
-        self.G.remove_edges_from(list(set(edge_list)))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        for edge in edge_list:
+            try:
+                self.G.remove_edge(edge)
+            except:
+                continue
+
+    def fall_MT(self,e):
+        if (flip(self.p) == 'H'):
+            return [(e[0], e[1])]
+        return [None]
+    def random_fall_MT(self):
+        edges = list(self.G.edges())
+        edge_list = []
+        with ThreadPoolExecutor(32) as executor:
+            results = executor.map(self.fall_MT, edges)
+        for result in results:
+            edge_list.extend(result)
+        for edge in edge_list:
+            if edge != None:
+                try:
+                    self.G.remove_edge(edge[0],edge[1])
+                except:
+                    continue
+
 
     def add_phase(self):
         nodes = list(self.G.nodes())
