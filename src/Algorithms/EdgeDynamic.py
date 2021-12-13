@@ -72,6 +72,7 @@ class EdgeDynamic:
                 logging.info("----------------------------------------------------------------")
                 logging.info("Number of nodes: %r Falling probability: %r Flooding: %r" % (n,p,self.flooding))
                 outpath = create_folder(self.outPath,"EdgeDynamic_n_"+str(n)+"_p_"+str(p)+"_f_"+str(self.flooding))
+                print("Outpath",outpath)
                 outpath = outpath + "results"
                 os.mkdir(outpath)
 
