@@ -188,7 +188,7 @@ class DynamicGraph:
                 # Converting in int the element sampled over the list
                 # Calculating the sample size
                 sample_size = self.get_sample_add_phase(neighbors)
-                v_sample = rnd.choices(app, k=sample_size)
+                v_sample = np.random.choice(app, size=sample_size)
                 # Adding the edge (i,v) to the graph
                 for x in v_sample:
                     edge_list.append((u, int(x)))
@@ -221,7 +221,7 @@ class DynamicGraph:
             sample_size = self.get_sample_del_phase(neig)
 
             # Sampling a node from the neighborhood
-            v_sample = rnd.choices(neig, k=sample_size)
+            v_sample = np.random.choice(neig, size=sample_size)
             # Adding the samples to the list of nodes to remove
             for x in v_sample:
                 edge_list.append((u, int(x)))
@@ -278,7 +278,7 @@ class DynamicGraph:
                     # Converting in int the element sampled over the list
                     # Calculating the sample size
                     sample_size = self.get_sample_add_phase(neighbors)
-                    v_sample = rnd.choices(app, k=sample_size)
+                    v_sample = np.random.choice(app, size=sample_size)
                     # Adding the edge (i,v) to the graph
                     for x in v_sample:
                         edge_list.append((i, int(x)))
@@ -307,7 +307,7 @@ class DynamicGraph:
                     # Converting in int the element sampled over the list
                     # Calculating the sample size
                     sample_size = self.get_sample_add_phase(neighbors)
-                    v_sample = rnd.choices(app,k=sample_size)
+                    v_sample = np.random.choice(app,size=sample_size)
                     # Adding the edge (i,v) to the graph
                     for x in v_sample:
                         edge_list.append((i, int(x)))
@@ -334,7 +334,7 @@ class DynamicGraph:
                 sample_size = self.get_sample_del_phase(neig)
 
                 # Sampling a node from the neighborhood
-                v_sample = rnd.choices(neig,k=sample_size)
+                v_sample = np.random.choice(neig,size=sample_size)
                 # Adding the samples to the list of nodes to remove
                 for x in v_sample:
                     edge_list.append((i, int(x)))
@@ -358,7 +358,7 @@ class DynamicGraph:
                 sample_size = self.get_sample_del_phase(neig)
 
                 # Sampling a node from the neighborhood
-                v_sample = rnd.choices(neig,k=sample_size)
+                v_sample = np.random.choice(neig,size=sample_size)
                 # Adding the samples to the list of nodes to remove
                 for x in v_sample:
                     edge_list.append((i, int(x)))
@@ -517,7 +517,7 @@ class DynamicGraph:
                     # Converting in int the element sampled over the list
                     # Calculating the sample size
                     sample_size = self.get_sample_add_phase(neighbors)
-                    v_sample = rnd.choices(app,k=sample_size)
+                    v_sample = np.random.choice(app,size=sample_size)
                     # Adding the edge (i,v) to the graph
                     edge_list.append((i, int(v_sample[0])))
         # If is not the first round and there are nodes in the network,
@@ -532,7 +532,7 @@ class DynamicGraph:
                 for i in survived_entering_nodes:
                     sample_size = self.get_sample_add_phase([])
 
-                    v_sample = rnd.choices(nodes, k=sample_size)
+                    v_sample = np.random.choice(nodes, size=sample_size)
                     for x in v_sample:
                         #edge_list.append((i, str(x)))
                         edge_list.append((i, int(x)))
@@ -564,7 +564,7 @@ class DynamicGraph:
                 # Calculating the sample size
                 sample_size = self.get_sample_del_phase(neig)
                 # Sampling a node from the neighborhood
-                v_sample = rnd.choices(neig, k=sample_size)
+                v_sample = np.random.choice(neig, size=sample_size)
 
                 lista_rimozioni.append(i)
                 # Adding the samples to the list of nodes to remove
