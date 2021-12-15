@@ -312,26 +312,28 @@ class VertexDynamic:
         except FileExistsError:
             logging.error("Directory %r sim already exists" % (path))
 
+        '''
         try:
             # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/beforeA")
             logging.info("Directory %r sim/before Created " % (path))
         except FileExistsError:
             logging.error("Directory %r sim/before already exists" % (path))
-
+        '''
         try:
             # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/before")
             logging.info("Directory %r sim/before Created " % (path))
         except FileExistsError:
             logging.error("Directory %r sim/before already exists" % (path))
+        '''
         try:
             # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/afterA")
             logging.info("Directory %r sim/after Created " % (path))
         except FileExistsError:
             logging.error("Directory %r sim/after already exists" % (path))
-
+        '''
         try:
             # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/after")
@@ -354,20 +356,20 @@ class VertexDynamic:
         stats = {"d": G.get_d(), "c": G.get_c(), "n": G.get_target_n(),"lambda":G.get_inrate(),"beta":G.get_outrate()}
 
         while (repeat):
-            G.disconnect_from_network()
-            # Saving graph
-            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/afterA/" + str(t) + ".adjlist")
-
-            G.connect_to_network()
-            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/beforeA/" + str(t) + ".adjlist")
-
-            G.add_phase_vd()
-            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
-
-
-            G.del_phase_vd()
+            G.disconnect_from_network_MT()
             # Saving graph
             nx.write_adjlist(G.get_G(), path=path + str(sim) + "/after/" + str(t) + ".adjlist")
+
+            G.connect_to_network()
+            #nx.write_adjlist(G.get_G(), path=path + str(sim) + "/beforeA/" + str(t) + ".adjlist")
+
+            G.add_phase_vd_MT()
+            #nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
+
+
+            G.del_phase_vd_MT()
+            # Saving graph
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
 
 
 
@@ -465,7 +467,7 @@ class VertexDynamic:
         c = 0
 
         while (repeat):
-            G.disconnect_from_network()
+            G.disconnect_from_network_MT()
             if (achieved):
 
                 spectralGapBefore = spectral_gap_sparse(G.get_G())
@@ -480,11 +482,11 @@ class VertexDynamic:
 
             G.connect_to_network()
 
-            G.add_phase_vd()
+            G.add_phase_vd_MT()
 
 
 
-            G.del_phase_vd()
+            G.del_phase_vd_MT()
 
 
 

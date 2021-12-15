@@ -461,6 +461,44 @@ class DynamicGraph:
         self.set_max_label(X_t)
         self.set_number_of_entering_nodes_at_each_round(X_t)
 
+
+
+    def fall_MT(self,e):
+        if (flip(self.p) == 'H'):
+            return [(e[0], e[1])]
+        return [None]
+    def random_fall_MT(self):
+        edges = list(self.G.edges())
+        edge_list = []
+        with ThreadPoolExecutor(32) as executor:
+            results = executor.map(self.fall_MT, edges)
+        for result in results:
+            edge_list.extend(result)
+        for edge in edge_list:
+            if edge != None:
+                try:
+                    self.G.remove_edge(edge[0],edge[1])
+                except:
+                    continue
+
+    def disconnect_MT(self,u):
+        if (flip(self.outrate) == "H"):
+            return u
+    def disconnect_from_network_MT(self):
+        Z_t = 0
+        exiting_nodes = []
+        nodes = self.get_list_of_nodes()
+        with ThreadPoolExecutor(16) as executor:
+            exiting_nodes = executor.map(self.disconnect_MT, nodes)
+        for u in exiting_nodes:
+            if u != None:
+                try:
+                    self.G.remove_node(u)
+                    Z_t += 1
+                except:
+                    continue
+        self.set_number_of_exiting_nodes_at_each_round(Z_t)
+
     # Function that delete agets from the network with probability q
     def disconnect_from_network(self):
         # Random variable that counts the number of nodes that exits the network
@@ -501,6 +539,54 @@ class DynamicGraph:
     #def vertex_dynamic_add(self):
         # RAES ESEGUITO TRA I NODI AL TEMPO I-1
         # RAES ESEGUITO TRA I NODI ENTRANTI VERSO QUELLI AL TEMPO I-1
+
+
+
+    def add_vd_MT(self,u):
+        nodes = list(set(self.G.nodes()) - set(self.entering_nodes))
+        neighbors = [n for n in self.G.neighbors(u)]
+        edge_list = []
+        if (len(neighbors) < self.d):
+            # Calculating the set of the elements over random sampling
+            if (len(neighbors) > 0):
+                app = list(set(nodes) - set(neighbors) - set([u]))
+            else:
+                app = list(set(nodes) - set([u]))
+            if (app):
+                # Converting in int the element sampled over the list
+                # Calculating the sample size
+                sample_size = self.get_sample_add_phase(neighbors)
+                v_sample = np.random.choice(app, size=sample_size)
+                # Adding the edge (i,v) to the graph
+                for x in v_sample:
+                    edge_list.append((u, int(x)))
+
+        if (self.t > 0 and len(nodes) > 0):
+
+            # New nodes are connecting to the network
+            survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
+            if (len(survived_entering_nodes) > 0):
+
+                for i in survived_entering_nodes:
+                    sample_size = self.get_sample_add_phase([])
+
+                    v_sample = np.random.choice(nodes, size=sample_size)
+                    for x in v_sample:
+                        #edge_list.append((i, str(x)))
+                        edge_list.append((i, int(x)))
+        return edge_list
+
+    def add_phase_vd_MT(self):
+        nodes = list(set(self.G.nodes()) - set(self.entering_nodes))
+        edge_list = []
+
+        with ThreadPoolExecutor(16) as executor:
+            results = executor.map(self.add_vd_MT, nodes)
+
+        for result in results:
+            edge_list.extend(result)
+        # Adding the undirected edge list to the graph
+        self.G.add_edges_from(list(set(edge_list)))
 
     def add_phase_vd(self):
         nodes = list(set(self.G.nodes())-set(self.entering_nodes))
@@ -552,12 +638,46 @@ class DynamicGraph:
 
 
         # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
+    def del_vd_MT(self,u):
+        nodes = list(set(self.G.nodes())-set(self.entering_nodes))
+        edge_list = []
+        neig = [n for n in self.G.neighbors(u)]
+
+        if (len(neig) > self.tolerance):
+            # Calculating the sample size
+            sample_size = self.get_sample_del_phase(neig)
+            # Sampling a node from the neighborhood
+            v_sample = np.random.choice(neig, size=sample_size)
+
+            # lista_rimozioni.append(i)
+            # Adding the samples to the list of nodes to remove
+            for x in v_sample:
+                # edge_list.append((str(i), str(x)))
+                edge_list.append((int(u), int(x)))
+        return edge_list
+
+    def del_phase_vd_MT(self):
+        self.t += 1
+        nodes = list(set(self.G.nodes())-set(self.entering_nodes))
+        edge_list = []
+        with ThreadPoolExecutor(16) as executor:
+            results = executor.map(self.del_vd_MT, nodes)
+        for result in results:
+            edge_list.extend(result)
+
+        # Removing the undirected edge list from the graph
+        # Now we have to transform the directed edge list in ad undirected edge list
+        for edge in edge_list:
+            try:
+                self.G.remove_edge(edge)
+            except:
+                continue
 
     def del_phase_vd(self):
         self.t += 1
         nodes = list(set(self.G.nodes())-set(self.entering_nodes))
         edge_list = []
-        lista_rimozioni = []
+        #lista_rimozioni = []
         for i in nodes:
             neig = [n for n in self.G.neighbors(i)]
             if (len(neig) > self.tolerance):
@@ -566,7 +686,7 @@ class DynamicGraph:
                 # Sampling a node from the neighborhood
                 v_sample = np.random.choice(neig, size=sample_size)
 
-                lista_rimozioni.append(i)
+                #lista_rimozioni.append(i)
                 # Adding the samples to the list of nodes to remove
                 for x in v_sample:
                     #edge_list.append((str(i), str(x)))
