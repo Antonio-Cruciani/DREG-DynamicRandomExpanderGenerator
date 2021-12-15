@@ -465,8 +465,13 @@ class VertexDynamic:
             return (-1)
         G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
         c = 0
+        start = time.time()
 
         while (repeat):
+            if ( t % 50 == 0):
+                partial = time.time() - start
+                logging.info("Computed %r steps in %r"%(t,partial))
+
             G.disconnect_from_network_MT()
             if (achieved):
 
