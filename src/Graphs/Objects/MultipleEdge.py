@@ -488,7 +488,7 @@ class DynamicGraph:
         Z_t = 0
         exiting_nodes = []
         nodes = self.get_list_of_nodes()
-        with ThreadPoolExecutor(16) as executor:
+        with ThreadPoolExecutor(32) as executor:
             exiting_nodes = executor.map(self.disconnect_MT, nodes)
         for u in exiting_nodes:
             if u != None:
@@ -580,7 +580,7 @@ class DynamicGraph:
         nodes = list(set(self.G.nodes()) - set(self.entering_nodes))
         edge_list = []
 
-        with ThreadPoolExecutor(16) as executor:
+        with ThreadPoolExecutor(32) as executor:
             results = executor.map(self.add_vd_MT, nodes)
 
         for result in results:
@@ -660,7 +660,7 @@ class DynamicGraph:
         self.t += 1
         nodes = list(set(self.G.nodes())-set(self.entering_nodes))
         edge_list = []
-        with ThreadPoolExecutor(16) as executor:
+        with ThreadPoolExecutor(32) as executor:
             results = executor.map(self.del_vd_MT, nodes)
         for result in results:
             edge_list.extend(result)
