@@ -431,8 +431,8 @@ class EdgeDynamic:
                 logging.info("Computed %r steps in %r"%(t,partial))
 
 
-            G.add_phase_MT()
-            G.del_phase_MT()
+            G.add_phase()
+            G.del_phase()
 
             #spectralGapBefore,lambda1Before,lambda2Before = spectral_gap(G.get_G())
             spectralGapBefore = spectral_gap(G.get_G())
@@ -442,7 +442,7 @@ class EdgeDynamic:
             }
 
             if (p != 0):
-                G.random_fall_MT()
+                G.random_fall()
 
             #spectralGapAfter,lambda1After,lambda2After = spectral_gap(G.get_G())
             spectralGapAfter = spectral_gap(G.get_G())
