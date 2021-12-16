@@ -472,7 +472,7 @@ class VertexDynamic:
                 partial = time.time() - start
                 logging.info("Computed %r steps in %r"%(t,partial))
 
-            G.disconnect_from_network_MT()
+            G.disconnect_from_network()
             if (achieved):
 
                 spectralGapBefore = spectral_gap_sparse(G.get_G())
@@ -487,11 +487,11 @@ class VertexDynamic:
 
             G.connect_to_network()
 
-            G.add_phase_vd_MT()
+            G.add_phase_vd()
 
 
 
-            G.del_phase_vd_MT()
+            G.del_phase_vd()
 
 
 
