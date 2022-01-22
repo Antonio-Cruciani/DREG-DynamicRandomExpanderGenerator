@@ -65,9 +65,9 @@ class EdgeDynamic:
         logging.info("----------------------------------------------------------------")
         logging.info("Starting simulation")
         sim_start = time.time()
-        for p in self.p_list:
+        for n in self.n_list:
 
-           for n in self.n_list:
+           for p in self.p_list:
 
                 logging.info("----------------------------------------------------------------")
                 logging.info("Number of nodes: %r Falling probability: %r Flooding: %r" % (n,p,self.flooding))
@@ -83,7 +83,11 @@ class EdgeDynamic:
                             "Number of nodes: %r Falling probability: %r Flooding: %r d: %d c: %r" % (n, p, self.flooding, d,c))
                         if (p != 0 and (not self.spectrumSim) and (not self.MC) and False):
                             logging.info(" Inferring epsilon , please wait")
-                            epsilon = self.get_epsilon(d, c, p, n)
+                            # If provvisorio
+                            if (not self.spectrumSim):
+                                epsilon = self.get_epsilon(d, c, p, n)
+                            else:
+                                epsilon = None
                         else:
                             epsilon = self.epsilon
                         logging.info("Inferred Epsilon: %r " % (epsilon))
@@ -91,7 +95,8 @@ class EdgeDynamic:
                             logging.info("Simulation: %d" % (sim))
                             start_time = time.time()
                             if(self.spectrumSim):
-                                stats = self.EdgeDynamicGeneratorSpectrum(d, c,p,n,sim,epsilon)
+                                #stats = self.EdgeDynamicGeneratorSpectrum(d, c,p,n,sim,epsilon)
+                                stats = self.EdgeDynamicGeneratorSpectrumMaxIter(d, c, p, n, sim)
                             elif(self.MC):
                                 stats = self.EdgeDynamicGeneratorMCConfigurations( d, c, p, n, outpath, sim)
 
@@ -377,6 +382,75 @@ class EdgeDynamic:
         stats2 = {"d":d,"c":c,"n":n,"p":p}
         stats3 = [stats,stats2]
         return stats3
+
+
+
+    def EdgeDynamicGeneratorSpectrumMaxIter(self, d, c, p,n, sim,epsilon=None):
+
+
+
+
+        logging.info("Max-Iter Spectrum Analysis")
+        t = 0
+        final_stats = []
+
+        repeat = True
+        sim = {
+            "simulation": sim,
+            "d": d,
+            "c":c,
+            "p":p
+        }
+        if (d <= 0 or c < 0):
+            logging.error("Error, input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(n, d, c, falling_probability = p,model = self.model)
+
+
+        while(repeat ):
+
+            G.add_phase()
+            G.del_phase()
+
+            #spectralGapBefore,lambda1Before,lambda2Before = spectral_gap(G.get_G())
+            spectralGapBefore = spectral_gap(G.get_G())
+            stats = {"t":t}
+            stats_bef = {
+                "spectralGapBefore": spectralGapBefore,
+            }
+
+            if (p != 0):
+                G.random_fall()
+
+            #spectralGapAfter,lambda1After,lambda2After = spectral_gap(G.get_G())
+            if (p == 0):
+                stats_aft = {
+                    "spectralGapAfter": spectralGapBefore,
+                }
+            else:
+                spectralGapAfter = spectral_gap(G.get_G())
+
+                stats_aft = {
+                    "spectralGapAfter": spectralGapAfter,
+                }
+
+
+
+            if(t>= self.max_iter):
+                repeat = False
+
+
+
+            final_stats.append({**sim, **stats_bef,**stats_aft, **stats})
+            #if(p!=0):
+            #    logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapAfter))
+            #else:
+            #    logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapBefore))
+
+            t+=1
+
+        return (final_stats)
+
     def EdgeDynamicGeneratorSpectrum(self, d, c, p,n, sim,epsilon):
 
 

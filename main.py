@@ -136,6 +136,8 @@ def main():
     simulations = int(config['simulations']['simultaions_number'])
     only_spectral = config['simulations']['only_spectral_properties'] in ['true', '1', 't', 'y', 'True']
     offline = config['simulations']['offline_simulation'] in ['true', '1', 't', 'y', 'True']
+    if(config['model']['graph'] == 'VD'):
+        floodingLongRun = config['simulations']['flooding_long_run'] in ['true', '1', 't', 'y', 'True']
 
     gpu_opt = config['other_parameters']['gpu_optimization'] in ['true', '1', 't', 'y', 'True']
     eps = float(config['other_parameters']['epsilon'])
@@ -168,9 +170,10 @@ def main():
             max_poisson = int(config['advanced']['max_nodes_poisson_rate'])
             step_poisson = int(config['advanced']['step_nodes_poisson_rate'])
             in_rates = [x + min_poisson for x in range(min_poisson, max_poisson, step_poisson)]
+
             ex = VertexDynamic(degrees, tolerances, in_rates, probabilities, outPath, flooding=flooding, regular_decay=0.5,
                                model="Multiple", simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral,
-                               Offline=offline, GPU=gpu_opt)
+                               Offline=offline, floodingLongRun=floodingLongRun,GPU=gpu_opt)
             ex.run()
 
 
@@ -184,11 +187,12 @@ def main():
             ex = VertexDynamic(degrees, tolerances, in_rates, probabilities, outPath, flooding=flooding,
                                regular_decay=0.5,
                                model="Multiple", simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral,
-                               Offline=offline, GPU=gpu_opt)
+                               Offline=offline, floodingLongRun=floodingLongRun,GPU=gpu_opt)
             ex.run()
 
 
         else:
+
             inputs = []
             for n in nodes:
                 for x in probabilities:
@@ -196,7 +200,7 @@ def main():
             for elem in inputs:
                 ex = VertexDynamic(degrees, tolerances, [elem[0]], [elem[1]], outPath, flooding=flooding, regular_decay=0.5,
                                    model="Multiple", simNumber=simulations, maxIter=max_iter, onlySpectral=only_spectral,
-                                   Offline=offline, GPU=gpu_opt)
+                                   Offline=offline,floodingLongRun=floodingLongRun, GPU=gpu_opt)
                 ex.run()
 
 

@@ -30,7 +30,7 @@ class VertexDynamicOutput:
 class VertexDynamic:
 
     def __init__(self, d, c, inrate, outrate, outpath, flooding=True, regular_convergence=0.9, regular_decay=0.5
-                 , model="Multiple", simNumber=30, maxIter=100, onlySpectral=False, Offline=False, GPU=False):
+                 , model="Multiple", simNumber=30, maxIter=100, onlySpectral=False, Offline=False,floodingLongRun =False, GPU=False):
         """
 
 
@@ -61,6 +61,7 @@ class VertexDynamic:
         self.outPath = outpath
         self.simNumber = simNumber
         self.spectrum = onlySpectral
+        self.flooding_long_run = floodingLongRun
         self.MC = Offline
         self.max_iter = maxIter
         self.GPU = GPU
@@ -89,9 +90,14 @@ class VertexDynamic:
                             logging.info("Simulation %d" % (sim))
                             start_time = time.time()
                             if(self.spectrum):
-                                stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim,path = path  )
+                                #Provvisorio
+                                stats= self.VertexDynamicGeneratorSpectrumMaxIter( d, c, inrate, outrate, sim, path=path)
+
+                                #stats = self.VertexDynamicGeneratorSpectrum(d, c, inrate, outrate, sim,path = path  )
                             elif(self.MC):
                                 stats = self.VertexDynamicGeneratorMCConfigurations( d, c, inrate, outrate, sim, path=path)
+                            elif(self.flooding_long_run):
+                                stats = self.VertexDynamicGeneratorFloodingLongRun(d, c, inrate, outrate, sim)
 
                             else:
                                 stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
@@ -399,6 +405,89 @@ class VertexDynamic:
 
 
 
+    def VertexDynamicGeneratorSpectrumMaxIter(self, d, c, inrate, outrate, sim,path=""):
+
+
+
+
+        t = 0
+
+
+        final_stats = []
+        achieved = False
+
+        repeat = True
+        sim = {
+            "simulation": sim
+        }
+
+        if (d <= 0 or c < 0):
+            logging.error("Input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
+        c = 0
+
+        while (repeat):
+            G.disconnect_from_network()
+            stats = {
+                "d": d,
+                "c": c,
+                "n": G.get_G().number_of_nodes(),
+                "target_n": G.get_target_n(),
+                "lambda": G.get_inrate(),
+                "q": G.get_outrate(),
+                "t": t,
+                "converged": G.get_converged()
+            }
+
+            spectralGapBefore = spectral_gap_sparse(G.get_G())
+            spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
+
+
+
+
+
+
+            G.connect_to_network()
+
+            G.add_phase_vd()
+
+
+
+            G.del_phase_vd()
+
+
+
+            if (not achieved):
+                if (G.get_target_density()):
+                    logging.info("The Graph contains the desired number of nodes")
+                    achieved = True
+                    G.set_converged(True)
+
+
+                    spectralGapAfter = spectral_gap_sparse(G.get_G())
+                    spectralGapsAfter = {"SpectralGapAfter":spectralGapAfter}
+                    #spectralGapBefore = {'SpectralGapBefore':0}
+                    final_stats.append({**sim, **stats,**spectralGapBefore,**spectralGapsAfter})
+
+            else:
+
+                spectralGapAfter = spectral_gap_sparse(G.get_G())
+                spectralGapsAfter = {"SpectralGapAfter": spectralGapAfter}
+                final_stats.append({**sim, **stats,**spectralGapBefore,**spectralGapsAfter})
+            t += 1
+            if(G.get_converged()):
+
+
+                if(c == self.max_iter):
+                    repeat = False
+
+                    logging.info("Graph converged and 100 more steps simulated")
+                else:
+                    c+=1
+
+
+        return (final_stats)
 
 
 
@@ -523,6 +612,118 @@ class VertexDynamic:
 
         return (final_stats)
 
+    def VertexDynamicGeneratorFloodingLongRun(self, d, c, inrate, outrate, sim):
+        def check_convergence_dynamic():
+
+            if (G.get_converged() == False):
+                G.set_converged(True)
+
+
+
+            flood_dictionary = {}
+            if (G.get_converged()):
+                if (G.flooding.get_initiator() == -1):
+                    G.set_flooding()
+                    G.flooding.set_stop_time(200)
+                    G.flooding.set_initiator()
+                    G.flooding.update_flooding_long_run(G)
+                else:
+
+                    # Updating Flooding
+                    if (G.flooding.get_t_flood() == 1):
+                        logging.info("Flooding protocol STARTED %r"%(G.flooding.get_started()))
+                    if (G.flooding.get_started() == True):
+                        G.flooding.update_flooding_long_run(G)
+
+                        if (not G.flooding.check_flooding_status()):
+                            G.set_converged(True)
+                            if (G.flooding.get_number_of_restart() == 0):
+                                logging.info("All the informed nodes left the network")
+                                logging.info("Flooding Protocol status: Failed")
+                                logging.info("----------------------------------------------------------------")
+                                G.flooding.set_converged(False)
+                                G.flooding.set_failed(True)
+                        if (G.flooding.get_t_flood()>=100):
+                            G.flooding.set_converged(True)
+                            logging.info("FLOODING LONG RUN CONVERGED")
+                            logging.info("Number of informed nodes %d" % (G.flooding.get_informed_nodes()))
+                            logging.info("Number of uninformed nodes %d " % (G.flooding.get_uninformed_nodes()))
+                            logging.info("Percentage of informed nodes %r" % (G.flooding.get_percentage()))
+                            #logging.info("Informed Ratio: %r" % (G.flooding.get_last_ratio()))
+                            logging.info("Flooding Protocol status: Correctly Terminated")
+                            logging.info("Flooding time: %d" % (G.flooding.get_t_flood()))
+                            logging.info("----------------------------------------------------------------")
+
+
+
+
+                flood_dictionary['informed_nodes'] = G.flooding.get_informed_nodes()
+                flood_dictionary['uninformed_nodes'] = G.flooding.get_uninformed_nodes()
+                flood_dictionary['percentage_informed'] = G.flooding.get_percentage()
+                flood_dictionary['t_flood'] = G.flooding.get_t_flood()
+                flood_dictionary['process_status'] = G.get_converged()
+                flood_dictionary['flood_status'] = G.flooding.get_converged()
+                flood_dictionary['initiator'] = G.flooding.get_initiator()
+
+            else:
+                flood_dictionary['informed_nodes'] = 0
+                flood_dictionary['uninformed_nodes'] = len(G.get_list_of_nodes())
+                flood_dictionary['percentage_informed'] = 0
+                flood_dictionary['t_flood'] = 0
+                flood_dictionary['process_status'] = G.get_converged()
+                flood_dictionary['flood_status'] = G.flooding.get_converged()
+                flood_dictionary['initiator'] = G.flooding.get_initiator()
+
+            return (flood_dictionary)
+
+        t = 0
+
+        final_stats = []
+        achieved = False
+
+        repeat = True
+        sim = {
+            "simulation": sim
+        }
+        if (d <= 0 or c < 0):
+            logging.error("Input parameters must be: d>0 c>1")
+            return (-1)
+        G = DynamicGraph(0, d, c, inrate, outrate, 0, self.model)
+        logging.info("Simulating 100 steps of flooding")
+        while (repeat):
+            G.disconnect_from_network()
+            G.connect_to_network()
+
+            G.add_phase_vd()
+
+
+            G.del_phase_vd()
+
+            if (not achieved):
+                if (G.get_target_density()):
+                    logging.info("The Graph contains the desired number of nodes")
+                    achieved = True
+                    stats = {'d':d,'c':c,'t':t,"lambda": G.get_inrate(),"beta":G.get_outrate(),"n":G.get_nodes_t(),"entering_nodes":G.get_number_of_entering_nodes_at_each_round()[-1],"exiting_nodes":G.get_number_of_exiting_nodes_at_each_round()[-1]}
+                    flood_info = check_convergence_dynamic()
+                    #conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
+                    final_stats.append({**sim, **stats, **flood_info})
+            else:
+                stats = {'d': d, 'c': c, 't': t, "lambda": G.get_inrate(), "beta": G.get_outrate(),"n":G.get_nodes_t(),
+                         "entering_nodes": G.get_number_of_entering_nodes_at_each_round()[-1],
+                         "exiting_nodes": G.get_number_of_exiting_nodes_at_each_round()[-1]}
+                flood_info = check_convergence_dynamic()
+                #conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
+                final_stats.append({**sim, **stats, **flood_info})
+            t += 1
+
+
+            if (G.flooding.get_converged() and (not (G.flooding.get_failed()))):
+                repeat = False
+
+            if (G.flooding.get_failed()):
+                repeat = False
+                logging.info("Flooding protocol: FAILED")
+        return (final_stats)
 
     def write_info_dic_as_csv(self, outPath, results):
         create_file(outPath, list(results.get_stats()[0][0].keys()))

@@ -442,7 +442,7 @@ class DynamicGraph:
             self.target_density = self.target_size_achieved()
         self.set_max_label(X_t)
         self.set_number_of_entering_nodes_at_each_round(X_t)
-
+        self.set_n = self.G.number_of_nodes()
     # Function that delete agets from the network with probability q
     def disconnect_from_network(self):
         # Random variable that counts the number of nodes that exits the network
@@ -463,6 +463,8 @@ class DynamicGraph:
         if(self.consensus.get_started()):
             self.consensus.del_nodes_from_dictionary(exiting_nodes)
         self.set_number_of_exiting_nodes_at_each_round(Z_t)
+        self.set_n = self.G.number_of_nodes()
+
 
     def get_nodes_t(self):
         return(len(self.G.nodes()))
@@ -585,4 +587,6 @@ class DynamicGraph:
         self.G.remove_edges_from(falling_edges)
         self.G.add_edges_from(new_edges)
 
+    def set_n(self,newN):
+        self.n = newN
 

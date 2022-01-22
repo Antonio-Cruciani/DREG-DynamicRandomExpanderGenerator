@@ -75,6 +75,21 @@ class Flooding:
     def get_converged(self):
         return(self.converged)
 
+    def update_flooding_long_run(self, G):
+        # Filtering the dictionary getting all the informed nodes
+        uninformed_neighbors = []
+        for i in list(G.get_G().nodes()):
+            if (self.dic[i] == 1):
+                for j in list(G.get_G().neighbors(i)):
+                    if (self.dic[j] == 0):
+                        uninformed_neighbors.append(j)
+        to_inform = list(set(uninformed_neighbors))
+        for i in to_inform:
+            self.dic[i] = 1
+        self.t_flood += 1
+        self.set_percentage(self.get_informed_nodes()/len(list(self.dic.items())))
+        return (len(to_inform))
+
     def update_flooding(self,G):
         # Filtering the dictionary getting all the informed nodes
         uninformed_neighbors = []
@@ -128,6 +143,8 @@ class Flooding:
             nodes = len(list(self.dic.keys()))
             ones = (self.get_informed_nodes() / nodes) * 100
             self.set_percentage(ones)
+
+
 
     def incremental_convergence(self):
         number_informed = self.get_informed_nodes()
