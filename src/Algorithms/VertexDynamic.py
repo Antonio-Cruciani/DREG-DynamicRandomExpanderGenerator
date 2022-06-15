@@ -102,6 +102,7 @@ class VertexDynamic:
         logging.info("Ending simulation")
         logging.info("Total elapsed time %r" % (time.time() - sim_start))
 
+
     def VertexDynamicGenerator(self, d, c, inrate, outrate, sim):
 
         def check_convergence_dynamic():

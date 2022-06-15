@@ -87,7 +87,7 @@ class Flooding:
         for i in to_inform:
             self.dic[i] = 1
         self.t_flood += 1
-        self.incremental_convergence()
+        #self.incremental_convergence()
         return(len(to_inform))
 
     def check_flooding_status(self):

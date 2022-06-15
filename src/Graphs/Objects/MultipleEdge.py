@@ -12,7 +12,7 @@ from src.Protocols.FloodOBJ import Flooding
 from src.Protocols.Consensus import Consensus
 class DynamicGraph:
 
-    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = None ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
+    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = "Multiple" ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
         """
 
         :param n: int, number of nodes.
@@ -408,6 +408,7 @@ class DynamicGraph:
     def connect_to_network(self):
         # Poisson Process of parameter Lambda for the number of nodes accessing in the network
         X_t = np.random.poisson(self.inrate)
+
         # Getting the maximum label in the Graph
         #nodes = self.get_list_of_nodes()
         # if(nodes):
@@ -426,6 +427,7 @@ class DynamicGraph:
             self.max_label += 1
         # Adding the list of nodes in the Graph
         self.G.add_nodes_from(entering_nodes)
+
         self.entering_nodes = entering_nodes
         if (self.flooding.get_started() ):
             self.flooding.add_nodes_to_dictionary(entering_nodes)
@@ -438,10 +440,15 @@ class DynamicGraph:
                 else:
                     new_nodes_colors.append(1)
             self.consensus.add_nodes_to_dictionary(entering_nodes,new_nodes_colors)
+
         if(not self.target_density):
+
             self.target_density = self.target_size_achieved()
+
         self.set_max_label(X_t)
+
         self.set_number_of_entering_nodes_at_each_round(X_t)
+
 
     # Function that delete agets from the network with probability q
     def disconnect_from_network(self):
@@ -485,9 +492,14 @@ class DynamicGraph:
         # RAES ESEGUITO TRA I NODI ENTRANTI VERSO QUELLI AL TEMPO I-1
 
     def add_phase_vd(self):
+
         nodes = list(set(self.G.nodes())-set(self.entering_nodes))
         edge_list = []
+
+
+
         for i in nodes:
+
             neighbors = [n for n in self.G.neighbors(i)]
             if (len(neighbors) < self.d):
                 # Calculating the set of the elements over random sampling
