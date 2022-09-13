@@ -456,10 +456,12 @@ class EdgeDynamic:
                     repeat = False
                 else:
                     c+=1
-
+            if (t == self.max_iter):
+                repeat = False
             final_stats.append({**sim, **stats_bef,**stats_aft, **stats})
-            logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapAfter))
+            #logging.debug("SPECTRAL BEFORE %r SPECTRAL AFTER %r"%(spectralGapBefore,spectralGapAfter))
             t+=1
+            logging.info("Simulation %r | Step %r/%r | Spectral Gap converged? %r"%(sim['simulation'],t,self.max_iter,G.get_converged()))
 
         return (final_stats)
 

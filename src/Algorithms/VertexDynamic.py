@@ -520,6 +520,7 @@ class VertexDynamic:
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
                     c+=1
+            logging.info("Simulation %r | Step %r/%r | Spectral Gap converged? %r"%(sim['simulation'],t,self.max_iter,G.get_converged()))
 
 
         return (final_stats)

@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import math as mt
 import scipy as sp
-
+import scipy.sparse.linalg
 
 
 def spectral_gap_sparse(G):
@@ -23,7 +23,7 @@ def spectral_gap_sparse(G):
 
 
             if (len(G.nodes()) > 2):
-                spettro = sp.sparse.linalg.eigsh(P, k=2, which="LA", return_eigenvectors=False)
+                spettro = scipy.sparse.linalg.eigsh(P, k=2, which="LA", return_eigenvectors=False)
 
                 spettro = sorted(spettro, reverse=True)
                 sg = spettro[0] - spettro[1]

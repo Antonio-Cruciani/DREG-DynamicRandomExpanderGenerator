@@ -150,7 +150,7 @@ if __name__ == "__main__":
     d_list = [4]
     c_list = [1.5]
     n_list = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
-    outrate_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    outrate_list = [0.1]
     inrate_list = []
     for n in n_list:
         for q in outrate_list:
