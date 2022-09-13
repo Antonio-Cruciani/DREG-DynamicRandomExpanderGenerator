@@ -40,7 +40,7 @@ It is possible to define " external events " that causes the edge or node disapp
 ( [More details](https://arxiv.org/abs/1811.10316) ) that allows you to define an Expander Graph in **O**(log n) rounds With High Probability.
 - **Edge Dynamic (ERAES)** proposed by Antonio Cruciani and Francesco Pasquale that is a natural extension of RAES where there exists the probability **p** that, at each time step, each edge of the graph can fall. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph. 
 - **Vertex Dynamic (VRAES)** proposed by Antonio Cruciani and Francesco Pasquale that is a Dynamic Random Graph where at each time step there are new vertices that join the network and vertices that leave it. This is an infinite stochastic process that allow you to construct a good dynamic Expander Graph.
-- **Mixed Dynamic (EVRAES)  proposed by Antonio Cruciani and Francesco Pasquale. This is a Dynamic Graph model in which nodes and edges appear and disappear. Nodes follow the same rules of VRAES and the edge disappearance phenomenon follows the ERAES scheme.
+- **Mixed Dynamic (EVRAES)**  proposed by Antonio Cruciani and Francesco Pasquale. This is a Dynamic Graph model in which nodes and edges appear and disappear. Nodes follow the same rules of VRAES and the edge disappearance phenomenon follows the ERAES scheme.
 
 ## How to define and execute a model
 Given the **config.ini** file you can set up the the experiments for ERAES and VRAES. 
