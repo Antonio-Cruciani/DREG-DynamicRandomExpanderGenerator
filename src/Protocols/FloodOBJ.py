@@ -1,3 +1,5 @@
+import logging
+
 import networkx as nx
 import random as rnd
 
@@ -85,7 +87,7 @@ class Flooding:
         for i in to_inform:
             self.dic[i] = 1
         self.t_flood += 1
-        self.incremental_convergence()
+        #self.incremental_convergence()
         return(len(to_inform))
 
     def check_flooding_status(self):
@@ -96,6 +98,36 @@ class Flooding:
 
     def set_stop_time(self,it):
         self.stop_time = it
+
+    def incremental_convergence_dep(self):
+        number_informed = self.get_informed_nodes()
+        number_uninformed = self.get_uninformed_nodes()
+
+
+        informed_ratio = number_informed/(number_uninformed+number_informed)
+
+
+        self.informed_ratio.append(informed_ratio)
+        if(self.t_flood>1):
+            if(self.informed_ratio[-1] > self.informed_ratio[-2]):
+                self.stabilization += 1
+            else:
+                self.stabilization -= 1
+        #if(self.t_flood > number_informed+number_uninformed):
+        #    logging.debug("Simulation running slow, variable Stabilization = %r"%self.stabilization)
+        if(self.stabilization == 0 and self.t_flood >1):
+            logging.info("++++++++++++++++++++++++++++++++++++++++")
+            logging.info("++++ Flooding: Converged, alpha = %r t = %r"%(self.informed_ratio[-1],self.t_flood))
+            logging.info("---- Variable Stabilization = %r"%(self.stabilization))
+            logging.debug("****** Informed ratio ******")
+            logging.debug("%r"%informed_ratio)
+            logging.debug("*****************************")
+            logging.info("++++++++++++++++++++++++++++++++++++++++")
+
+            self.set_converged(True)
+            nodes = len(list(self.dic.keys()))
+            ones = (self.get_informed_nodes() / nodes) * 100
+            self.set_percentage(ones)
 
     def incremental_convergence(self):
         number_informed = self.get_informed_nodes()

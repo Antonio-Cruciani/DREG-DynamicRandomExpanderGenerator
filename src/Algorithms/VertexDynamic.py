@@ -3,14 +3,12 @@ import networkx as nx
 from src.Graphs.Objects.MultipleEdge import DynamicGraph
 from src.FileOperations.WriteOnFile import create_file, create_folder, write_on_file_contents
 from src.StastModules.Snapshot import get_snapshot_dynamic,get_snapshot_dynamicND
-from src.StastModules.SpectralAnalysis import get_spectral_gap_transition_matrix,spectral_gap_sparse
+from src.StastModules.SpectralAnalysis import spectral_gap_sparse
 
 import time
 import math as mt
 import logging
 import os
-
-
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class VertexDynamicOutput:
@@ -33,8 +31,11 @@ class VertexDynamic:
 
     def __init__(self, d, c, inrate, outrate, outpath, flooding=True, regular_convergence=0.9, regular_decay=0.5
                  , model="Multiple", simNumber=30, maxIter=100, onlySpectral=False, Offline=False, GPU=False):
-
         """
+
+
+
+
         :param d: int, minimum degree that each node must have
         :param c: float, tolerance constant, c*d is the maximum degree that each node can have
         :param inrate: float, intensity parameter of the Poisson Process
@@ -49,7 +50,6 @@ class VertexDynamic:
         :param Offline: bool, if true, will simulate the model saving the adjacency list of the model at each time step without computing any statistic
         :param GPU: bool, if true, will be used the GPU instead of the CPU for solving the eigen-problem
         """
-
         self.d_list = d
         self.c_list = c
         self.inrate_list = inrate
@@ -95,14 +95,13 @@ class VertexDynamic:
 
                             else:
                                 stats = self.VertexDynamicGenerator(d, c, inrate, outrate, sim)
-
-
                             vertexDynamicStats.add_stats(stats)
                             logging.info("Elapsed time %r" % (time.time() - start_time))
                             logging.info("----------------------------------------------------------------")
                 self.write_info_dic_as_csv(outpath, vertexDynamicStats)
         logging.info("Ending simulation")
         logging.info("Total elapsed time %r" % (time.time() - sim_start))
+
 
     def VertexDynamicGenerator(self, d, c, inrate, outrate, sim):
 
@@ -182,7 +181,7 @@ class VertexDynamic:
                             logging.info("----------------------------------------------------------------")
 
                         threshold = G.get_target_n()
-                        if (G.flooding.get_t_flood() > threshold):
+                        if (G.flooding.get_t_flood() >100* threshold):
                             logging.info("Iterations > threshold")
                             logging.info("The Flooding protocol is too slow, stopping the simulation")
                             logging.info("Number of informed nodes %d " % (G.flooding.get_informed_nodes()))
@@ -316,10 +315,24 @@ class VertexDynamic:
 
         try:
             # Create sim Directory
+            os.mkdir(path + "/" + str(sim) + "/beforeA")
+            logging.info("Directory %r sim/before Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim/before already exists" % (path))
+
+        try:
+            # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/before")
             logging.info("Directory %r sim/before Created " % (path))
         except FileExistsError:
             logging.error("Directory %r sim/before already exists" % (path))
+        try:
+            # Create sim Directory
+            os.mkdir(path + "/" + str(sim) + "/afterA")
+            logging.info("Directory %r sim/after Created " % (path))
+        except FileExistsError:
+            logging.error("Directory %r sim/after already exists" % (path))
+
         try:
             # Create sim Directory
             os.mkdir(path + "/" + str(sim) + "/after")
@@ -344,11 +357,13 @@ class VertexDynamic:
         while (repeat):
             G.disconnect_from_network()
             # Saving graph
-            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/afterA/" + str(t) + ".adjlist")
 
             G.connect_to_network()
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/beforeA/" + str(t) + ".adjlist")
 
             G.add_phase_vd()
+            nx.write_adjlist(G.get_G(), path=path + str(sim) + "/before/" + str(t) + ".adjlist")
 
 
             G.del_phase_vd()
@@ -453,18 +468,12 @@ class VertexDynamic:
         while (repeat):
             G.disconnect_from_network()
             if (achieved):
-                if(self.GPU):
-                    IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(G.get_G())
 
-                else:
-                    spectralGapBefore = spectral_gap_sparse(G.get_G())
+                spectralGapBefore = spectral_gap_sparse(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
             else:
-                if (self.GPU):
-                    IsinvertibleBefore, spectralGapBefore, lambdaNGapBefore = get_spectral_gap_transition_matrix(
-                        G.get_G())
-                else:
-                    spectralGapBefore = spectral_gap_sparse(G.get_G())
+
+                spectralGapBefore = spectral_gap_sparse(G.get_G())
                 spectralGapBefore = {"SpectralGapBefore": spectralGapBefore}
 
 
@@ -487,11 +496,8 @@ class VertexDynamic:
                     stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
                     check_convergence_dynamic()
                     conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
-                    if (self.GPU):
-                        IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(
-                            G.get_G())
-                    else:
-                        spectralGapAfter = spectral_gap_sparse(G.get_G())
+
+                    spectralGapAfter = spectral_gap_sparse(G.get_G())
                     spectralGapsAfter = {"SpectralGapAfter":spectralGapAfter}
                     #spectralGapBefore = {'SpectralGapBefore':0}
                     final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
@@ -500,11 +506,8 @@ class VertexDynamic:
                 stats = get_snapshot_dynamicND(G, G.get_d(), G.get_c(), t)
                 check_convergence_dynamic()
                 conv_perc = {"conv_percentage": (G.get_semiregular_percentage())}
-                if (self.GPU):
-                    IsinvertibleAfter, spectralGapAfter, lambdaNGapAfter = get_spectral_gap_transition_matrix(
-                        G.get_G())
-                else:
-                    spectralGapAfter = spectral_gap_sparse(G.get_G())
+
+                spectralGapAfter = spectral_gap_sparse(G.get_G())
                 spectralGapsAfter = {"SpectralGapAfter": spectralGapAfter}
                 final_stats.append({**sim, **conv_perc, **stats,**spectralGapBefore,**spectralGapsAfter})
             t += 1
@@ -517,21 +520,8 @@ class VertexDynamic:
                     logging.info("Graph converged and 100 more steps simulated")
                 else:
                     c+=1
+            logging.info("Simulation %r | Step %r/%r | Spectral Gap converged? %r"%(sim['simulation'],t,self.max_iter,G.get_converged()))
 
-
-
-        '''
-        i = 0
-        for g in graph_before:
-            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/before/" + str(i) + ".edgelist"
-                         )
-            i+=1
-        i = 0
-        for g in graph_after:
-            nx.write_adjlist(g, path=path + str(sim['simulation']) + "/after/" + str(i) + ".edgelist"
-                          )
-            i+=1
-        '''
 
         return (final_stats)
 
