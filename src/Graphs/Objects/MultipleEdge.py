@@ -265,14 +265,14 @@ class DynamicGraph:
                     for x in v_sample:
                         edge_list.append((i, int(x)))
         # Now we have to transform the directed edge list in ad undirected edge list
-        '''preprocessed = []
+        preprocessed = []
         for i in edge_list:
             if i[0] > i[1]:
                 preprocessed.append((i[1], i[0]))
             else:
-                preprocessed.append((i[0], i[1]))'''
+                preprocessed.append((i[0], i[1]))
         # Adding the undirected edge list to the graph
-        self.G.add_edges_from(edge_list)
+        self.G.add_edges_from(list(set(preprocessed)))
 
     def add_phase_dep(self):
         nodes = list(self.G.nodes())

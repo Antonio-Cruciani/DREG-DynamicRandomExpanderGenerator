@@ -190,7 +190,7 @@ if __name__ == "__main__":
                         reduced = []
                         for key in return_dict:
                             reduced.extend(return_dict[key])
-
+                        print("RED ",reduced)
                         df = pd.DataFrame(reduced)
 
                         df.to_csv(outpath + "results.csv")
