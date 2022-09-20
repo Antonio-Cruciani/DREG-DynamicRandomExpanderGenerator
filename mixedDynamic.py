@@ -108,8 +108,8 @@ def worker(data, return_dict):
 
         G.add_phase_vd()
         G.del_phase_vd()
-
-        G.random_fall()
+        if (edge_falling_rate != 0):
+            G.random_fall()
 
         if (not achieved):
             if (G.get_target_density()):
