@@ -147,32 +147,36 @@ def worker(data, return_dict):
 
 
 if __name__ == "__main__":
-    d_list = [4]
-    c_list = [1.5]
-    n_list = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
-    outrate_list = [0.1]
+    d_list = [6]
+    c_list = [5]
+    n_list = [32768]
+    outrate_list = [0.5]
     inrate_list = []
     for n in n_list:
         for q in outrate_list:
-            inrate_list.append(n * q)
+            inrate_list.append((n * q,q))
 
-    probs_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-    outPath = "./tmp/"
+    #probs_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    probs_list = [0.3]
+
+    #probs_list = [0.0]
+
+    outPath = "./evraes_6/"
     for d in d_list:
         for c in c_list:
             for inrate in inrate_list:
-                for outrate in outrate_list:
+                #for outrate in outrate_list:
                     for probs in probs_list:
                         data = {
                             "d": d,
                             "c": c,
-                            "inrate": inrate,
-                            "outrate": outrate,
+                            "inrate": inrate[0],
+                            "outrate": inrate[1],
                             "edge_falling_rate": probs,
                             "max_iter": 100
                         }
                         name = "MixedDynamic_d_" + str(d) + "_c_" + str(c) + "_inrate_" + str(
-                            inrate) + "_outrate_" + str(outrate) + "_p_" + str(probs)
+                            inrate[0]) + "_outrate_" + str(inrate[1]) + "_p_" + str(probs)
                         outpath = create_folder(outPath, name)
                         logging.info("EXECUTING: %r " % name)
                         manager = multiprocessing.Manager()
@@ -190,7 +194,6 @@ if __name__ == "__main__":
                         reduced = []
                         for key in return_dict:
                             reduced.extend(return_dict[key])
-                        print("RED ",reduced)
                         df = pd.DataFrame(reduced)
 
                         df.to_csv(outpath + "results.csv")

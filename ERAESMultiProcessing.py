@@ -112,12 +112,12 @@ def worker(data, return_dict):
 
 
 if __name__ == "__main__":
-    d_list = [4]
-    c_list = [1.5]
+    d_list = [3]
+    c_list = [3]
     n_list = [512, 1024, 2048, 4096, 8192, 16384, 32768]
 
 
-    probs_list = [0.0,0.1, 0.5, 0.7, 0.9]
+    probs_list = [0.0,0.1,0.5,0.7,0.9]
     outPath = "./tmp/"
     for d in d_list:
         for c in c_list:
