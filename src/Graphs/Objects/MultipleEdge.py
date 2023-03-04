@@ -12,7 +12,7 @@ from src.Protocols.FloodOBJ import Flooding
 from src.Protocols.Consensus import Consensus
 class DynamicGraph:
 
-    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = "Multiple" ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None):
+    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = "Multiple" ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None,degree_sequence = []):
         """
 
         :param n: int, number of nodes.
@@ -67,6 +67,13 @@ class DynamicGraph:
                     self.kn_edges.append((int(e.split(" ")[1]), int(e.split(" ")[0])))
         else:
             self.kn_edges = []
+        if (len(degree_sequence) > 0 and len(degree_sequence) != n):
+            print("ERROR degree sequence must have the same size of the vertex set")
+            exit(-1)
+        elif (len(degree_sequence) == n):
+            self.degree_sequence = degree_sequence
+        else:
+            self.degree_sequence = []
 
     def set_target_size(self,lam, beta):
         if(beta == 0):
@@ -158,6 +165,12 @@ class DynamicGraph:
         return(self.max_label)
     def get_target_n(self):
         return(self.target_n)
+
+    def get_sample_add_phase_dd(self,neigh,d):
+        if(self.type_of_dynamic_graph == "Single" ):
+            return(1)
+        elif(self.type_of_dynamic_graph == "Multiple"):
+            return(d-len(neigh))
     def get_sample_add_phase(self,neigh):
         if(self.type_of_dynamic_graph == "Single" ):
             return(1)
@@ -172,6 +185,13 @@ class DynamicGraph:
             return(1)
         elif(self.type_of_dynamic_graph == "Multiple"):
             return(len(neigh)-self.tolerance)
+
+
+    def get_sample_del_phase_dd(self,neigh,tolerance):
+        if(self.type_of_dynamic_graph == "Single" ):
+            return(1)
+        elif(self.type_of_dynamic_graph == "Multiple"):
+            return(len(neigh)-tolerance)
 
     def add_MT(self,u):
         nodes = list(self.G.nodes())
@@ -244,6 +264,36 @@ class DynamicGraph:
 
         # Removing the undirected edge list from the graph
         self.G.remove_edges_from(list(set(edge_list)))
+    def add_phase_dd(self):
+        nodes = list(self.G.nodes())
+        edge_list = []
+        for i in nodes:
+            neighbors = [n for n in self.G.neighbors(i)]
+            if (len(neighbors) < self.degree_sequence[i]):
+                #print("NODE ",i,") NEIG LEN ",len(neighbors), " DS ",self.degree_sequence[i])
+                # Calculating the set of the elements over random sampling
+                if (len(neighbors) > 0):
+                    app = list(set(nodes) - set(neighbors) - set([i]))
+                else:
+                    app = list(set(nodes) - set([i]))
+                if (app):
+                    # Converting to int the element sampled over the list
+                    # Calculating the sample size
+                    sample_size = self.get_sample_add_phase_dd(neighbors,self.degree_sequence[i])
+                    v_sample = rnd.choices(app, k=sample_size)
+                    # Adding the edge (i,v) to the graph
+                    for x in v_sample:
+                        edge_list.append((i, int(x)))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        preprocessed = []
+        for i in edge_list:
+            if i[0] > i[1]:
+                preprocessed.append((i[1], i[0]))
+            else:
+                preprocessed.append((i[0], i[1]))
+        # Adding the undirected edge list to the graph
+        self.G.add_edges_from(list(set(preprocessed)))
+
 
     def add_phase(self):
         nodes = list(self.G.nodes())
@@ -303,6 +353,29 @@ class DynamicGraph:
         # Adding the undirected edge list to the graph
         self.G.add_edges_from(list(set(preprocessed)))
 
+
+    def del_phase_dd(self):
+        self.t +=1
+        nodes = list(self.G.nodes())
+        edge_list = []
+        for i in nodes:
+            neig = [n for n in self.G.neighbors(i)]
+            if (len(neig) > self.c * self.degree_sequence[i]):
+                # Calculating the sample size
+
+                sample_size = self.get_sample_del_phase_dd(neig,int(self.c * self.degree_sequence[i]))
+
+                # Sampling a node from the neighborhood
+                v_sample = rnd.choices(neig,k=sample_size)
+                # Adding the samples to the list of nodes to remove
+                for x in v_sample:
+                    edge_list.append((i, int(x)))
+        # Now we have to transform the directed edge list in ad undirected edge list
+        for edge in edge_list:
+            try:
+                self.G.remove_edge(edge)
+            except:
+                continue
 
     def del_phase(self):
         self.t +=1

@@ -1,4 +1,4 @@
-from src.StastModules.GraphAnalysis import get_graph_properties,get_graph_properties_ND
+from src.StastModules.GraphAnalysis import get_graph_properties,get_graph_properties_ND,get_graph_properties_dd
 
 import numpy as np
 def get_snapshot_dynamic(G,d,c,t):
@@ -97,6 +97,39 @@ def get_snapshot(G,p,d,c,t,n_in=None,n_out=None):
         "p":p,
         "n":n,
         "d":d,
+        "c":c,
+        "avg_deg":avg_deg,
+        "stdv":stdv,
+        "var":var,
+        "semiReg":semireg,
+        "underReg": underreg,
+        "overReg": overreg,
+        "volume":vol,
+        "diameter":diameter,
+        "radius":radius,
+        "Regular":regularity,
+        "t":t
+    }
+    if(n_in != None and n_out != None):
+        dic["EnteringNodes"] = n_in
+        dic["ExitingNodes"] = n_out
+    return (dic)
+
+
+
+def get_snapshot_dd(G,p,c,dd,t,n_in=None,n_out=None):
+
+
+    #IsInvertible,spectralGap, lambdaNGap = get_spectral_gap_transition_matrix(G.get_G())
+    n, avg_deg, stdv, var, semireg, underreg, overreg, vol,diameter,radius = get_graph_properties_dd(G.get_G(),c,dd)
+    # Creating Dictionary with all the informations
+    if (G.isregular()):
+        regularity = False
+    else:
+        regularity = True
+    dic={
+        "p":p,
+        "n":n,
         "c":c,
         "avg_deg":avg_deg,
         "stdv":stdv,
