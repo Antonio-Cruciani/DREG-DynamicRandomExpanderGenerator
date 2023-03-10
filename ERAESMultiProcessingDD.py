@@ -122,7 +122,7 @@ if __name__ == "__main__":
     c_list = [1.5,3,4]
     n_list = [512, 1024, 2048, 4096, 8192, 16384, 32768]
 
-    exponent = [2,2.5,3]
+    exponent = [2,2.3,2.5,2.7,3]
     probs_list = [0.0,0.1,0.5,0.7,0.9]
     outPath = "./tmp/"
     for d in d_list:

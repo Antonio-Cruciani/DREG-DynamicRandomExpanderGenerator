@@ -43,7 +43,14 @@ def get_graph_properties_dd(G,c,dd):
         #    diameter = nx.diameter(G)
         #    radius = nx.radius(G)
         #else:
-        diameter = "Null"
+        diam = "Null"
+        if nx.is_connected(G):
+            diam = nx.approximation.diameter(G)
+        else:
+            lcc = max(nx.connected_components(G),key = len)
+            G_lcc = [G.subgraph(c).copy() for c in lcc]
+            diam = nx.approximation.diameter(G_lcc)
+        diameter = diam
         radius =  "Null"
     else:
         n=0
