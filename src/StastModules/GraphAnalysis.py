@@ -43,7 +43,7 @@ def get_graph_properties_dd(G,c,dd):
         #    diameter = nx.diameter(G)
         #    radius = nx.radius(G)
         #else:
-        diam = "Null"
+        diameter = "Null"
         
         radius =  "Null"
     else:
