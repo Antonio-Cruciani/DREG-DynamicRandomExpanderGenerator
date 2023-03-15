@@ -6,13 +6,15 @@ import scipy
 import scipy.sparse
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from networkx.algorithms.graphical import is_graphical
+from networkx.utils.random_sequence import powerlaw_sequence
 
 from src.MathModules.MathTools import flip
 from src.Protocols.FloodOBJ import Flooding
 from src.Protocols.Consensus import Consensus
 class DynamicGraph:
 
-    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = "Multiple" ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None,degree_sequence = []):
+    def __init__(self,n = 0,d = 4,c = 1.5,lam = 1 ,beta = 1,falling_probability = 0,model = "Multiple" ,starting_edge_list = [],edge_birth_rate = None, edge_death_rate = None,degree_sequence = [],gamma=None):
         """
 
         :param n: int, number of nodes.
@@ -53,6 +55,8 @@ class DynamicGraph:
         self.time_conv = 0
         self.reset_number = 0
         self.t = 0
+        self.gamma = gamma
+        self.vd_dd = {}
         self.max_label = -1
         if(starting_edge_list):
             self.G.add_edges_from(starting_edge_list)
@@ -121,6 +125,8 @@ class DynamicGraph:
         return(self.number_of_entering_nodes_at_each_round)
     def get_target_density(self):
         return(self.target_density)
+    def get_vd_dd(self):
+        return self.vd_dd
     def get_target_n(self):
         return(self.target_n)
     def get_n(self):
@@ -523,6 +529,98 @@ class DynamicGraph:
         self.set_number_of_entering_nodes_at_each_round(X_t)
 
 
+
+
+    # Function for nodes accessing the network following a Poisson Flow
+    def connect_to_network_dd(self):
+        # Poisson Process of parameter Lambda for the number of nodes accessing in the network
+        X_t = np.random.poisson(self.inrate)
+
+        # Getting the maximum label in the Graph
+        #nodes = self.get_list_of_nodes()
+        # if(nodes):
+        #     max_label = max(nodes)
+        # else:
+        #     max_label = -1
+        # Defining labels of the new nodes
+        entering_nodes = []
+        # for i in range(X_t):
+        #     entering_nodes.append(max_label + 1)
+        #     max_label += 1
+        for i in range(X_t):
+            #entering_nodes.append(str(self.max_label + 1))
+            entering_nodes.append(self.max_label + 1)
+
+            self.max_label += 1
+        
+        # Setting new target degree distribution
+        degs = [self.vd_dd[u] for u in self.G.nodes()]
+        if (len(degs)>0 or (len(degs) == 0 and X_t >= 2)):
+            iterate = True
+            new_derees = []
+            j= 0
+            #while iterate:
+            new_derees = [int(round(d)) for d in powerlaw_sequence(X_t, self.gamma)]
+            dd = degs + new_derees
+            #if is_graphical(dd):
+            i = 0
+            for u in entering_nodes:
+                self.vd_dd[u] = new_derees[i]
+                i+=1
+                #iterate = False
+            
+        else:
+            for u in entering_nodes:
+                self.vd_dd[u] = int(round(powerlaw_sequence(X_t, self.gamma)))
+
+
+        # Adding the list of nodes in the Graph
+        self.G.add_nodes_from(entering_nodes)
+
+        self.entering_nodes = entering_nodes
+        if (self.flooding.get_started() ):
+            self.flooding.add_nodes_to_dictionary(entering_nodes)
+
+        if(self.consensus.get_started()):
+            new_nodes_colors = []
+            for i in entering_nodes:
+                if (flip(self.consensus_bias[0]) == 'H'):
+                    new_nodes_colors.append(0)
+                else:
+                    new_nodes_colors.append(1)
+            self.consensus.add_nodes_to_dictionary(entering_nodes,new_nodes_colors)
+
+        if(not self.target_density):
+
+            self.target_density = self.target_size_achieved()
+
+        self.set_max_label(X_t)
+
+        self.set_number_of_entering_nodes_at_each_round(X_t)
+
+
+    # Function that delete agets from the network with probability q
+    def disconnect_from_network_dd(self):
+        # Random variable that counts the number of nodes that exits the network
+        Z_t = 0
+        # List of exiting nodes
+        exiting_nodes = []
+        # Doing a Bernoulli experiment for each node of the network
+        # With probability q a node leave the Graph
+        nodes = self.get_list_of_nodes()
+        for u in nodes:
+            if (flip(self.outrate) == "H"):
+                self.G.remove_node(u)
+                del self.vd_dd[u]
+                exiting_nodes.append(u)
+                Z_t += 1
+        if (self.flooding.get_started()):
+            self.flooding.del_nodes_from_dictionary(exiting_nodes)
+
+        if(self.consensus.get_started()):
+            self.consensus.del_nodes_from_dictionary(exiting_nodes)
+        self.set_number_of_exiting_nodes_at_each_round(Z_t)
+
     # Function that delete agets from the network with probability q
     def disconnect_from_network(self):
         # Random variable that counts the number of nodes that exits the network
@@ -586,7 +684,8 @@ class DynamicGraph:
                     sample_size = self.get_sample_add_phase(neighbors)
                     v_sample = rnd.choices(app,k=sample_size)
                     # Adding the edge (i,v) to the graph
-                    edge_list.append((i, int(v_sample[0])))
+                    for x in v_sample:
+                        edge_list.append((i, int(x)))
         # If is not the first round and there are nodes in the network,
         # then the new nodes sample d vertices in the network
 
@@ -618,7 +717,61 @@ class DynamicGraph:
         self.G.add_edges_from(list(set(preprocessed)))
 
 
-        # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
+    def add_phase_vd_dd(self):
+
+        nodes = list(set(self.G.nodes())-set(self.entering_nodes))
+        edge_list = []
+
+
+
+        for i in nodes:
+
+            neighbors = [n for n in self.G.neighbors(i)]
+            if (len(neighbors) < self.vd_dd[i]):
+                # Calculating the set of the elements over random sampling
+                if (len(neighbors) > 0):
+                    app = list(set(nodes) - set(neighbors) - set([i]))
+                else:
+                    app = list(set(nodes) - set([i]))
+                if (app):
+                    # Converting in int the element sampled over the list
+                    # Calculating the sample size
+                    sample_size = self.get_sample_add_phase_dd(neighbors,self.vd_dd[i])
+                    v_sample = rnd.choices(app,k=sample_size)
+                    # Adding the edge (i,v) to the graph
+                    for x in v_sample:
+                        edge_list.append((i, int(x)))
+        # If is not the first round and there are nodes in the network,
+        # then the new nodes sample d vertices in the network
+
+        if (self.t > 0 and len(nodes) > 0):
+
+            # New nodes are connecting to the network
+            survived_entering_nodes = list(set(self.entering_nodes).intersection(set(self.G.nodes())))
+            if (len(survived_entering_nodes) > 0):
+
+                for i in survived_entering_nodes:
+                    sample_size = self.get_sample_add_phase_dd([],self.vd_dd[i])
+
+                    v_sample = rnd.choices(nodes, k=sample_size)
+                    for x in v_sample:
+                        #edge_list.append((i, str(x)))
+                        edge_list.append((i, int(x)))
+
+
+
+                #print(edge_list)
+        # Now we have to transform the directed edge list in ad undirected edge list
+        preprocessed = []
+        for i in edge_list:
+            if int(i[0] )> int(i[1]):
+                preprocessed.append((i[1], i[0]))
+            else:
+                preprocessed.append((i[0], i[1]))
+        # Adding the undirected edge list to the graph
+        self.G.add_edges_from(list(set(preprocessed)))
+
+    # Del phase where nodes with |N(u)|>c*d choose u.a.r. a list of nodes in there Neighborhood and disconnect from it
 
     def del_phase_vd(self):
         self.t += 1
@@ -649,6 +802,38 @@ class DynamicGraph:
 
         self.G.remove_edges_from(to_delete)
         #self.G.remove_edges_from(list(preprocessed))
+
+
+    def del_phase_vd_dd(self):
+        self.t += 1
+        nodes = list(set(self.G.nodes())-set(self.entering_nodes))
+        edge_list = []
+        lista_rimozioni = []
+        for i in nodes:
+            neig = [n for n in self.G.neighbors(i)]
+            if (len(neig) > self.c * self.vd_dd[i]):
+                # Calculating the sample size
+                sample_size = self.get_sample_del_phase_dd(neig,int(self.c *self.vd_dd[i]))
+                # Sampling a node from the neighborhood
+                v_sample = rnd.choices(neig, k=sample_size)
+
+                lista_rimozioni.append(i)
+                # Adding the samples to the list of nodes to remove
+                for x in v_sample:
+                    #edge_list.append((str(i), str(x)))
+                    edge_list.append((int(i), int(x)))
+
+        # Now we have to transform the directed edge list in ad undirected edge list
+        #preprocessed = []
+        #set_preprocessed = list(set(edge_list))
+        preprocessed = edge_list
+                # Removing the undirected edge list from the graph
+        #print(list(set(preprocessed)))
+        to_delete  =list(set(preprocessed))
+
+        self.G.remove_edges_from(to_delete)
+        #self.G.remove_edges_from(list(preprocessed))
+
 
 
     def edge_markovian(self):
