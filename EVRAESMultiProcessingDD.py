@@ -148,21 +148,21 @@ def worker(data, return_dict):
 
 
 if __name__ == "__main__":
-    c_list = [1.5]
-    n_list = [256]
-    outrate_list = [0.5]
+    c_list = [1.5,2,3]
+    n_list = [512, 1024, 2048, 4096, 8192, 16384, 32768]
+    outrate_list = [0.1,0.3,0.5,0.7,0.9]
     inrate_list = []
     for n in n_list:
         for q in outrate_list:
             inrate_list.append((n * q,q))
 
     #probs_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-    probs_list = [0.0]
+    probs_list = [0.0,0.1,0.5,0.7,0.9]
     exponent = [2,2.3,2.5,2.7,3]
 
     #probs_list = [0.0]
 
-    outPath = "./tmp/"
+    outPath = "./tmp_evraes/"
     for c in c_list:
         for inrate in inrate_list:
             #for outrate in outrate_list:
