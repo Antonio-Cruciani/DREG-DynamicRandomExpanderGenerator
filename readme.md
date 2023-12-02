@@ -2,7 +2,7 @@
 
 # Dynamic Random (Expander) Graph Generator
 
- This is a function package for people interested in studying graphs that evolves over time. Anyone with a basic understanding of Python can create their own dynamic graph.
+ This is a function package for people interested in studying graphs that evolve over time. Anyone with a basic understanding of Python can create their own dynamic graph.
 
 
 
