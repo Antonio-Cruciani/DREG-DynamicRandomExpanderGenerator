@@ -13,7 +13,7 @@ function has_to_stop(degrees::Array{Int64},d::Int64,cd::Int64,p::Float64,round::
 end
 
 
-function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,max_iter::Int64 = 100,persist_snapshots::Bool = false,starting_graph = nothing)::Tuple{SimpleGraph,Int64,Array{Array{SimpleGraph}}}
+function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,max_iter::Int64 = 100,verbose::Int64 = 0,persist_snapshots::Bool = false,starting_graph = nothing)::Tuple{SimpleGraph,Int64,Array{Array{SimpleGraph}}}
     g::SimpleGraph = SimpleGraph()
     cd::Int64 = trunc(Int64,c*d)
     s_graph::String = ""
@@ -52,8 +52,65 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
             end
         end
         round += 1
-        println("Round t "*string(round)*"/"*string(max_iter))
-        flush(stdout)
+        if verbose > 0 && round % verbose == 0
+            println("Round t "*string(round)*"/"*string(max_iter))
+            flush(stdout)
+        end
+    end
+    return g,round,snapshots
+end
+
+
+
+function vertex_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,λ::Float64,p::Float64,max_iter::Int64 = 100,verbose::Int64 = 0,persist_snapshots::Bool = false,starting_graph = nothing)::Tuple{SimpleGraph,Int64,Array{Array{SimpleGraph}}}
+    g::SimpleGraph = SimpleGraph()
+    cd::Int64 = trunc(Int64,c*d)
+    s_graph::String = ""
+    round::Int64 = 0
+    # Index for each phase
+    snapshots::Array{Array{SimpleGraph}} = Array{Array{SimpleGraph}}([])
+    for _ in 1:4
+        push!(snapshots,[])
+    end
+    if (isnothing(starting_graph))
+        g = SimpleGraph(n)
+        s_graph = "Empty"
+    else
+        g = starting_graph
+        s_graph = "Custom"
+        n = nv(g)
+    end
+    gc::SimpleGraph = complement(g)
+    println("----------------------------------------------------------------")
+    println("Edge Dynamic Random Graph\nStarting Configuration : "*s_graph*"\nNumber of nodes : "*string(n)*"\nTarget degree : "*string(d)*"\nSlack constant c : "*string(c)*" | Slack c⋅d : "*string(cd)*"\nPoisson Process Rate (joining rate) : "*string(λ)*"\nNode disappearance probability q : "*string(p)*"\nMaximum number of iterations : "*string(max_iter))
+    println("----------------------------------------------------------------")
+    flush(stdout)
+    prev_n::Int64 = nv(g)
+    while (!has_to_stop(degree(g),d,cd,p,round,max_iter))
+        prev_n = nv(g)
+        _phase_0!(g,gc,d,λ)
+        if persist_snapshots
+            push!(snapshots[1],copy(g))
+        end
+        _phase_1!(g,gc,d,nv(g)-prev_n)
+        if persist_snapshots
+            push!(snapshots[2],copy(g))
+        end
+        _phase_2!(g,gc,cd,nv(g)-prev_n)
+        if persist_snapshots
+            push!(snapshots[3],copy(g))
+        end
+        if (p > 0)
+           _phase_4!(g,gc,p)
+            if persist_snapshots
+                push!(snapshots[4],copy(g))
+            end
+        end
+        round += 1
+        if verbose > 0 && round % verbose == 0
+            println("Round t "*string(round)*"/"*string(max_iter))
+            flush(stdout)
+        end
     end
     return g,round,snapshots
 end
