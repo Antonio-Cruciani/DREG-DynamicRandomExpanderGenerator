@@ -13,15 +13,18 @@ function has_to_stop(degrees::Array{Int64},d::Int64,cd::Int64,p::Float64,round::
 end
 
 
-function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,max_iter::Int64 = 100,verbose::Int64 = 0,persist_snapshots::Bool = false,starting_graph = nothing)::Tuple{SimpleGraph,Int64,Array{Array{SimpleGraph}}}
+function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,max_iter::Int64 = 100,verbose::Int64 = 0,persist_snapshots::Bool = false,starting_graph = nothing)
     g::SimpleGraph = SimpleGraph()
     cd::Int64 = trunc(Int64,c*d)
     s_graph::String = ""
     round::Int64 = 0
+    execution_time::Array{Array{Float64}} = Array{Array{Float64}}([])
+    start_time::Float64 = 0.0
     # Index for each phase
     snapshots::Array{Array{SimpleGraph}} = Array{Array{SimpleGraph}}([])
     for _ in 1:3
         push!(snapshots,[])
+        push!(execution_time,[])
     end
     if (isnothing(starting_graph))
         g = SimpleGraph(n)
@@ -36,17 +39,21 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
     println("Edge Dynamic Random Graph\nStarting Configuration : "*s_graph*"\nNumber of nodes : "*string(n)*"\nTarget degree : "*string(d)*"\nSlack constant c : "*string(c)*" | Slack c⋅d : "*string(cd)*"\nEdge disappearance probability p : "*string(p)*"\nMaximum number of iterations : "*string(max_iter))
     println("----------------------------------------------------------------")
     flush(stdout)
+    start_time = time()
     while (!has_to_stop(degree(g),d,cd,p,round,max_iter))
         _phase_1!(g,gc,d)
+        push!(execution_time[1],time()-start_time)
         if persist_snapshots
             push!(snapshots[1],copy(g))
         end
         _phase_2!(g,gc,cd)
+        push!(execution_time[2],time()-start_time)
         if persist_snapshots
             push!(snapshots[2],copy(g))
         end
         if (p > 0)
            _phase_3!(g,gc,p)
+           push!(execution_time[3],time()-start_time)
             if persist_snapshots
                 push!(snapshots[3],copy(g))
             end
@@ -54,10 +61,18 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
         round += 1
         if verbose > 0 && round % verbose == 0
             println("Round t "*string(round)*"/"*string(max_iter))
+            avg_ph_1 = string((mean(execution_time[1])))
+            avg_ph_2 = string((mean(execution_time[2])))
+            avg_ph_3 = string((mean(execution_time[3])))
+            if (p > 0)
+                println("Average times. Phase 1 : "*avg_ph_1*" Phase 2 : "*avg_ph_2*" Phase 3 : "*avg_ph_3)
+            else
+                println("Average times. Phase 1 : "*avg_ph_1*" Phase 2 : "*avg_ph_2)
+            end
             flush(stdout)
         end
     end
-    return g,round,snapshots
+    return g,round,snapshots,time()-start_time,execution_time
 end
 
 
