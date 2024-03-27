@@ -61,14 +61,15 @@ function _phase_1!(g::SimpleGraph,gc::SimpleGraph,d::Int64,newborn::Int64 = 0)
     new_edges::Array{Tuple{Int64,Int64}} = Array{Tuple{Int64,Int64}}([])
     degree_array::Array{Int64} = degree(g)
     
-    vs_active = [i for i in 1:nv(g)]
-    d, r = divrem(nv(g), Threads.nthreads())
+    vs_active = [i for i in 1:nv(g)-newborn]
+    d, r = divrem(nv(g)-newborn, Threads.nthreads())
     ntasks = d == 0 ? r : Threads.nthreads()
     task_size = cld(nv(g), ntasks)
     local_new_edges::Vector{Array{Tuple{Int64,Int64}}} = [Array{Tuple{Int64,Int64}}([]) for _ in 1:ntasks]
     all_neigs::Array{Array{Int64}} = [Array{Int64}([]) for _ in 1:ntasks ]
     old_neigs::Array{Array{Int64}} = [Array{Int64}([]) for _ in 1:ntasks]
     indices::Array{Array{Int64}} = [Array{Int64}([]) for _ in 1:ntasks]
+    println(task_size, " CIAO ")
     @sync for (t, task_range) in enumerate(Iterators.partition(1:(nv(g)-newborn), task_size))
         Threads.@spawn for u in @view(vs_active[task_range])
             all_neigs[t] = Array{Int64}([])
@@ -125,7 +126,7 @@ function _phase_1!(g::SimpleGraph,gc::SimpleGraph,d::Int64,newborn::Int64 = 0)
             exit(1)
         end
     end
-    return nothing
+    return g,gc
 end
 
 
@@ -188,7 +189,7 @@ function _phase_2!(g::SimpleGraph,gc::SimpleGraph,cd::Int64,newborn::Int64 = 0)
             exit(1)
         end
     end
-    return nothing
+    return g,gc
 end
 
 
@@ -208,7 +209,7 @@ function _phase_3!(g::SimpleGraph,gc::SimpleGraph,p::Float64)
             exit(1)
         end
     end
-    return nothing
+    return g,gc
 end
 
 

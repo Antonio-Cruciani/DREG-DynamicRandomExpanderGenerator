@@ -41,14 +41,14 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
     flush(stdout)
     start_time = time()
     while (!has_to_stop(degree(g),d,cd,p,round,max_iter))
-        _phase_1!(g,gc,d)
+        g,gc = _phase_1!(g,gc,d)
         push!(execution_time[1],time()-start_time)
         if persist_snapshots
             push!(snapshots[1],copy(g))
         end
         #degs = degree(g)
         #println("Degree: AVG "*string(mean(degs))* " STD "*string(std(degs))*" Minimum "*string(minimum(degs))*" Maximum "*string(maximum(degs)))
-        _phase_2!(g,gc,cd)
+        g,gc =_phase_2!(g,gc,cd)
         push!(execution_time[2],time()-start_time)
         if persist_snapshots
             push!(snapshots[2],copy(g))
@@ -56,7 +56,7 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
         #degs = degree(g)
         #println("Degree: AVG "*string(mean(degs))* " STD "*string(std(degs))*" Minimum "*string(minimum(degs))*" Maximum "*string(maximum(degs)))
         if (p > 0)
-           _phase_3!(g,gc,p)
+            g,gc = _phase_3!(g,gc,p)
            push!(execution_time[3],time()-start_time)
             if persist_snapshots
                 push!(snapshots[3],copy(g))
