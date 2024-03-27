@@ -46,11 +46,15 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
         if persist_snapshots
             push!(snapshots[1],copy(g))
         end
+        #degs = degree(g)
+        #println("Degree: AVG "*string(mean(degs))* " STD "*string(std(degs))*" Minimum "*string(minimum(degs))*" Maximum "*string(maximum(degs)))
         _phase_2!(g,gc,cd)
         push!(execution_time[2],time()-start_time)
         if persist_snapshots
             push!(snapshots[2],copy(g))
         end
+        #degs = degree(g)
+        #println("Degree: AVG "*string(mean(degs))* " STD "*string(std(degs))*" Minimum "*string(minimum(degs))*" Maximum "*string(maximum(degs)))
         if (p > 0)
            _phase_3!(g,gc,p)
            push!(execution_time[3],time()-start_time)
@@ -64,6 +68,8 @@ function edge_dynamic_d_regular_graph(n::Int64,d::Int64,c::Float64,p::Float64,ma
             avg_ph_1 = string((mean(execution_time[1])))
             avg_ph_2 = string((mean(execution_time[2])))
             avg_ph_3 = string((mean(execution_time[3])))
+            degs = degree(g)
+            println("Degree: AVG "*string(mean(degs))* " STD "*string(std(degs))*" Minimum "*string(minimum(degs))*"(Target "*string(d)*") Maximum "*string(maximum(degs))*" (Target "*string(cd)*")")
             if (p > 0)
                 println("Average times. Phase 1 : "*avg_ph_1*" Phase 2 : "*avg_ph_2*" Phase 3 : "*avg_ph_3)
             else
